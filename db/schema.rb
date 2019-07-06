@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_07_06_154034) do
+ActiveRecord::Schema.define(version: 2019_07_06_160041) do
 
   create_table "balances", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
     t.bigint "credential_id"
@@ -71,6 +71,34 @@ ActiveRecord::Schema.define(version: 2019_07_06_154034) do
     t.index ["user_id"], name: "index_strategies_on_user_id"
   end
 
+  create_table "tickers", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.bigint "market_id"
+    t.decimal "mid", precision: 10
+    t.decimal "bid", precision: 10
+    t.decimal "ask", precision: 10
+    t.decimal "last", precision: 10
+    t.decimal "low", precision: 10
+    t.decimal "high", precision: 10
+    t.decimal "volume", precision: 10
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["market_id"], name: "index_tickers_on_market_id"
+  end
+
+  create_table "trades", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.bigint "credential_id"
+    t.bigint "market_id"
+    t.string "tid"
+    t.integer "side"
+    t.decimal "price", precision: 10
+    t.decimal "amount", precision: 10
+    t.decimal "fee", precision: 10
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["credential_id"], name: "index_trades_on_credential_id"
+    t.index ["market_id"], name: "index_trades_on_market_id"
+  end
+
   create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
     t.string "uid", limit: 12
     t.string "email"
@@ -88,4 +116,7 @@ ActiveRecord::Schema.define(version: 2019_07_06_154034) do
   add_foreign_key "credentials", "users"
   add_foreign_key "markets", "exchanges"
   add_foreign_key "strategies", "users"
+  add_foreign_key "tickers", "markets"
+  add_foreign_key "trades", "credentials"
+  add_foreign_key "trades", "markets"
 end
