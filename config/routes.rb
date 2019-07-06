@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :balances
   resources :credentials
   resources :markets
   resources :exchanges
