@@ -10,7 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_07_06_152111) do
+ActiveRecord::Schema.define(version: 2019_07_06_152820) do
+
+  create_table "credentials", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.bigint "user_id"
+    t.bigint "exchange_id"
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["exchange_id"], name: "index_credentials_on_exchange_id"
+    t.index ["user_id"], name: "index_credentials_on_user_id"
+  end
 
   create_table "exchanges", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
     t.string "name"
@@ -47,5 +57,7 @@ ActiveRecord::Schema.define(version: 2019_07_06_152111) do
     t.index ["uid"], name: "index_users_on_uid", unique: true
   end
 
+  add_foreign_key "credentials", "exchanges"
+  add_foreign_key "credentials", "users"
   add_foreign_key "markets", "exchanges"
 end
