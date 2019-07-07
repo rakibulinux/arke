@@ -1,0 +1,59 @@
+markets:
+  - name: btcusdt
+  - name: ethusdt
+
+exchanges:
+  - name: binance
+    url:  ""
+    rest: ""
+    ws:   ""
+    rate: 1.0
+
+  - name: bitfaker
+    url:  ""
+    rest: ""
+    ws:   ""
+    rate: 1.0
+
+  - name: bitfinex
+    url:  ""
+    rest: ""
+    ws:   ""
+    rate: 1.0
+
+  - name: hitbtc
+    url:  ""
+    rest: ""
+    ws:   ""
+    rate: 1.0
+
+  - name: huobi
+    url:  ""
+    rest: ""
+    ws:   ""
+    rate: 1.0
+
+  - name: kraken
+    url:  ""
+    rest: ""
+    ws:   ""
+    rate: 1.0
+
+  - name: luno
+    url:  ""
+    rest: ""
+    ws:   ""
+    rate: 1.0
+
+  - name: okex
+    url:  ""
+    rest: ""
+    ws:   ""
+    rate: 1.0
+
+  - name: rubykube
+    url:  ""
+    rest: ""
+    ws:   ""
+    rate: 1.0
+
