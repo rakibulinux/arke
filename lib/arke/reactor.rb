@@ -1,8 +1,3 @@
-require "ostruct"
-require "faraday"
-require "faraday_middleware"
-require "em-synchrony"
-require "em-synchrony/em-http"
 
 require "arke/exchange"
 require "arke/strategy"
@@ -48,6 +43,8 @@ module Arke
     def run
       EM.synchrony do
         trap("INT") { stop }
+
+        Arke::Log.info("Starting Reactor")
 
         @strategies.each do |strategy|
           Fiber.new do
