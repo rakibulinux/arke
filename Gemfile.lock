@@ -55,7 +55,6 @@ GEM
       msgpack (~> 1.0)
     builder (3.2.3)
     byebug (11.0.1)
-    clamp (1.3.0)
     coderay (1.1.2)
     colorize (0.8.1)
     concurrent-ruby (1.1.5)
@@ -224,7 +223,6 @@ DEPENDENCIES
   bitx (~> 0.2.2)
   bootsnap (>= 1.1.0)
   byebug
-  clamp (~> 1.3)
   colorize (~> 0.8.1)
   em-synchrony (~> 1.0)
   eventmachine (~> 1.2)

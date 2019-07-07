@@ -5,6 +5,14 @@ module Arke::Helpers
       @conf ||= YAML.load_file(config)
     end
 
+    def load_configuration
+      strategy_file = File.join(::Rails.root, "config/strategies.yml")
+      raise "File #{strategy_file} not found" unless File.exists?(strategy_file)
+      config = YAML.load_file(strategy_file)
+
+      Arke::Configuration.define { |c| c.strategy = config['strategy'] }
+    end
+
     def strategies_configs
       if conf["strategies"] && conf["strategies"].is_a?(Array)
         strategies = conf["strategies"]

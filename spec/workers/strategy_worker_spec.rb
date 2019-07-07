@@ -6,7 +6,7 @@ RSpec.describe StrategyWorker, type: :worker do
     it 'be able to start strategies' do
       sw = StrategyWorker.new
       sw.perform('start', 10)
-      sw.wait
+      #sw.wait
     end
   end
 end
