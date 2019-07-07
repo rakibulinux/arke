@@ -1,12 +1,20 @@
 markets:
-  - name: btcusdt
-  - name: ethusdt
+  - name:   BTCUSDT
+    base:   BTC
+    quote:  USDT
+    base_precision: 8
+    quote_precision: 2
+  - name:   ETHUSDT
+    base:   ETH
+    quote:  USDT
+    base_precision: 5
+    quote_precision: 2
 
 exchanges:
   - name: binance
-    url:  ""
-    rest: ""
-    ws:   ""
+    url:  "https://www.binance.com"
+    rest: "https://api.binance.com"
+    ws:   "wss://api.binance.com"
     rate: 1.0
 
   - name: bitfaker
@@ -52,8 +60,7 @@ exchanges:
     rate: 1.0
 
   - name: rubykube
-    url:  ""
-    rest: ""
-    ws:   ""
+    url:  "https://www.devkube.com"
+    rest: "https://www.devkube.com"
+    ws:   "wss://www.devkube.com"
     rate: 1.0
-

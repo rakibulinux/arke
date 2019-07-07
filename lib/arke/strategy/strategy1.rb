@@ -8,6 +8,19 @@ module Arke::Strategy
     include Arke::Helpers::Splitter
     include Arke::Helpers::Spread
 
+    def default_params
+      {
+        side: 'both',
+        spread_bids: 0.001,
+        spread_asks: 0.001,
+        limit_asks_base: 0.05,
+        limit_bids_base: 0.05,
+        levels_size: 0.25,
+        levels_count: 10,
+        enable_orderback: false
+      }
+    end
+
     def initialize(sources, target, config, executor)
       super
       params = @config["params"] || {}
