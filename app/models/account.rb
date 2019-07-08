@@ -1,4 +1,4 @@
-class Credential < ApplicationRecord
+class Account < ApplicationRecord
   belongs_to :user
   belongs_to :exchange
 end

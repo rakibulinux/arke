@@ -10,27 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_07_06_160041) do
+ActiveRecord::Schema.define(version: 2019_07_08_123719) do
+
+  create_table "accounts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.bigint "user_id"
+    t.bigint "exchange_id"
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["exchange_id"], name: "index_accounts_on_exchange_id"
+    t.index ["user_id"], name: "index_accounts_on_user_id"
+  end
 
   create_table "balances", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
-    t.bigint "credential_id"
     t.string "currency"
     t.decimal "amount", precision: 10
     t.decimal "available", precision: 10
     t.decimal "locked", precision: 10
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["credential_id"], name: "index_balances_on_credential_id"
-  end
-
-  create_table "credentials", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
-    t.bigint "user_id"
-    t.bigint "exchange_id"
-    t.string "name"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["exchange_id"], name: "index_credentials_on_exchange_id"
-    t.index ["user_id"], name: "index_credentials_on_user_id"
+    t.bigint "account_id"
+    t.index ["account_id"], name: "index_balances_on_account_id"
   end
 
   create_table "exchanges", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
@@ -62,10 +62,9 @@ ActiveRecord::Schema.define(version: 2019_07_06_160041) do
     t.bigint "target_id"
     t.string "name"
     t.string "driver"
-    t.integer "frequency"
+    t.integer "interval"
     t.json "params"
     t.string "state"
-    t.boolean "debug"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_strategies_on_user_id"
@@ -86,7 +85,6 @@ ActiveRecord::Schema.define(version: 2019_07_06_160041) do
   end
 
   create_table "trades", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
-    t.bigint "credential_id"
     t.bigint "market_id"
     t.string "tid"
     t.integer "side"
@@ -95,7 +93,8 @@ ActiveRecord::Schema.define(version: 2019_07_06_160041) do
     t.decimal "fee", precision: 10
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["credential_id"], name: "index_trades_on_credential_id"
+    t.bigint "account_id"
+    t.index ["account_id"], name: "index_trades_on_account_id"
     t.index ["market_id"], name: "index_trades_on_market_id"
   end
 
@@ -111,12 +110,12 @@ ActiveRecord::Schema.define(version: 2019_07_06_160041) do
     t.index ["uid"], name: "index_users_on_uid", unique: true
   end
 
-  add_foreign_key "balances", "credentials"
-  add_foreign_key "credentials", "exchanges"
-  add_foreign_key "credentials", "users"
+  add_foreign_key "accounts", "exchanges"
+  add_foreign_key "accounts", "users"
+  add_foreign_key "balances", "accounts"
   add_foreign_key "markets", "exchanges"
   add_foreign_key "strategies", "users"
   add_foreign_key "tickers", "markets"
-  add_foreign_key "trades", "credentials"
+  add_foreign_key "trades", "accounts"
   add_foreign_key "trades", "markets"
 end
