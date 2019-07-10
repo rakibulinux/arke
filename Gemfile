@@ -15,6 +15,8 @@ gem 'puma', '~> 3.11'
 # Use Redis adapter to run Action Cable in production
 gem 'redis', '~> 4.0'
 
+gem 'vault', '~> 0.12.0'
+
 gem 'rbtree', '~> 0.4.2'
 gem 'colorize', '~> 0.8.1'
 gem 'faraday', '~> 0.15.4'
@@ -64,3 +66,5 @@ end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 # gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
+
+gem "simplecov", "~> 0.17.0", :groups => [:development, :test]

@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :trade do
-    credential { nil }
+    account { nil }
     market { nil }
     tid { "MyString" }
     side { 1 }

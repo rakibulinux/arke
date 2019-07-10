@@ -13,6 +13,9 @@ RSpec.describe Api::V1::StrategiesController, type: :controller do
 
   let(:auth_header) { { 'Authorization' => "Bearer #{jwt_for(user_params)}" }}
 
+  before(:all) { WebMock.disable! }
+  after(:all) { WebMock.enable! }
+
   describe 'GET #index' do
     it 'returns user strategies' do
       request.headers.merge! auth_header
