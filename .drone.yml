@@ -1,0 +1,27 @@
+---
+kind: pipeline
+name: default
+
+steps:
+  - name: Run rspec
+    image: ruby:2.6.3
+    environment:
+      DATABASE_HOST: database
+      RAILS_ENV: test
+    commands:
+      - gem update bundler
+      - bundle --jobs $(nproc)
+      - bundle exec rake db:drop db:create db:migrate
+      - bundle exec rspec
+
+services:
+- name: database
+  image: mariadb
+  ports:
+    - 3306
+  environment:
+    MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+
+trigger:
+  event:
+    - push

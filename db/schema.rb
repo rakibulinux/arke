@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_07_08_123719) do
+ActiveRecord::Schema.define(version: 2019_07_06_160041) do
 
   create_table "accounts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
     t.bigint "user_id"
@@ -23,13 +23,13 @@ ActiveRecord::Schema.define(version: 2019_07_08_123719) do
   end
 
   create_table "balances", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.bigint "account_id"
     t.string "currency"
     t.decimal "amount", precision: 10
     t.decimal "available", precision: 10
     t.decimal "locked", precision: 10
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "account_id"
     t.index ["account_id"], name: "index_balances_on_account_id"
   end
 
@@ -50,6 +50,8 @@ ActiveRecord::Schema.define(version: 2019_07_08_123719) do
     t.string "quote"
     t.integer "base_precision"
     t.integer "quote_precision"
+    t.decimal "min_ask_amount", precision: 32, scale: 16, default: "0.0", null: false
+    t.decimal "min_bid_amount", precision: 32, scale: 16, default: "0.0", null: false
     t.string "state"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -58,7 +60,9 @@ ActiveRecord::Schema.define(version: 2019_07_08_123719) do
 
   create_table "strategies", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
     t.bigint "user_id"
+    t.bigint "source_market_id"
     t.bigint "source_id"
+    t.bigint "target_market_id"
     t.bigint "target_id"
     t.string "name"
     t.string "driver"
@@ -85,6 +89,7 @@ ActiveRecord::Schema.define(version: 2019_07_08_123719) do
   end
 
   create_table "trades", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.bigint "account_id"
     t.bigint "market_id"
     t.string "tid"
     t.integer "side"
@@ -93,7 +98,6 @@ ActiveRecord::Schema.define(version: 2019_07_08_123719) do
     t.decimal "fee", precision: 10
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "account_id"
     t.index ["account_id"], name: "index_trades_on_account_id"
     t.index ["market_id"], name: "index_trades_on_market_id"
   end

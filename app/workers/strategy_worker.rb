@@ -1,23 +1,16 @@
 require 'arke'
 
 class StrategyWorker
-  include Sidekiq::Worker
 
   def initialize
-    @threads ||= []
+    @config = []
   end
 
-  def perform(command, id)
-
-    case command
-    when 'start'
-      logger.warn "Starting #{id}"
-      @threads << Thread.new { Arke::Reactor.new({}).run }
-    else
-    end
+  def load_db
+    @config.concat Strategy.all.map(&:to_h)
   end
 
-  def wait
-    @threads.each(&:join)
+  def run
+    Arke::Reactor.new(@config).run
   end
 end

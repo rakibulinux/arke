@@ -1,4 +1,4 @@
 class Trade < ApplicationRecord
-  belongs_to :credential
+  belongs_to :account
   belongs_to :market
 end

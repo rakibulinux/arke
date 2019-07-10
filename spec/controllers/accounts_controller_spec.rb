@@ -23,10 +23,10 @@ require 'rails_helper'
 # removed from Rails core in Rails 5, but can be added back in via the
 # `rails-controller-testing` gem.
 
-RSpec.describe CredentialsController, type: :controller do
+RSpec.describe AccountsController, type: :controller do
 
   # This should return the minimal set of attributes required to create a valid
-  # Credential. As you add validations to Credential, be sure to
+  # account. As you add validations to account, be sure to
   # adjust the attributes here as well.
   let(:valid_attributes) {
     skip("Add a hash of attributes valid for your model")
@@ -38,12 +38,12 @@ RSpec.describe CredentialsController, type: :controller do
 
   # This should return the minimal set of values that should be in the session
   # in order to pass any filters (e.g. authentication) defined in
-  # CredentialsController. Be sure to keep this updated too.
+  # accountsController. Be sure to keep this updated too.
   let(:valid_session) { {} }
 
   describe "GET #index" do
     it "returns a success response" do
-      credential = Credential.create! valid_attributes
+      account = Account.create! valid_attributes
       get :index, params: {}, session: valid_session
       expect(response).to be_successful
     end
@@ -51,33 +51,33 @@ RSpec.describe CredentialsController, type: :controller do
 
   describe "GET #show" do
     it "returns a success response" do
-      credential = Credential.create! valid_attributes
-      get :show, params: {id: credential.to_param}, session: valid_session
+      account = Account.create! valid_attributes
+      get :show, params: {id: account.to_param}, session: valid_session
       expect(response).to be_successful
     end
   end
 
   describe "POST #create" do
     context "with valid params" do
-      it "creates a new Credential" do
+      it "creates a new account" do
         expect {
-          post :create, params: {credential: valid_attributes}, session: valid_session
-        }.to change(Credential, :count).by(1)
+          post :create, params: {account: valid_attributes}, session: valid_session
+        }.to change(Account, :count).by(1)
       end
 
-      it "renders a JSON response with the new credential" do
+      it "renders a JSON response with the new account" do
 
-        post :create, params: {credential: valid_attributes}, session: valid_session
+        post :create, params: {account: valid_attributes}, session: valid_session
         expect(response).to have_http_status(:created)
         expect(response.content_type).to eq('application/json')
-        expect(response.location).to eq(credential_url(Credential.last))
+        expect(response.location).to eq(account_url(account.last))
       end
     end
 
     context "with invalid params" do
-      it "renders a JSON response with errors for the new credential" do
+      it "renders a JSON response with errors for the new account" do
 
-        post :create, params: {credential: invalid_attributes}, session: valid_session
+        post :create, params: {account: invalid_attributes}, session: valid_session
         expect(response).to have_http_status(:unprocessable_entity)
         expect(response.content_type).to eq('application/json')
       end
@@ -90,27 +90,27 @@ RSpec.describe CredentialsController, type: :controller do
         skip("Add a hash of attributes valid for your model")
       }
 
-      it "updates the requested credential" do
-        credential = Credential.create! valid_attributes
-        put :update, params: {id: credential.to_param, credential: new_attributes}, session: valid_session
-        credential.reload
+      it "updates the requested account" do
+        account = Account.create! valid_attributes
+        put :update, params: {id: account.to_param, account: new_attributes}, session: valid_session
+        account.reload
         skip("Add assertions for updated state")
       end
 
-      it "renders a JSON response with the credential" do
-        credential = Credential.create! valid_attributes
+      it "renders a JSON response with the account" do
+        account = Account.create! valid_attributes
 
-        put :update, params: {id: credential.to_param, credential: valid_attributes}, session: valid_session
+        put :update, params: {id: account.to_param, account: valid_attributes}, session: valid_session
         expect(response).to have_http_status(:ok)
         expect(response.content_type).to eq('application/json')
       end
     end
 
     context "with invalid params" do
-      it "renders a JSON response with errors for the credential" do
-        credential = Credential.create! valid_attributes
+      it "renders a JSON response with errors for the account" do
+        account = Account.create! valid_attributes
 
-        put :update, params: {id: credential.to_param, credential: invalid_attributes}, session: valid_session
+        put :update, params: {id: account.to_param, account: invalid_attributes}, session: valid_session
         expect(response).to have_http_status(:unprocessable_entity)
         expect(response.content_type).to eq('application/json')
       end
@@ -118,11 +118,11 @@ RSpec.describe CredentialsController, type: :controller do
   end
 
   describe "DELETE #destroy" do
-    it "destroys the requested credential" do
-      credential = Credential.create! valid_attributes
+    it "destroys the requested account" do
+      account = Account.create! valid_attributes
       expect {
-        delete :destroy, params: {id: credential.to_param}, session: valid_session
-      }.to change(Credential, :count).by(-1)
+        delete :destroy, params: {id: account.to_param}, session: valid_session
+      }.to change(account, :count).by(-1)
     end
   end
 

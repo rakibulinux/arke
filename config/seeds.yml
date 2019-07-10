@@ -30,7 +30,7 @@ exchanges:
     rate: 1.0
 
   - name: hitbtc
-    url:  "https://www.hibtc.com"
+    url:  "https://www.hitbtc.com"
     rest: "https://api.hitbtc.com/api/2"
     ws:   "wss://api.hitbtc.com/api/2/ws"
     rate: 1.0

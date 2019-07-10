@@ -14,7 +14,6 @@ gem 'puma', '~> 3.11'
 # gem 'jbuilder', '~> 2.5'
 # Use Redis adapter to run Action Cable in production
 gem 'redis', '~> 4.0'
-gem 'sidekiq', '~> 5.2'
 
 gem 'rbtree', '~> 0.4.2'
 gem 'colorize', '~> 0.8.1'

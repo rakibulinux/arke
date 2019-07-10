@@ -3,10 +3,9 @@ require 'rails_helper'
 RSpec.describe StrategyWorker, type: :worker do
   context 'Perfoming tasks' do
 
-    it 'be able to start strategies' do
-      sw = StrategyWorker.new
-      sw.perform('start', 10)
-      #sw.wait
+    it 'loads strategies from db' do
+      skip
+      expect { StrategyWorker.new.load_db }.not_to raise_error
     end
   end
 end

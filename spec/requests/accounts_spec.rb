@@ -1,9 +1,9 @@
 require 'rails_helper'
 
-RSpec.describe "Credentials", type: :request do
-  describe "GET /credentials" do
+RSpec.describe "Accounts", type: :request do
+  describe "GET /accounts" do
     it "works! (now write some real specs)" do
-      get credentials_path
+      get accounts_path
       expect(response).to have_http_status(200)
     end
   end
