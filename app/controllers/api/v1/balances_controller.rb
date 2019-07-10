@@ -1,4 +1,4 @@
-class BalancesController < ApplicationController
+class Api::V1::BalancesController < ApplicationController
   before_action :set_balance, only: [:show, :update, :destroy]
 
   # GET /balances

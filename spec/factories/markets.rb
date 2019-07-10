@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :market do
-    exchange { nil }
     quote { "USD" }
+    exchange { create(:exchange) }
     base_precision { 8 }
     quote_precision { 2 }
     state { "active" }

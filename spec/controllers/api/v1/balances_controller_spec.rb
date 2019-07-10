@@ -23,7 +23,7 @@ require 'rails_helper'
 # removed from Rails core in Rails 5, but can be added back in via the
 # `rails-controller-testing` gem.
 
-RSpec.describe BalancesController, type: :controller do
+RSpec.describe Api::V1::BalancesController, type: :controller do
 
   # This should return the minimal set of attributes required to create a valid
   # Balance. As you add validations to Balance, be sure to

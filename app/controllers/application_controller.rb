@@ -4,6 +4,8 @@
 require_dependency 'arke/middleware/jwt_authenticator'
 
 class ApplicationController < ActionController::API
+  include Response
+
   before_action :auth_user!
   before_action :create_user
 

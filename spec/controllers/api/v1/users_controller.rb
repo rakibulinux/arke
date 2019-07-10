@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe UsersController, type: :controller do
+RSpec.describe Api::V1::UsersController, type: :controller do
   let(:user_uid){ SecureRandom.hex(6) }
   let(:user_params) { { uid: user_uid, level: 3, role: 'admin', state: 'active', email: 'test@test.com' } }
   let(:auth_header) { { 'Authorization' => "Bearer #{jwt_for(user_params)}" }}

@@ -1,30 +1,9 @@
 require "rails_helper"
 
-RSpec.describe StrategiesController, type: :routing do
+RSpec.describe Api::V1::StrategiesController, type: :routing do
   describe "routing" do
     it "routes to #index" do
-      expect(:get => "/strategies").to route_to("strategies#index")
-    end
-
-    it "routes to #show" do
-      expect(:get => "/strategies/1").to route_to("strategies#show", :id => "1")
-    end
-
-
-    it "routes to #create" do
-      expect(:post => "/strategies").to route_to("strategies#create")
-    end
-
-    it "routes to #update via PUT" do
-      expect(:put => "/strategies/1").to route_to("strategies#update", :id => "1")
-    end
-
-    it "routes to #update via PATCH" do
-      expect(:patch => "/strategies/1").to route_to("strategies#update", :id => "1")
-    end
-
-    it "routes to #destroy" do
-      expect(:delete => "/strategies/1").to route_to("strategies#destroy", :id => "1")
+      expect(:get => "/api/v1/strategies").to route_to("api/v1/strategies#index")
     end
   end
 end

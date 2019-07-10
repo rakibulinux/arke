@@ -1,4 +1,4 @@
-class ExchangesController < ApplicationController
+class Api::V1::ExchangesController < ApplicationController
   before_action :set_exchange, only: [:show, :update, :destroy]
 
   # GET /exchanges

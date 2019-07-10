@@ -23,10 +23,10 @@ require 'rails_helper'
 # removed from Rails core in Rails 5, but can be added back in via the
 # `rails-controller-testing` gem.
 
-RSpec.describe StrategiesController, type: :controller do
+RSpec.describe Api::V1::AccountsController, type: :controller do
 
   # This should return the minimal set of attributes required to create a valid
-  # Strategy. As you add validations to Strategy, be sure to
+  # account. As you add validations to account, be sure to
   # adjust the attributes here as well.
   let(:valid_attributes) {
     skip("Add a hash of attributes valid for your model")
@@ -36,20 +36,14 @@ RSpec.describe StrategiesController, type: :controller do
     skip("Add a hash of attributes invalid for your model")
   }
 
-  let(:auth_header) { { 'Authorization' => "Bearer #{jwt_for({email: 'email@test.com', uid: 'ID234234', level: 3, role: 'admin', state: 'active'})}" }}
-
   # This should return the minimal set of values that should be in the session
   # in order to pass any filters (e.g. authentication) defined in
-  # StrategiesController. Be sure to keep this updated too.
+  # accountsController. Be sure to keep this updated too.
   let(:valid_session) { {} }
-
-  before do
-    request.headers.merge! auth_header
-  end
 
   describe "GET #index" do
     it "returns a success response" do
-      strategy = Strategy.create! valid_attributes
+      account = Account.create! valid_attributes
       get :index, params: {}, session: valid_session
       expect(response).to be_successful
     end
@@ -57,33 +51,33 @@ RSpec.describe StrategiesController, type: :controller do
 
   describe "GET #show" do
     it "returns a success response" do
-      strategy = Strategy.create! valid_attributes
-      get :show, params: {id: strategy.to_param}, session: valid_session
+      account = Account.create! valid_attributes
+      get :show, params: {id: account.to_param}, session: valid_session
       expect(response).to be_successful
     end
   end
 
   describe "POST #create" do
     context "with valid params" do
-      it "creates a new Strategy" do
+      it "creates a new account" do
         expect {
-          post :create, params: {strategy: valid_attributes}, session: valid_session
-        }.to change(Strategy, :count).by(1)
+          post :create, params: {account: valid_attributes}, session: valid_session
+        }.to change(Account, :count).by(1)
       end
 
-      it "renders a JSON response with the new strategy" do
+      it "renders a JSON response with the new account" do
 
-        post :create, params: {strategy: valid_attributes}, session: valid_session
+        post :create, params: {account: valid_attributes}, session: valid_session
         expect(response).to have_http_status(:created)
         expect(response.content_type).to eq('application/json')
-        expect(response.location).to eq(strategy_url(Strategy.last))
+        expect(response.location).to eq(account_url(account.last))
       end
     end
 
     context "with invalid params" do
-      it "renders a JSON response with errors for the new strategy" do
+      it "renders a JSON response with errors for the new account" do
 
-        post :create, params: {strategy: invalid_attributes}, session: valid_session
+        post :create, params: {account: invalid_attributes}, session: valid_session
         expect(response).to have_http_status(:unprocessable_entity)
         expect(response.content_type).to eq('application/json')
       end
@@ -96,27 +90,27 @@ RSpec.describe StrategiesController, type: :controller do
         skip("Add a hash of attributes valid for your model")
       }
 
-      it "updates the requested strategy" do
-        strategy = Strategy.create! valid_attributes
-        put :update, params: {id: strategy.to_param, strategy: new_attributes}, session: valid_session
-        strategy.reload
+      it "updates the requested account" do
+        account = Account.create! valid_attributes
+        put :update, params: {id: account.to_param, account: new_attributes}, session: valid_session
+        account.reload
         skip("Add assertions for updated state")
       end
 
-      it "renders a JSON response with the strategy" do
-        strategy = Strategy.create! valid_attributes
+      it "renders a JSON response with the account" do
+        account = Account.create! valid_attributes
 
-        put :update, params: {id: strategy.to_param, strategy: valid_attributes}, session: valid_session
+        put :update, params: {id: account.to_param, account: valid_attributes}, session: valid_session
         expect(response).to have_http_status(:ok)
         expect(response.content_type).to eq('application/json')
       end
     end
 
     context "with invalid params" do
-      it "renders a JSON response with errors for the strategy" do
-        strategy = Strategy.create! valid_attributes
+      it "renders a JSON response with errors for the account" do
+        account = Account.create! valid_attributes
 
-        put :update, params: {id: strategy.to_param, strategy: invalid_attributes}, session: valid_session
+        put :update, params: {id: account.to_param, account: invalid_attributes}, session: valid_session
         expect(response).to have_http_status(:unprocessable_entity)
         expect(response.content_type).to eq('application/json')
       end
@@ -124,11 +118,11 @@ RSpec.describe StrategiesController, type: :controller do
   end
 
   describe "DELETE #destroy" do
-    it "destroys the requested strategy" do
-      strategy = Strategy.create! valid_attributes
+    it "destroys the requested account" do
+      account = Account.create! valid_attributes
       expect {
-        delete :destroy, params: {id: strategy.to_param}, session: valid_session
-      }.to change(Strategy, :count).by(-1)
+        delete :destroy, params: {id: account.to_param}, session: valid_session
+      }.to change(account, :count).by(-1)
     end
   end
 

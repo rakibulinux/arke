@@ -1,4 +1,4 @@
-class MarketsController < ApplicationController
+class Api::V1::MarketsController < ApplicationController
   before_action :set_market, only: [:show, :update, :destroy]
 
   # GET /markets
