@@ -3,8 +3,8 @@ FactoryBot.define do
     user { create(:user) }
     source { create(:account) }
     target { create(:account) }
-    source_market { create(:market) }
-    target_market { create(:market) }
+    source_market { create(:market, :btcusd) }
+    target_market { create(:market, :ethusd) }
     name { Faker::Alphanumeric.alpha(7) }
     driver { %w(copy microtrades).sample }
     interval { Faker::Number.number(1) }

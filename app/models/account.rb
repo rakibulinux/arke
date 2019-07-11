@@ -1,6 +1,8 @@
 class Account < ApplicationRecord
   belongs_to :user
   belongs_to :exchange
+  has_many :balances
+  has_many :trades
 
   validates :api_key, :name, presence: true, on: :create
   validates :api_key, with: :key_validator, strict: true

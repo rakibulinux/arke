@@ -1,11 +1,11 @@
 FactoryBot.define do
   factory :trade do
-    account { nil }
-    market { nil }
-    tid { "MyString" }
-    side { 1 }
-    price { "9.99" }
-    amount { "9.99" }
-    fee { "9.99" }
+    account { create(:account) }
+    market { create(:market, :btcusd) }
+    tid { Faker::Alphanumeric.alpha(7) }
+    side { Faker::Number.number(1) }
+    price { Faker::Number.decimal(2) }
+    amount { Faker::Number.decimal(2) }
+    fee { Faker::Number.decimal(2) }
   end
 end

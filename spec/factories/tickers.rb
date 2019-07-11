@@ -1,12 +1,12 @@
 FactoryBot.define do
   factory :ticker do
-    market { nil }
-    mid { "9.99" }
-    bid { "9.99" }
-    ask { "9.99" }
-    last { "9.99" }
-    low { "9.99" }
-    high { "9.99" }
-    volume { "9.99" }
+    market { create(:market, :btcusd) }
+    mid {  Faker::Number.decimal(2) }
+    bid {  Faker::Number.decimal(2) }
+    ask {  Faker::Number.decimal(2) }
+    last {  Faker::Number.decimal(2) }
+    low {  Faker::Number.decimal(2) }
+    high {  Faker::Number.decimal(2) }
+    volume {  Faker::Number.decimal(2) }
   end
 end

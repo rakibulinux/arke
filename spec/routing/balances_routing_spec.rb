@@ -5,26 +5,5 @@ RSpec.describe Api::V1::BalancesController, type: :routing do
     it "routes to #index" do
       expect(:get => "/api/v1/balances").to route_to("api/v1/balances#index")
     end
-
-    it "routes to #show" do
-      expect(:get => "/api/v1/balances/1").to route_to("api/v1/balances#show", :id => "1")
-    end
-
-
-    it "routes to #create" do
-      expect(:post => "/api/v1/balances").to route_to("api/v1/balances#create")
-    end
-
-    it "routes to #update via PUT" do
-      expect(:put => "/api/v1/balances/1").to route_to("api/v1/balances#update", :id => "1")
-    end
-
-    it "routes to #update via PATCH" do
-      expect(:patch => "/api/v1/balances/1").to route_to("api/v1/balances#update", :id => "1")
-    end
-
-    it "routes to #destroy" do
-      expect(:delete => "/api/v1/balances/1").to route_to("api/v1/balances#destroy", :id => "1")
-    end
   end
 end

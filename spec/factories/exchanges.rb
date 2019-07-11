@@ -5,6 +5,6 @@ FactoryBot.define do
     url { Faker::Internet.url }
     rest { Faker::Internet.url }
     ws { Faker::Internet.url }
-    rate { rand() }
+    rate { Faker::Number.decimal(2) }
   end
 end
