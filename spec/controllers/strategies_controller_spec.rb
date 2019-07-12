@@ -36,10 +36,16 @@ RSpec.describe StrategiesController, type: :controller do
     skip("Add a hash of attributes invalid for your model")
   }
 
+  let(:auth_header) { { 'Authorization' => "Bearer #{jwt_for({email: 'email@test.com', uid: 'ID234234', level: 3, role: 'admin', state: 'active'})}" }}
+
   # This should return the minimal set of values that should be in the session
   # in order to pass any filters (e.g. authentication) defined in
   # StrategiesController. Be sure to keep this updated too.
   let(:valid_session) { {} }
+
+  before do
+    request.headers.merge! auth_header
+  end
 
   describe "GET #index" do
     it "returns a success response" do
