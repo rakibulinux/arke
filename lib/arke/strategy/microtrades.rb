@@ -39,9 +39,18 @@ module Arke::Strategy
       amount = rand(@min_amount..@max_amount)
       amount = apply_precision(amount, target.base_precision.to_f, side_min_value)
       price = side == :buy ? @max_price : @min_price
-      order = Arke::Order.new(target.market, price, amount, side)
-      Arke::Log.warn "ID:#{id} Creating order #{order}"
-      target.create_order(order)
+      Fiber.new do
+        begin
+          order = Arke::Order.new(target.market, price, amount, side)
+          Arke::Log.warn "ID:#{id} Creating order #{order}"
+          target.create_order(order)
+          Arke::Log.warn "ID:#{id} Created order #{order}"
+          EM::Synchrony.sleep(0.1)
+          target.stop_order(order.id)
+        rescue StandardError
+          Arke::Log.error "ID:#{id} #{$!}"
+        end
+      end.resume
       nil
     end
   end

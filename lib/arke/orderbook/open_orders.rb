@@ -28,9 +28,10 @@ module Arke::Orderbook
       @book[side][price].sum { |_id, order| order.amount }
     end
 
-    def add_order(order, id)
+    def add_order(order)
+      raise "Order id is nil" if order.id.nil?
       @book[order.side][order.price] ||= {}
-      @book[order.side][order.price][id] = order
+      @book[order.side][order.price][order.id] = order
     end
 
     def update(order)

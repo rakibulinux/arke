@@ -61,7 +61,8 @@ module Arke::Exchange
       params.delete(:price) if order.type == "market"
       response = post("peatio/market/orders", params)
       if order.type == "limit" && response.env.status == 201 && response.env.body["id"]
-        @open_orders.add_order(order, response.env.body["id"])
+        order.id = response.env.body["id"]
+        @open_orders.add_order(order)
       end
       response
     end
@@ -104,7 +105,8 @@ module Arke::Exchange
       (total.to_f / max_limit.to_f).ceil.times do |page|
         response = get("peatio/market/orders", { market: "#{@market.downcase}", limit: max_limit, page: page + 1, state: "wait" }).body.each do |o|
           order = Arke::Order.new(o["market"].upcase, o["price"].to_f, o["remaining_volume"].to_f, o["side"].to_sym)
-          @open_orders.add_order(order, o["id"])
+          order.id = o["id"]
+          @open_orders.add_order(order)
         end
       end
     end
@@ -207,7 +209,8 @@ module Arke::Exchange
         case ord["state"]
         when "wait"
           order = Arke::Order.new(ord["market"].upcase, ord["price"].to_f, ord["remaining_volume"].to_f, side)
-          @open_orders.add_order(order, ord["id"])
+          order.id = ord["id"]
+          @open_orders.add_order(order)
         when "cancel"
           @open_orders.remove_order(ord["id"]) if @open_orders.exist?(side, ord["price"].to_f, ord["id"])
         end

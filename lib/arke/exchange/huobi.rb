@@ -85,7 +85,8 @@ module Arke::Exchange
         # The order type, possible values are: buy-market, sell-market, buy-limit, sell-limit, buy-ioc, sell-ioc, buy-limit-maker, sell-limit-maker
         type = o['type'].split('-').first.to_sym
         order = Arke::Order.new(o['symbol'].upcase, o['price'].to_f, remaining_amount, type)
-        @open_orders.add_order(order, o['id'])
+        order.id = o['id']
+        @open_orders.add_order(order)
       end
       @open_orders
     end

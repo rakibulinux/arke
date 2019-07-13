@@ -116,7 +116,8 @@ module Arke::Exchange
       @client.open_orders(symbol: @market).each do |o|
         remaining_volume = o["origQty"].to_f - o["executedQty"].to_f
         order = Arke::Order.new(o["symbol"], o["price"].to_f, remaining_volume, o["side"].downcase.to_sym)
-        @open_orders.add_order(order, o["orderId"])
+        order.id = o["orderId"]
+        @open_orders.add_order(order)
       end
       @open_orders
     end

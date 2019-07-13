@@ -232,7 +232,8 @@ module Arke::Exchange
       orders = authenticated_post("/v1/orders").body
       orders.select { |o| o['symbol'].upcase == @market && o['is_live'] == true }.each do |o|
         order = Arke::Order.new(o['symbol'].upcase, o['price'].to_f, o['remaining_amount'].to_f, o['side'].to_sym)
-        @open_orders.add_order(order, o['id'])
+        order.id = o['id']
+        @open_orders.add_order(order)
       end
       @open_orders
     end
