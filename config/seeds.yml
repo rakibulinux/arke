@@ -18,9 +18,9 @@ exchanges:
     rate: 1.0
 
   - name: bitfaker
-    url:  ""
-    rest: ""
-    ws:   ""
+    url:  "https://www.bitfaker.com"
+    rest: "https://api.bitfaker.com"
+    ws:   "wss://api.bitfaker.com"
     rate: 1.0
 
   - name: bitfinex
