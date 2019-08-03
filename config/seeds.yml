@@ -11,16 +11,16 @@ markets:
     quote_precision: 2
 
 exchanges:
-  - name: binance
-    url:  "https://www.binance.com"
-    rest: "https://api.binance.com"
-    ws:   "wss://api.binance.com"
-    rate: 1.0
-
   - name: bitfaker
     url:  "https://www.bitfaker.com"
     rest: "https://api.bitfaker.com"
     ws:   "wss://api.bitfaker.com"
+    rate: 1.0
+
+  - name: binance
+    url:  "https://www.binance.com"
+    rest: "https://api.binance.com"
+    ws:   "wss://api.binance.com"
     rate: 1.0
 
   - name: bitfinex
@@ -59,7 +59,7 @@ exchanges:
     ws:   "wss://real.okex.com:10442/ws/v3"
     rate: 1.0
 
-  - name: rubykube
+  - name: opendax
     url:  "https://www.devkube.com"
     rest: "https://www.devkube.com/api/v2/peatio"
     ws:   "wss://www.devkube.com"

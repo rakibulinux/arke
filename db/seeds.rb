@@ -31,17 +31,6 @@ YAML::load_file(Rails.root.join('config', 'seeds.yml')).tap do |seeds|
         market.update(market_params)
       end
     end
-
-    puts
   end
+  puts "End of seed"
 end
-
-# FIXME: make seed file for development
-## if Rails.env.development?
-##   User.create!(email: 'admin@barong.io', level: 3, uid: 'ID123456789') unless User.find_by(uid: 'ID123456789')
-## 
-##   source = Account.create!(user: User.first, exchange: Exchange.find_by(name: :bitfaker))
-##   target = Account.create!(user: User.first, exchange: Exchange.find_by(name: :rubykube))
-## 
-##   Strategy.create!(user: User.first, source: source, target: target, source_market: Market.first, target_market: Market.last, driver: :copy)
-## end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_07_06_160041) do
+ActiveRecord::Schema.define(version: 2019_08_03_182417) do
 
   create_table "accounts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
     t.bigint "user_id"
@@ -20,6 +20,13 @@ ActiveRecord::Schema.define(version: 2019_07_06_160041) do
     t.datetime "updated_at", null: false
     t.index ["exchange_id"], name: "index_accounts_on_exchange_id"
     t.index ["user_id"], name: "index_accounts_on_user_id"
+  end
+
+  create_table "accounts_robots", id: false, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "robot_id", null: false
+    t.string "tag"
+    t.index ["account_id", "robot_id"], name: "index_accounts_robots_on_account_id_and_robot_id"
   end
 
   create_table "balances", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
@@ -58,20 +65,15 @@ ActiveRecord::Schema.define(version: 2019_07_06_160041) do
     t.index ["exchange_id"], name: "index_markets_on_exchange_id"
   end
 
-  create_table "strategies", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  create_table "robots", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
     t.bigint "user_id"
-    t.bigint "source_market_id"
-    t.bigint "source_id"
-    t.bigint "target_market_id"
-    t.bigint "target_id"
     t.string "name"
-    t.string "driver"
-    t.integer "interval"
+    t.string "strategy"
     t.json "params"
     t.string "state"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["user_id"], name: "index_strategies_on_user_id"
+    t.index ["user_id"], name: "index_robots_on_user_id"
   end
 
   create_table "tickers", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
@@ -118,7 +120,7 @@ ActiveRecord::Schema.define(version: 2019_07_06_160041) do
   add_foreign_key "accounts", "users"
   add_foreign_key "balances", "accounts"
   add_foreign_key "markets", "exchanges"
-  add_foreign_key "strategies", "users"
+  add_foreign_key "robots", "users"
   add_foreign_key "tickers", "markets"
   add_foreign_key "trades", "accounts"
   add_foreign_key "trades", "markets"

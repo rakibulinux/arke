@@ -1,11 +1,8 @@
-class Strategy < ApplicationRecord
+class Robot < ApplicationRecord
   belongs_to :user
 
   #TODO link to credentials id
-  belongs_to :source, class_name: :Account
-  belongs_to :source_market, class_name: :Market
-  belongs_to :target, class_name: :Account
-  belongs_to :target_market, class_name: :Market
+  has_and_belongs_to_many :accounts
 
   def to_h
     {

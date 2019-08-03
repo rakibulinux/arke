@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe Api::V1::StrategiesController, type: :controller do
+RSpec.describe Api::V1::RobotsController, type: :controller do
   let(:user_params) { { email: 'email@test.com', uid: 'ID234234', level: 3, role: 'admin', state: 'active' } }
   let!(:user1) { create(:user, user_params) }
   let!(:user2) { create(:user) }
@@ -17,7 +17,7 @@ RSpec.describe Api::V1::StrategiesController, type: :controller do
   after(:all) { WebMock.enable! }
 
   describe 'GET #index' do
-    it 'returns user strategies' do
+    it 'returns user robots' do
       request.headers.merge! auth_header
       get :index, params: {}
       result = JSON.parse(response.body)
@@ -53,7 +53,7 @@ RSpec.describe Api::V1::StrategiesController, type: :controller do
 
         result = JSON.parse(response.body)
         expect(response.code).to eq '404'
-        expect(result['errors']).to eq(['strategies.doesnt_exist'])
+        expect(result['errors']).to eq(['robots.doesnt_exist'])
       end
 
       it 'returns error when strategy doesnt exist' do
@@ -61,7 +61,7 @@ RSpec.describe Api::V1::StrategiesController, type: :controller do
 
         result = JSON.parse(response.body)
         expect(response.code).to eq '404'
-        expect(result['errors']).to eq(['strategies.doesnt_exist'])
+        expect(result['errors']).to eq(['robots.doesnt_exist'])
       end
     end
 
@@ -86,7 +86,7 @@ RSpec.describe Api::V1::StrategiesController, type: :controller do
         it 'creates a new  user strategy' do
           expect {
             post :create, params: { strategy: valid_attributes }
-          }.to change { user1.strategies.count }.by(1)
+          }.to change { user1.robots.count }.by(1)
         end
 
         it 'renders a JSON response with the new user strategy' do
@@ -106,7 +106,7 @@ RSpec.describe Api::V1::StrategiesController, type: :controller do
 
           result = JSON.parse(response.body)
           expect(response.code).to eq '422'
-          expect(result['errors']).to eq(['strategies.create_failed'])
+          expect(result['errors']).to eq(['robots.create_failed'])
         end
       end
     end
@@ -142,7 +142,7 @@ RSpec.describe Api::V1::StrategiesController, type: :controller do
 
           result = JSON.parse(response.body)
           expect(response.code).to eq '422'
-          expect(result['errors']).to eq(['strategies.update_failed'])
+          expect(result['errors']).to eq(['robots.update_failed'])
         end
 
         it 'returns error when user strategy doesnt exist' do
@@ -150,7 +150,7 @@ RSpec.describe Api::V1::StrategiesController, type: :controller do
 
           result = JSON.parse(response.body)
           expect(response.code).to eq '404'
-          expect(result['errors']).to eq(['strategies.doesnt_exist'])
+          expect(result['errors']).to eq(['robots.doesnt_exist'])
         end
       end
     end
@@ -172,7 +172,7 @@ RSpec.describe Api::V1::StrategiesController, type: :controller do
       it 'destroys the requested strategy' do
         expect {
           delete :destroy, params: { id: strategy4.id }
-        }.to change(Strategy, :count).by(-1)
+        }.to change(Robot, :count).by(-1)
       end
 
       it 'returns error when strategy doesnt exist' do
@@ -180,7 +180,7 @@ RSpec.describe Api::V1::StrategiesController, type: :controller do
 
         result = JSON.parse(response.body)
         expect(response.code).to eq '404'
-        expect(result['errors']).to eq(['strategies.doesnt_exist'])
+        expect(result['errors']).to eq(['robots.doesnt_exist'])
       end
     end
 
