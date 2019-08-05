@@ -82,7 +82,7 @@ module Arke
             if response.respond_to?(:status) && response.status >= 300
               Log.warn "ID:#{id} Failed to create order #{order} status:#{response.status}(#{response.reason_phrase}) body:#{response.body}"
             end
-          rescue RuntimeError, Faraday::ParsingError
+          rescue StandardError
             Log.error "ID:#{id} #{$!}"
           end
         end
@@ -91,7 +91,7 @@ module Arke
           begin
             Arke::Log.info "ID:#{id} Canceling order: #{action.params}"
             action.destination.stop_order(action.params[:id])
-          rescue RuntimeError, Faraday::ParsingError
+          rescue StandardError
             Log.error "ID:#{id} #{$!}"
           end
         end
