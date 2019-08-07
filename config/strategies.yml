@@ -1,0 +1,73 @@
+log_level: INFO
+strategies:
+- id: 1
+  type: copy
+  debug: true
+  enabled: true
+  period: 30
+  params:
+    spread_bids: 0.003
+    spread_asks: 0.003
+    limit_asks_base: 0.05
+    limit_bids_base: 0.05
+    levels_size: 0.25
+    levels_count: 10
+    side: both
+    enable_orderback: false
+
+  target:
+    driver: rubykube
+    debug: false
+    market:
+      id: FTHUSD
+      base: fth
+      quote: usd
+      base_precision: 2
+      quote_precision: 2
+      min_ask_amount: 1.5
+      min_bid_amount: 1.5
+    host: "http://www.devkube.com"
+    ws: "ws://www.devkube.com"
+    key: "1e91304459024a43"
+    secret: "87b900c9de2c00c91689710f6184b12a"
+    delay: 1
+
+  sources:
+    - driver: binance
+      market:
+        id: ETHUSDT
+        base: ETH
+        quote: USDT
+        base_precision: 8
+        quote_precision: 8
+        min_order_back_amount: 1.5
+      host: "api.binance.com"
+      key:
+      secret:
+      delay: 1
+
+- id: 2
+  type: microtrades
+  debug: true
+  period: 5
+  period_random_delay: 90
+  params:
+    min_amount: 0.05
+    max_amount: 10
+    min_price: 100
+    max_price: 1000
+
+  target:
+    driver: rubykube
+    debug: false
+    market:
+      id: FTHUSD
+      base: fth
+      quote: usd
+      base_precision: 2
+      quote_precision: 2
+    host: "http://www.devkube.com"
+    ws: "ws://www.devkube.com"
+    key: "1e91304459024a43"
+    secret: "87b900c9de2c00c91689710f6184b12a"
+    delay: 0.01

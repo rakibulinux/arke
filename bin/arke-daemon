@@ -1,6 +1,23 @@
 #!/usr/bin/env ruby
-require File.expand_path('../../config/environment', __FILE__)
+# frozen_string_literal: true
+
+require File.expand_path("../config/environment", __dir__)
+
+require "optparse"
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: example.rb [options]"
+
+  opts.on("-fFILE", "--file=FILE", "Load config from a YAML file instead of database") do |file|
+    options[:file] = file
+  end
+end.parse!
 
 worker = StrategyWorker.new
-worker.load_db
+if options[:file]
+  worker.load_file(options[:file])
+else
+  worker.load_db
+end
 worker.run
