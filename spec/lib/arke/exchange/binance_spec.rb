@@ -1,22 +1,27 @@
 describe Arke::Exchange::Binance do
   include_context 'mocked binance'
 
+  let(:config) do
+    {
+      "market" => {
+        "id" => "ETHUSDT",
+        "base" => "ETH",
+        "quote" => "USDT",
+        "base_precision" => "4",
+        "quote_precision" => "4",
+      }
+    }
+  end
   let(:binance) do
     Arke::Exchange::Binance.new(
       {
         'host' => 'api.binance.com',
-        'market' => {
-          "id" => "ETHUSDT",
-          "base" => "ETH",
-          "quote" => "USDT",
-          "base_precision" => "4",
-          "quote_precision" => "4",
-        },
         'key' => 'Uwg8wqlxueiLCsbTXjlogviL8hdd60',
         'secret' => 'OwpadzSYOSkzweoJkjPrFeVgjOwOuxVHk8FXIlffdWw',
       }
     )
   end
+  before { binance.configure_market(config["market"]) }
 
   context 'ojbect initialization' do
     it 'is a sublass of Arke::Exchange::Base' do

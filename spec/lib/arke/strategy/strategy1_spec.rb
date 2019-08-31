@@ -1,7 +1,7 @@
 require "rails_helper"
 
 describe Arke::Strategy::Strategy1 do
-  let(:strategy) { Arke::Strategy::Strategy1.new([source], target, config, nil) }
+  let(:strategy) { Arke::Strategy::Strategy1.new([source], target, config, nil, nil) }
   let(:source) { Arke::Exchange.create(config["sources"].first) }
   let(:target) { Arke::Exchange.create(config["target"]) }
   let(:side) { "both" }
@@ -42,18 +42,14 @@ describe Arke::Strategy::Strategy1 do
     }
   end
 
-  let(:target_config) do
-    {
-      "driver" => "rubykube",
-      "host" => "http://www.example.com",
-      "key" => nil,
-      "secret" => nil,
-    }
-  end
-
   let(:target_orderbook) { strategy.call }
   let(:target_bids) { target_orderbook[:buy] }
   let(:target_asks) { target_orderbook[:sell] }
+
+  before do
+    target.configure_market(config["target"]["market"])
+    source.configure_market(config["sources"].first["market"])
+  end
 
   before(:each) do
     source.fetch_balances

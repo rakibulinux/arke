@@ -21,6 +21,8 @@ describe Arke::ActionScheduler do
   let(:order_sell) { Arke::Order.new(market, 1.1, 1, :sell, "limit", 10) }
   let(:order_sell2) { Arke::Order.new(market, 1.4, 1, :sell, "limit", 11) }
   let(:order_buy2) { Arke::Order.new(market, 1.4, 3, :buy, "limit", 12) }
+  before { target.configure_market(exchange_config["market"]) }
+
 
   context "current and desired orderbooks are empty" do
     it "creates no action" do

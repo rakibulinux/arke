@@ -8,7 +8,7 @@ module Arke::Strategy
     include Arke::Helpers::Splitter
     include Arke::Helpers::Spread
 
-    def initialize(sources, target, config, executor)
+    def initialize(sources, target, config, executor, reactor)
       super
       params = @config["params"] || {}
       @levels_size = params["levels_size"].to_f

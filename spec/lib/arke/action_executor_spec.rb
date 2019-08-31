@@ -12,15 +12,19 @@ describe Arke::ActionExecutor do
           "quote" => "USD",
           "min_ask_amount" => "0.01",
           "min_bid_amount" => "0.01",
+          "base_precision" => 6,
+          "quote_precision" => 2,
         },
         "delay" => delay,
       }
     }
   end
-  let(:action_executor) { Arke::ActionExecutor.new(config) }
   let(:target) { Arke::Exchange.create(config["target"]) }
   let(:market) { config["target"]["market"]['id'] }
+  let(:sources) { }
+  let(:action_executor) { Arke::ActionExecutor.new(config["id"], target, sources) }
   let(:actions) { [] }
+  before { target.configure_market(config["target"]["market"]) }
 
   context "actions are empty, delay 1 sec" do
     it "doesn't schedule an action" do

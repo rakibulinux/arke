@@ -2,6 +2,8 @@
 
 require "arke"
 
+#FIXME Delete worker
+
 class StrategyWorker
   attr_reader :config
 

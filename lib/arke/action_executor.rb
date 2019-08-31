@@ -6,13 +6,13 @@ module Arke
     attr_accessor :exchanges
     attr_reader :id
 
-    def initialize(config)
+    def initialize(id, target, sources)
       @exchanges = {}
-      @id = config["id"]
-      Array(config["sources"]).each do |source|
-        @exchanges[source["driver"].to_sym] = { delay: source["delay"].to_f }
+      @id = id
+      Array(sources).each do |source|
+        @exchanges[source.driver.to_sym] = { delay: source.delay.to_f }
       end
-      @exchanges[config["target"]["driver"].to_sym] = { delay: config["target"]["delay"].to_f }
+      @exchanges[target.driver.to_sym] = { delay: target.delay.to_f }
       create_queues
       self
     end

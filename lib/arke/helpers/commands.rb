@@ -5,14 +5,6 @@ module Arke::Helpers
       @conf ||= YAML.load_file(config)
     end
 
-    def load_configuration
-      strategy_file = File.join(::Rails.root, "config/strategies.yml")
-      raise "File #{strategy_file} not found" unless File.exists?(strategy_file)
-      config = YAML.load_file(strategy_file)
-
-      Arke::Configuration.define { |c| c.strategy = config['strategy'] }
-    end
-
     def strategies_configs
       if conf["strategies"] && conf["strategies"].is_a?(Array)
         strategies = conf["strategies"]
@@ -42,9 +34,19 @@ module Arke::Helpers
       strategies
     end
 
+    def accounts_configs
+      if conf["accounts"] && conf["accounts"].is_a?(Array)
+        accounts = conf["accounts"]
+      else
+        accounts = []
+      end
+      accounts
+    end
+
     def safe_yield(blk, *args)
       begin
-        blk.call(*args)
+        account = accounts_configs.select { |a| a["id"] == args.first["account_id"] }.first
+        blk.call(*args, account)
       rescue StandardError => e
         Arke::Log.error "#{e}: #{e.backtrace.join("\n")}"
       end

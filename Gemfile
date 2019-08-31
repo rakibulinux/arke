@@ -15,8 +15,8 @@ gem 'puma', '~> 3.11'
 # Use Redis adapter to run Action Cable in production
 gem 'redis', '~> 4.0'
 
+gem 'clamp', '~> 1.3.1'
 gem 'vault-rails', '~> 0.5.0'
-
 gem 'rbtree', '~> 0.4.2'
 gem 'colorize', '~> 0.8.1'
 gem 'faraday', '~> 0.15.4'

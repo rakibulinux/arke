@@ -7,7 +7,6 @@ module Arke::Exchange
       super
       @ws_url = "wss://stream.binance.com:9443/ws/#{@market}@depth"
       @client = ::Binance::Client::REST.new(api_key: @api_key, secret_key: @secret, adapter: @adapter)
-      @min_notional = get_min_notional
     end
 
     def start
@@ -73,6 +72,7 @@ module Arke::Exchange
     end
 
     def get_amount(order)
+      @min_notional = get_min_notional unless @min_notional
       percentage = 0.2
       notional = order.price * order.amount
       if notional > @min_notional

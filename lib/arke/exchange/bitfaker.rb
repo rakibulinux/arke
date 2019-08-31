@@ -5,12 +5,16 @@ module Arke::Exchange
 
     def initialize(opts)
       super
-      @path = opts["orderbook"] || File.join(Rails.root, "spec/support/fixtures/bitfinex.yaml")
+      @path = opts["orderbook"] || File.join("./spec/support/fixtures/bitfinex.yaml")
       @orderbook = Arke::Orderbook::Orderbook.new(@market)
     end
 
     def start
       load_orderbook
+    end
+
+    def cancel_all_orders
+      puts "order cancelled"
     end
 
     def create_order(order)
@@ -24,18 +28,39 @@ module Arke::Exchange
     def get_balances
       [
         {
-          "currency" => "BTC",
+          "currency" => "btc",
           "total" => 4723846.89208129,
           "free" => 4723846.89208129,
           "locked" => 0.0,
         },
         {
-          "currency" => "USD",
+          "currency" => "usd",
           "total" => 4763468.68006011,
           "free" => 4763368.68006011,
           "locked" => 100.0,
         }
       ]
+    end
+
+    def get_market_infos
+      {
+        "id" => "btcusd",
+        "name" => "BTC/USD",
+        "base_unit" => "btc",
+        "quote_unit" => "usd",
+        "ask_fee" => "0.0002",
+        "bid_fee" => "0.0002",
+        "min_price" => "0.0",
+        "max_price" => "0.0",
+        "min_amount" => "0.00001",
+        "amount_precision" => 6,
+        "price_precision" => 6,
+        "state" => "enabled",
+      }
+    end
+
+    def update_orderbook
+      load_orderbook
     end
 
     def ping; end

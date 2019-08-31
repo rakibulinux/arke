@@ -4,7 +4,7 @@ module Arke::Exchange
   class Base
     include ::Arke::Helpers::Precision
 
-    attr_reader :delay, :open_orders, :market, :driver, :opts
+    attr_reader :delay, :open_orders, :market, :driver, :opts, :account_id
     attr_reader :balances, :base, :quote, :base_precision, :quote_precision
     attr_reader :min_ask_amount, :min_bid_amount, :min_order_back_amount
     attr_accessor :timer
@@ -14,26 +14,30 @@ module Arke::Exchange
     DefaultQuotePrecision = 8
 
     def initialize(opts)
-      @market = opts["market"]["id"]
-      @base = opts["market"]["base"]
-      @quote = opts["market"]["quote"]
-      @base_precision = opts["market"]["base_precision"] || DefaultBasePrecision
-      @quote_precision = opts["market"]["quote_precision"] || DefaultQuotePrecision
-      @min_ask_amount = opts["market"]["min_ask_amount"]
-      @min_bid_amount = opts["market"]["min_bid_amount"]
-      @min_order_back_amount = opts["market"]["min_order_back_amount"].to_f
       @driver = opts["driver"]
       @api_key = opts["key"]
       @secret = opts["secret"]
+      @account_id = opts["id"]
       @delay = (opts["delay"] || DefaultDelay).to_f
       @adapter = opts[:faraday_adapter] || :em_synchrony
       @opts = opts
       @balances = nil
       @timer = nil
-      @open_orders = Arke::Orderbook::OpenOrders.new(@market)
-      @orderbook = Arke::Orderbook::Orderbook.new(@market)
       @trades_cb = []
       load_platform_markets(opts["driver"]) if opts[:load_platform_markets]
+    end
+
+    def configure_market(market)
+      @market = market["id"]
+      @base = market["base"]
+      @quote = market["quote"]
+      @base_precision = market["base_precision"] || DefaultBasePrecision
+      @quote_precision = market["quote_precision"] || DefaultQuotePrecision
+      @min_ask_amount = market["min_ask_amount"]
+      @min_bid_amount = market["min_bid_amount"]
+      @open_orders = Arke::Orderbook::OpenOrders.new(@market)
+      @orderbook = Arke::Orderbook::Orderbook.new(@market)
+      @min_order_back_amount = market["min_order_back_amount"].to_f
     end
 
     def info(msg)

@@ -1,7 +1,7 @@
 require "rails_helper"
 
 describe Arke::Strategy::Fixedprice do
-  let(:strategy) { Arke::Strategy::Fixedprice.new([], target, config, nil) }
+  let(:strategy) { Arke::Strategy::Fixedprice.new([], target, config, nil, nil) }
   let(:target) { Arke::Exchange.create(config["target"]) }
   let(:price) { 123 }
   let(:random_delta) { 0 }
@@ -52,6 +52,7 @@ describe Arke::Strategy::Fixedprice do
   before(:each) do
     target.fetch_balances
   end
+  before { target.configure_market(config["target"]["market"]) }
 
   context "running both sides" do
     let(:side) { "both" }

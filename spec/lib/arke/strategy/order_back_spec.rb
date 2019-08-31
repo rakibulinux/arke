@@ -3,9 +3,10 @@ require "rails_helper"
 describe Arke::Strategy::Example1 do
   include_context "mocked rubykube"
 
-  let(:strategy) { Arke::Strategy::Example1.new([source], target, config, executor) }
+  let(:strategy) { Arke::Strategy::Example1.new([source], target, config, executor, nil) }
   let(:config) do
     {
+      "id" => 1,
       "type" => "strategy1",
       "params" => {
         "spread_bids" => 0.01,
@@ -45,12 +46,14 @@ describe Arke::Strategy::Example1 do
     }
   end
 
-  let(:executor) { Arke::ActionExecutor.new(config) }
 
   let(:target) { Arke::Exchange::Rubykube.new(config["target"]) }
   let(:source) { Arke::Exchange::Rubykube.new(config["sources"].first) }
 
   let(:target_orderbook) { strategy.call }
+  before { target.configure_market(config["target"]["market"]) }
+  before { source.configure_market(config["sources"].first["market"]) }
+  let(:executor) { Arke::ActionExecutor.new(config["id"], target, source) }
 
   context "Creates an order back on trade event" do
     let(:order) { Arke::Order.new("ethusd", 1.21, 2.14, :buy) }

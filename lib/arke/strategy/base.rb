@@ -9,7 +9,7 @@ module Arke::Strategy
     DefaultOrderbackTimer = 0.01
     DefaultPeriod = 10
 
-    def initialize(sources, target, config, executor)
+    def initialize(sources, target, config, executor, reactor)
       @config = config
       @id = @config["id"]
       @volume_ratio = config["volume_ratio"]
@@ -27,6 +27,7 @@ module Arke::Strategy
       @executor = executor
       @sources = sources
       @target = target
+      @reactor = reactor
       register_callbacks
       Arke::Log.info "ID:#{id} ----====[ #{self.class.to_s.split('::').last} Strategy ]====----"
     end

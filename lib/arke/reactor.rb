@@ -1,3 +1,8 @@
+require "ostruct"
+require "faraday"
+require "faraday_middleware"
+require "em-synchrony"
+require "em-synchrony/em-http"
 
 require "arke/exchange"
 require "arke/strategy"
@@ -5,10 +10,13 @@ require "arke/strategy"
 module Arke
   # Main event ractor loop
   class Reactor
+    class StrategyNotFound < StandardError; end
+
     # * @shutdown is a flag which controls strategy execution
-    def initialize(configs)
+    def initialize(strategies_configs, accounts_configs)
       @shutdown = false
-      init_strategies(configs)
+      init_accounts(accounts_configs)
+      init_strategies(strategies_configs)
     end
 
     def report_fatal(e, id)
@@ -16,15 +24,29 @@ module Arke
       Arke::Log.fatal "ID:#{id} Strategy stopped"
     end
 
+    def init_accounts(accounts_configs)
+      @accounts = {}
+      accounts_configs.each do |config|
+        @accounts[config["id"]] = Arke::Exchange.create(config)
+      end
+    end
+
+    def build_exchange_with_market(config)
+      ex = @accounts[config["account_id"]]
+      raise "Account not found id: #{config["account_id"]}" unless ex
+      new_ex = ex.clone
+      new_ex.configure_market(config["market"])
+      new_ex
+    end
+
     def init_strategies(strategies_configs)
+      update_balances
       @strategies = strategies_configs.map do |config|
         begin
-          executor = ActionExecutor.new(config)
-          sources = Array(config["sources"]).map do |ex_config|
-            Arke::Exchange.create(ex_config)
-          end
-          target = config["target"] ? Arke::Exchange.create(config["target"]) : nil
-          strategy = Arke::Strategy.create(sources, target, config, executor)
+          sources = Array(config["sources"]).map { |config| build_exchange_with_market(config) }
+          target = config["target"] ? build_exchange_with_market(config["target"]) : nil
+          executor = ActionExecutor.new(config["id"], target, sources)
+	  strategy = Arke::Strategy.create(sources, target, config, executor, self)
           OpenStruct.new({
             id: config["id"],
             target: target,
@@ -40,11 +62,19 @@ module Arke
       end.compact
     end
 
+    def find_strategy(id)
+      strategy = @strategies.find{|s| s.id == id}
+      raise StrategyNotFound.new("with id: #{id}") unless strategy
+      strategy
+    end
+
     def run
       EM.synchrony do
         trap("INT") { stop }
 
-        Arke::Log.info("Starting Reactor")
+        Fiber.new do
+          EM::Synchrony::add_periodic_timer(23) { update_balances }
+        end.resume
 
         @strategies.each do |strategy|
           Fiber.new do
@@ -84,24 +114,24 @@ module Arke
 
     def tick(strategy)
       begin
-        update_balances(strategy)
         update_orderbooks(strategy)
         execute_strategy(strategy)
-      rescue StandardError
-        Log.error "ID:#{strategy.id} #{$!}"
+      rescue StandardError => e
+        Log.error "ID:#{strategy.id} #{e}"
+        Log.error "#{e}: #{e.backtrace.join("\n")}"
       end
     end
 
-    def update_balances(strategy)
-      (strategy.sources + Array(strategy.target)).each do |ex|
+    def update_balances
+      @accounts.values.each do |ex|
         unless ex.respond_to?(:get_balances)
-          raise "ID:#{strategy.id} Exchange #{name.driver} doesn't support get_balances".red
+          raise "ACCOUNT_ID:#{ex.account_id} Exchange #{ex.driver} doesn't support get_balances".red
         end
         begin
-          Log.info "ID:#{strategy.id} Fetching balances on #{ex.driver}"
+          Log.info "ACCOUNT_ID:#{ex.account_id} Fetching balances on #{ex.driver}"
           ex.fetch_balances
         rescue StandardError => e
-          Log.error("ID:#{strategy.id} Fetching balances on #{ex.driver} failed")
+          Log.error("ACCOUNT_ID:#{ex.account_id} Fetching balances on #{ex.driver} failed")
         end
       end
     end

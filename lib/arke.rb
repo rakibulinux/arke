@@ -2,20 +2,14 @@ module Arke
   Trade = Struct.new(:market, :type, :volume, :price, :order_id)
 end
 
-require "json"
-require "yaml"
+require "clamp"
 require "rbtree"
+require "json"
 require "openssl"
-require "ostruct"
-require "colorize"
-
-require "faraday"
-require "faraday_middleware"
-
-require "em-synchrony"
-require "em-synchrony/em-http"
-
 require "faye/websocket"
+require "em-synchrony"
+require "yaml"
+require "colorize"
 
 require "binance"
 require "bitx"
@@ -57,3 +51,10 @@ require "arke/exchange/kraken"
 require "arke/exchange/luno"
 require "arke/exchange/okex"
 require "arke/exchange/rubykube"
+
+require "arke/command"
+require "arke/command/console"
+require "arke/command/show"
+require "arke/command/start"
+require "arke/command/version"
+require "arke/command/root"

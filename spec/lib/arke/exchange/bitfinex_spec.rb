@@ -18,6 +18,7 @@ describe Arke::Exchange::Bitfinex do
   end
   let(:strategy) { Arke::Strategy::Copy.new(config) }
   let(:bitfinex) { Arke::Exchange::Bitfinex.new(bitfinex_config) }
+  before { bitfinex.configure_market(bitfinex_config["market"]) }
 
   context 'Bitfinex class' do
     let(:data_create) { [1, 10, 20] }

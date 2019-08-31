@@ -6,8 +6,8 @@ module Arke
   module Strategy
     # Fabric method, creates proper Exchange instance
     # * takes +config+ (hash) and passes to +Strategy+ initializer
-    def self.create(sources, target, config, executor)
-      strategy_class(config["type"]).new(sources, target, config, executor)
+    def self.create(sources, target, config, executor, reactor)
+      strategy_class(config["type"]).new(sources, target, config, executor, reactor)
     end
 
     # Takes +type+ - +String+

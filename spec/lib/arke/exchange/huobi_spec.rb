@@ -8,17 +8,22 @@ describe Arke::Exchange::Huobi do
     Arke::Exchange::Huobi.new(
       {
         'host' => 'api.huobi.pro',
-        'market' => {
-          "id" => "ETHUSDT",
-          "base" => "ETH",
-          "quote" => "USDT",
-        },
         'key' => 'Uwg8wqlxueiLCsbTXjlogviL8hdd60',
         'secret' => 'OwpadzSYOSkzweoJkjPrFeVgjOwOuxVHk8FXIlffdWw',
         :faraday_adapter => faraday_adapter,
       }
     )
   end
+  let(:config) do
+    {
+      'market' => {
+        "id" => "ETHUSDT",
+        "base" => "ETH",
+        "quote" => "USDT",
+      }
+    }
+  end
+  before { huobi.configure_market(config["market"]) }
 
   context 'ojbect initialization' do
     it 'is a sublass of Arke::Exchange::Base' do

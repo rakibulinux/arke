@@ -1,34 +1,27 @@
+accounts:
+- id: 1
+  driver: bitfaker
+  host: "http://www.devkube.com"
+  key: ""
+  secret: ""
+- id: 2
+  driver: bitfaker
+  market: 'ETHUSD'
+  host: "api.bitfinex.com"
+  key: ""
+  secret: ""
+strategies:
 - type: copy
   target:
-    driver: bitfaker
+    account_id: 1
     market: 'ETHUSD'
-    host: "http://www.devkube.com"
-    key: ""
-    secret: ""
-    rate_limit: 0.2
-    delay: 0.5
   sources:
-    - driver: bitfaker
+    - account_id: 2
       market: 'ETHUSD'
-      host: "api.bitfinex.com"
-      key: ""
-      secret: ""
-      rate_limit: 0.2
-      delay: 0.5
 - type: copy
   target:
-    driver: bitfaker
+    account_id: 1
     market: 'BTCUSD'
-    host: "http://www.devkube.com"
-    key: ""
-    secret: ""
-    rate_limit: 0.2
-    delay: 0.5
   sources:
-    - driver: bitfaker
+    - account_id: 2
       market: 'BTCUSD'
-      host: "api.bitfinex.com"
-      key: ""
-      secret: ""
-      rate_limit: 0.2
-      delay: 0.5

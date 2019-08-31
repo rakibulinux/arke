@@ -20,6 +20,7 @@ describe Arke::Exchange::Rubykube do
   let(:strategy) { Arke::Strategy::Copy.new(strategy_config) }
   let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
   let(:rubykube) { Arke::Exchange::Rubykube.new(exchange_config) }
+  before { rubykube.configure_market(exchange_config["market"]) }
 
   context "rubykube#create_order" do
     it "sets proper url when create order" do

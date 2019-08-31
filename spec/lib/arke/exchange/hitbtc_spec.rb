@@ -4,16 +4,21 @@ describe Arke::Exchange::Hitbtc do
     Arke::Exchange::Hitbtc.new(
       {
         "host" => "api.hitbtc.com",
-        "market" => {
-          "id" => "ETHUSD",
-          "base" => "ETH",
-          "quote" => "USD",
-        },
         "key" => "abcdefghijklm",
         "secret" => "skhfksjhgksdjhfksjdfkjsdfksjhdkfsj",
       }
     )
   end
+  let(:config) do
+    {
+      "market" => {
+        "id" => "ETHUSD",
+        "base" => "ETH",
+        "quote" => "USD",
+      }
+    }
+  end
+  before { hitbtc.configure_market(config["market"]) }
 
   context "get_balances" do
     it "fetchs the account balance in arke format" do

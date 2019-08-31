@@ -7,7 +7,10 @@ module Arke::Exchange
 
     def initialize(config)
       super
-      @ws_url = "#{config["ws"]}/api/v2/ranger/private/?stream=order&stream=trade"
+      @peatio_route = config["peatio_route"] || "peatio"
+      @barong_route = config["barong_route"] || "barong"
+      @ranger_route = config["ranger_route"] || "ranger"
+      @ws_url = "#{config["ws"]}/api/v2/#{@ranger_route}/private/?stream=order&stream=trade"
       @connection = Faraday.new(:url => "#{config["host"]}/api/v2") do |builder|
         builder.response :json
         builder.response :logger if opts["debug"]
@@ -37,12 +40,12 @@ module Arke::Exchange
 
     # Ping the api
     def ping
-      @connection.get "/barong/identity/ping"
+      @connection.get "/#{barong_route}/identity/ping"
     end
 
     def cancel_all_orders
       response = post(
-        'peatio/market/orders/cancel',
+        "#{@peatio_route}/market/orders/cancel",
         { market: @market.downcase }
       )
       @open_orders.clear if response.env.status == 201
@@ -59,7 +62,7 @@ module Arke::Exchange
         price: order.price,
       }
       params.delete(:price) if order.type == "market"
-      response = post("peatio/market/orders", params)
+      response = post("#{@peatio_route}/market/orders", params)
       if order.type == "limit" && response.env.status == 201 && response.env.body["id"]
         order.id = response.env.body["id"]
         @open_orders.add_order(order)
@@ -71,7 +74,7 @@ module Arke::Exchange
     # * cancels +order+ via RestApi
     def stop_order(id)
       response = post(
-        "peatio/market/orders/#{id}/cancel"
+        "#{@peatio_route}/market/orders/#{id}/cancel"
       )
       @open_orders.remove_order(id)
 
@@ -79,7 +82,7 @@ module Arke::Exchange
     end
 
     def get_balances
-      response = get("peatio/account/balances")
+      response = get("#{@peatio_route}/account/balances")
       raise "#{response.body}" if response.status != 200
       response.body.map do |data|
         {
@@ -92,18 +95,18 @@ module Arke::Exchange
     end
 
     def currencies
-      get("peatio/public/currencies").body
+      get("#{@peatio_route}/public/currencies").body
     end
 
     def get_deposit_address(currency)
-      get("peatio/account/deposit_address/#{currency}").body
+      get("#{@peatio_route}/account/deposit_address/#{currency}").body
     end
 
     def fetch_openorders
       max_limit = 1000
-      total = get("peatio/market/orders", { market: "#{@market.downcase}", limit: 1, page: 1, state: "wait" }).headers["Total"]
+      total = get("#{@peatio_route}/market/orders", { market: "#{@market.downcase}", limit: 1, page: 1, state: "wait" }).headers["Total"]
       (total.to_f / max_limit.to_f).ceil.times do |page|
-        response = get("peatio/market/orders", { market: "#{@market.downcase}", limit: max_limit, page: page + 1, state: "wait" }).body.each do |o|
+        response = get("#{@peatio_route}/market/orders", { market: "#{@market.downcase}", limit: max_limit, page: page + 1, state: "wait" }).body.each do |o|
           order = Arke::Order.new(o["market"].upcase, o["price"].to_f, o["remaining_volume"].to_f, o["side"].to_sym)
           order.id = o["id"]
           @open_orders.add_order(order)
@@ -123,7 +126,7 @@ module Arke::Exchange
     def update_orderbook
       orderbook = Arke::Orderbook::Orderbook.new(@market)
       limit = @opts["limit"] || 1000
-      snapshot = @connection.get("peatio/public/markets/#{@market.downcase}/depth", { limit: limit }).body
+      snapshot = @connection.get("#{@peatio_route}/public/markets/#{@market.downcase}/depth", { limit: limit }).body
       Array(snapshot["bids"]).each do |order|
         orderbook.update(
           build_order(order, :buy)
@@ -138,8 +141,8 @@ module Arke::Exchange
     end
 
     def get_market_infos
-      response = @connection.get("peatio/public/markets").body
-      infos = response.select { |m| m['id'] == @market.downcase }.first
+      response = @connection.get("#{@peatio_route}/public/markets").body
+      infos = response.select { |m| m["id"] == @market.downcase }.first
       raise "Market #{@market} not found" unless infos
       infos
     end

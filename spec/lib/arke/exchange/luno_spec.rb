@@ -3,16 +3,21 @@ describe Arke::Exchange::Luno do
   let(:luno) do
     Arke::Exchange::Luno.new(
       {
-        "market" => {
-          "id" => "XBTZAR",
-          "base" => "XBT",
-          "quote" => "ZAR",
-        },
         "key" => "abcdefghijklm",
         "secret" => "skhfksjhgksdjhfksjdfkjsdfksjhdkfsj",
       }
     )
   end
+  let(:config) do
+    {
+    "market" => {
+      "id" => "XBTZAR",
+      "base" => "XBT",
+      "quote" => "ZAR",
+      }
+    }
+  end
+  before { luno.configure_market(config["market"]) }
 
   context "get_balances" do
     it "fetchs the account balance in arke format" do
