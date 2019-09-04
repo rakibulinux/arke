@@ -16,25 +16,15 @@ steps:
       - rspec spec/lib/arke
 
   - name: Bump and tag
-    image: ruby:2.6.3
+    image: rubykube/robox:1.0.1
     environment:
-      DATABASE_HOST: database
-      BOT_USERNAME: kite-bot
-      BOT_NAME: Kite Bot
+      BOT_NAME: Kite
       BOT_EMAIL: kite-bot@heliostech.fr
+      BOT_USERNAME: kite-bot
       GITHUB_API_KEY:
         from_secret: kite_bot_key
     commands:
-      - git config --global user.name "Kite Bot"
-      - git config --global user.email "kite-bot@heliostech.fr"
-      - git remote add authenticated-origin https://kite-bot:$GITHUB_API_KEY@github.com/${DRONE_REPO}
-      - git fetch authenticated-origin
-      - export SEMVER=$(cat VERSION)
-      - bump patch --commit-message " Release $SEMVER [ci skip]"
-      - git tag $(cat VERSION)
-      - git push authenticated-origin master
-      - git push --tags authenticated-origin
-      - git describe --tags $(git rev-list --tags --max-count=1) > .tags
+      - push.sh
     when:
       branch:
         - master
