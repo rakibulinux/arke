@@ -28,13 +28,13 @@ module Arke::Exchange
     def get_balances
       [
         {
-          "currency" => "btc",
+          "currency" => "BTC",
           "total" => 4723846.89208129,
           "free" => 4723846.89208129,
           "locked" => 0.0,
         },
         {
-          "currency" => "usd",
+          "currency" => "USD",
           "total" => 4763468.68006011,
           "free" => 4763368.68006011,
           "locked" => 100.0,
@@ -46,8 +46,8 @@ module Arke::Exchange
       {
         "id" => "btcusd",
         "name" => "BTC/USD",
-        "base_unit" => "btc",
-        "quote_unit" => "usd",
+        "base_unit" => "BTC",
+        "quote_unit" => "USD",
         "ask_fee" => "0.0002",
         "bid_fee" => "0.0002",
         "min_price" => "0.0",

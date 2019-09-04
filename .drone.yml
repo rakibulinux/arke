@@ -3,16 +3,6 @@ kind: pipeline
 name: default
 
 steps:
-  - name: Configure Vault
-    image: vault:0.11.4
-    commands:
-      - vault secrets disable secret
-      - vault secrets enable -path=secret -version=1 kv
-    environment:
-      VAULT_TOKEN: changeme
-      VAULT_DEV_ROOT_TOKEN_ID: changeme
-      VAULT_ADDR: http://vault:8200
-
   - name: Run rspec
     image: ruby:2.6.3
     environment:
@@ -22,8 +12,54 @@ steps:
     commands:
       - gem update bundler
       - bundle --jobs $(nproc)
-      - bundle exec rake db:drop db:create db:migrate
-      - bundle exec rspec
+      - rake db:create db:migrate
+      - rspec spec/lib/arke
+
+  - name: Bump and tag
+    image: ruby:2.6.3
+    environment:
+      DATABASE_HOST: database
+      BOT_USERNAME: kite-bot
+      BOT_NAME: Kite Bot
+      BOT_EMAIL: kite-bot@heliostech.fr
+      GITHUB_API_KEY:
+        from_secret: kite_bot_key
+    commands:
+      - git config --global user.name "Kite Bot"
+      - git config --global user.email "kite-bot@heliostech.fr"
+      - git remote add authenticated-origin https://kite-bot:$GITHUB_API_KEY@github.com/${DRONE_REPO}
+      - git fetch authenticated-origin
+      - export SEMVER=$(cat VERSION)
+      - bump patch --commit-message " Release $SEMVER [ci skip]"
+      - git tag $(cat VERSION)
+      - git push authenticated-origin master
+      - git push --tags authenticated-origin
+      - git describe --tags $(git rev-list --tags --max-count=1) > .tags
+    when:
+      branch:
+        - master
+
+  - name: "First Docker build and push"
+    image: plugins/gcr
+    settings:
+      repo:
+        from_secret: gcr_repo_first
+      json_key:
+        from_secret: gcr_creds_base64_first
+    when:
+      branch:
+        - master
+
+  - name: "Second Docker build and push"
+    image: plugins/gcr
+    settings:
+      repo:
+        from_secret: gcr_repo_second
+      json_key:
+        from_secret: gcr_creds_base64_second
+    when:
+      branch:
+        - master
 
 services:
 - name: database
@@ -32,6 +68,7 @@ services:
     - 3306
   environment:
     MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+
 - name: vault
   image: vault:0.11.4
   ports:

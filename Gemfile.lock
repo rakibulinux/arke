@@ -61,6 +61,7 @@ GEM
     bootsnap (1.4.4)
       msgpack (~> 1.0)
     builder (3.2.3)
+    bump (0.8.0)
     bunny (2.14.2)
       amq-protocol (~> 2.3, >= 2.3.0)
     byebug (11.0.1)
@@ -249,6 +250,7 @@ DEPENDENCIES
   binance (~> 1.2)
   bitx (~> 0.2.2)
   bootsnap (>= 1.1.0)
+  bump (~> 0.8)
   byebug
   clamp (~> 1.3.1)
   colorize (~> 0.8.1)
@@ -268,7 +270,7 @@ DEPENDENCIES
   rbtree (~> 0.4.2)
   redis (~> 4.0)
   rspec-rails (~> 3.8)
-  simplecov (~> 0.17.0)
+  simplecov
   spring
   spring-watcher-listen (~> 2.0.0)
   vault-rails (~> 0.5.0)
