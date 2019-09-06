@@ -51,6 +51,19 @@ steps:
       branch:
         - master
 
+  - name: "Push image to Quay.io"
+    image: plugins/docker
+    settings:
+      username:
+        from_secret: quay_username
+      password:
+        from_secret: quay_password
+      repo: quay.io/openware/arke
+      registry: quay.io
+    when:
+      branch:
+        - master
+
 services:
 - name: database
   image: mariadb
