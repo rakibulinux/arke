@@ -39,27 +39,34 @@ module Arke
       new_ex
     end
 
+    def register_strategy(strategy, id, sources, target, executor, debug = false)
+      strategy_struct = OpenStruct.new({
+        id: id,
+        target: target,
+        sources: sources,
+        executor: executor,
+        strategy: strategy,
+        debug: debug,
+      })
+      @strategies << strategy_struct
+    end
+
     def init_strategies(strategies_configs)
       update_balances
-      @strategies = strategies_configs.map do |config|
+      @strategies = []
+
+      strategies_configs.each do |config|
         begin
           sources = Array(config["sources"]).map { |config| build_exchange_with_market(config) }
           target = config["target"] ? build_exchange_with_market(config["target"]) : nil
           executor = ActionExecutor.new(config["id"], target, sources)
-	  strategy = Arke::Strategy.create(sources, target, config, executor, self)
-          OpenStruct.new({
-            id: config["id"],
-            target: target,
-            sources: sources,
-            executor: executor,
-            strategy: strategy,
-            debug: config["debug"] ? true : false,
-          })
+          strategy = Arke::Strategy.create(sources, target, config, executor, self)
+          register_strategy(strategy, config["id"], sources, target, executor, config["debug"] ? true : false)
         rescue StandardError => e
           report_fatal(e, config["id"])
           nil
         end
-      end.compact
+      end
     end
 
     def find_strategy(id)
