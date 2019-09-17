@@ -14,7 +14,6 @@ module Arke
       end
       @exchanges[target.driver.to_sym] = { delay: target.delay.to_f }
       create_queues
-      self
     end
 
     def start

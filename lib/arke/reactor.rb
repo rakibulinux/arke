@@ -34,6 +34,7 @@ module Arke
     def build_exchange_with_market(config)
       ex = @accounts[config["account_id"]]
       raise "Account not found id: #{config["account_id"]}" unless ex
+
       new_ex = ex.clone
       new_ex.configure_market(config["market"])
       new_ex

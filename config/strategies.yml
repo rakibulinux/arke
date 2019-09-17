@@ -18,7 +18,7 @@ accounts:
 
 strategies:
 - id: 1
-  type: copy
+  type: strategy2
   debug: true
   enabled: true
   period: 10
@@ -35,8 +35,8 @@ strategies:
     account_id: 1
     market:
       id: BTCUSD
-      base: btc
-      quote: usd
+      base: BTC
+      quote: USD
       base_precision: 2
       quote_precision: 2
       min_ask_amount: 1.5
@@ -66,8 +66,8 @@ strategies:
       account_id: 1
       market:
         id: BTCUSD
-        base: btc
-        quote: usd
+        base: BTC
+        quote: USD
         base_precision: 2
         quote_precision: 2
         min_ask_amount: 1.5

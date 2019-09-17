@@ -15,7 +15,8 @@ module Arke::Strategy
       @volume_ratio = config["volume_ratio"]
       @spread = config["spread"]
       @precision = config["precision"]
-      @debug = !!config["debug"]
+      @debug = config["debug"] ? true : false
+      @enabled = config["enabled"] ? true : false
       @debug_infos = {}
       @period = (config["period"] || DefaultPeriod).to_f
       @period_random_delay = config["period_random_delay"]
