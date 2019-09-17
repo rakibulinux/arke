@@ -55,7 +55,9 @@ module Arke::Exchange
 
     # Is executed in exchange when trade event is pushed to the websocket
     def notify_trade(trade, order)
-      @trades_cb.each {|cb| cb.call(trade, order) }
+      if trade.market == @market.downcase
+        @trades_cb.each { |cb| cb.call(trade, order) }
+      end
     end
 
     def start
