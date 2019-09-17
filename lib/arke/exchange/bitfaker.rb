@@ -7,6 +7,7 @@ module Arke::Exchange
       super
       @path = opts["orderbook"] || File.join("./spec/support/fixtures/bitfinex.yaml")
       @orderbook = Arke::Orderbook::Orderbook.new(@market)
+      @open_orders = Arke::Orderbook::OpenOrders.new(@market)
     end
 
     def start
@@ -79,6 +80,7 @@ module Arke::Exchange
       side = (amount.negative?) ? :sell : :buy
       amount = amount.abs
       @orderbook.update(Arke::Order.new(@market, price, amount, side))
+      @open_orders.add_order(Arke::Order.new(@market, price, amount, side, 'limit', _id))
     end
   end
 end

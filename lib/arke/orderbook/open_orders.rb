@@ -38,6 +38,14 @@ module Arke::Orderbook
       raise "update disabled for OpenOrders"
     end
 
+    def total_side_amount(side)
+      amount = 0
+      @book[side].each_value do |o|
+        amount += o.values.first.amount
+      end
+      amount
+    end
+
     def remove_order(id)
       cleanup = []
       @book[:sell].each { |k, v| v.delete(id); cleanup << [:sell, k] if v.empty? }

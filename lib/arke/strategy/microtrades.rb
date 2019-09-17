@@ -39,20 +39,24 @@ module Arke::Strategy
         market_infos["min_bid_amount"],
         target.min_ask_amount,
         target.min_bid_amount,
-      ].map(&:to_f).select{|a| a != 0}.min
+      ].map(&:to_f).reject(&:zero?).min
     end
 
     def get_amount(side)
       side_min_value = (side == :sell) ? target.min_ask_amount.to_f : target.min_bid_amount.to_f
       amount = rand(@min_amount..@max_amount)
+      linked_target = @reactor.find_strategy(@linked_strategy_id).target
+      side = side == :sell ? :buy : :sell
+      side_amount = linked_target.open_orders.total_side_amount(side)
+      amount = (side_amount * 0.6) > amount ? amount : (side_amount * 0.6)
       apply_precision(amount, target.base_precision.to_f, side_min_value)
     end
 
     def get_price(side)
       if @linked_strategy_id
-        linked_strategy = @reactor.find_strategy(@linked_strategy_id)
-        top_ask = linked_strategy.sources.first.orderbook[:sell].first
-        top_bid = linked_strategy.sources.first.orderbook[:buy].first
+        linked_source = @reactor.find_strategy(@linked_strategy_id).source
+        top_ask = linked_source.orderbook[:sell].first
+        top_bid = linked_source.orderbook[:buy].first
         if [top_ask, top_bid].include?(nil)
           raise EmptyOrderBook.new("Linked strategy orderbook is empty (top_ask:#{top_ask} top_bid: #{top_bid})")
         end

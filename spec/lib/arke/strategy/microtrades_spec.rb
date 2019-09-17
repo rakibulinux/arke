@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "rails_helper"
 
 describe Arke::Strategy::Microtrades do
@@ -17,22 +19,22 @@ describe Arke::Strategy::Microtrades do
 
   let(:config) do
     {
-      "type" => "microtrades",
+      "type"   => "microtrades",
       "params" => {
         "linked_strategy_id" => linked_strategy_id,
-        "min_amount" => 0.05,
-        "max_amount" => 1,
-        "min_price" => min_price,
-        "max_price" => max_price,
-        "price_difference" => 0.05
+        "min_amount"         => 350,
+        "max_amount"         => 400,
+        "min_price"          => min_price,
+        "max_price"          => max_price,
+        "price_difference"   => 0.05
       },
       "target" => {
         "driver" => "bitfaker",
         "market" => {
-          "id" => "BTCUSD",
-          "base" => "BTC",
-          "quote" => "USD",
-          "base_precision" => 4,
+          "id"              => "BTCUSD",
+          "base"            => "BTC",
+          "quote"           => "USD",
+          "base_precision"  => 4,
           "quote_precision" => 4,
         },
       }
@@ -42,8 +44,8 @@ describe Arke::Strategy::Microtrades do
   let(:target_config) do
     {
       "driver" => "rubykube",
-      "host" => "http://www.example.com",
-      "key" => nil,
+      "host"   => "http://www.example.com",
+      "key"    => nil,
       "secret" => nil,
     }
   end
@@ -80,10 +82,35 @@ describe Arke::Strategy::Microtrades do
       expect(strategy.get_price(:sell)).to eq(131.8410)
     end
 
+    it "limits the amount of sell and buy orders to 60% of linked strategy open orders total supply" do
+      expect(reactor).to receive(:find_strategy).with(linked_strategy_id).exactly(:twice).and_return(linked_strategy)
+      expect(strategy).to receive(:rand).exactly(:twice).and_return(600)
+      linked_strategy.target.update_orderbook
+
+      expect(linked_strategy.target.open_orders.total_side_amount(:buy)).to eq(245.24247407000001)
+      expect(linked_strategy.target.open_orders.total_side_amount(:sell)).to eq(562.5895608799999)
+
+      expect(strategy.get_amount(:buy)).to eq 337.5537
+      expect(strategy.get_amount(:sell)).to eq 147.1454
+    end
+
+    it "does not limit the amount of sell and buy orders when it doesn't exceed 60% of linked strategy open orders total supply" do
+      expect(reactor).to receive(:find_strategy).with(linked_strategy_id).exactly(:twice).and_return(linked_strategy)
+      expect(strategy).to receive(:rand).exactly(:twice).and_return(100)
+      linked_strategy.target.update_orderbook
+
+      expect(linked_strategy.target.open_orders.total_side_amount(:buy)).to eq(245.24247407000001)
+      expect(linked_strategy.target.open_orders.total_side_amount(:sell)).to eq(562.5895608799999)
+
+      expect(strategy.get_amount(:buy)).to eq 100
+      expect(strategy.get_amount(:sell)).to eq 100
+    end
+
+
     it "raise an error if the orderbook is empty" do
       expect(reactor).to receive(:find_strategy).with(linked_strategy_id).exactly(:twice).and_return(linked_strategy)
-      expect{strategy.get_price(:buy)}.to raise_error(Arke::Strategy::Microtrades::EmptyOrderBook)
-      expect{strategy.get_price(:sell)}.to raise_error(Arke::Strategy::Microtrades::EmptyOrderBook)
+      expect { strategy.get_price(:buy) }.to raise_error(Arke::Strategy::Microtrades::EmptyOrderBook)
+      expect { strategy.get_price(:sell) }.to raise_error(Arke::Strategy::Microtrades::EmptyOrderBook)
     end
   end
 end

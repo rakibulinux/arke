@@ -44,6 +44,16 @@ describe Arke::Orderbook::OpenOrders do
     expect(open_orders.price_amount(skip_order.side, skip_order.price)).to eq(2 * skip_order.amount)
   end
 
+  it "#total_side_amount" do
+    open_orders.add_order(delete_order)
+    open_orders.add_order(update_order)
+    open_orders.add_order(skip_order)
+    open_orders.add_order(create_order)
+
+    expect(open_orders.total_side_amount(:sell)).to eq 40
+    expect(open_orders.total_side_amount(:buy)).to eq 40
+  end
+
   context "open_orders#get_diff" do
     it "return correct diff" do
       open_orders.add_order(delete_order)

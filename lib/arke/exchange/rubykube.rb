@@ -214,7 +214,7 @@ module Arke::Exchange
           order = Arke::Order.new(ord["market"].upcase, ord["price"].to_f, ord["remaining_volume"].to_f, side)
           order.id = ord["id"]
           @open_orders.add_order(order)
-        when "cancel"
+        when "cancel", "done"
           @open_orders.remove_order(ord["id"]) if @open_orders.exist?(side, ord["price"].to_f, ord["id"])
         end
       end
