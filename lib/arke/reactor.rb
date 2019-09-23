@@ -46,7 +46,7 @@ module Arke
           sources = Array(config["sources"]).map { |config| build_exchange_with_market(config) }
           target = config["target"] ? build_exchange_with_market(config["target"]) : nil
           executor = ActionExecutor.new(config["id"], target, sources)
-	  strategy = Arke::Strategy.create(sources, target, config, executor, self)
+	        strategy = Arke::Strategy.create(sources, target, config, executor, self)
           OpenStruct.new({
             id: config["id"],
             target: target,
@@ -65,7 +65,7 @@ module Arke
     def find_strategy(id)
       strategy = @strategies.find{|s| s.id == id}
       raise StrategyNotFound.new("with id: #{id}") unless strategy
-      strategy
+      strategy.strategy
     end
 
     def run
