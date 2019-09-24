@@ -1,16 +1,18 @@
+# frozen_string_literal: true
+
 module Arke::Orderbook
   class Base
     attr_reader :book, :market
     attr_reader :volume_bids_base, :volume_asks_base
     attr_reader :volume_bids_quote, :volume_asks_quote
 
-    def initialize(market, opts = {})
+    def initialize(market, opts={})
       @market = market
       @book = {
-        buy: opts[:buy] || ::RBTree.new,
+        buy:  opts[:buy] || ::RBTree.new,
         sell: opts[:sell] || ::RBTree.new,
       }
-      @book[:buy].readjust { |a, b| b <=> a }
+      @book[:buy].readjust {|a, b| b <=> a }
       @volume_bids_base = opts[:volume_bids_base]
       @volume_asks_base = opts[:volume_asks_base]
       @volume_bids_quote = opts[:volume_bids_quote]
@@ -44,6 +46,10 @@ module Arke::Orderbook
       @book[side].last
     end
 
+    def best_price(side)
+      get(side) ? get(side).first : nil
+    end
+
     def better(side, a, b)
       side == :buy ? a > b : a < b
     end
@@ -55,8 +61,10 @@ module Arke::Orderbook
     def spread(bids_spread, asks_spread)
       asks_spread = 1 + asks_spread
       bids_spread = 1 - bids_spread
-      bids, asks = ::RBTree.new, ::RBTree.new
-      volume_bids_quote, volume_asks_quote = 0.0, 0.0
+      bids = ::RBTree.new
+      asks = ::RBTree.new
+      volume_bids_quote = 0.0
+      volume_asks_quote = 0.0
 
       self[:buy].each do |k, v|
         price = k * bids_spread
@@ -71,12 +79,12 @@ module Arke::Orderbook
 
       self.class.new(
         @market,
-        buy: bids,
-        sell: asks,
+        buy:               bids,
+        sell:              asks,
         volume_bids_quote: volume_bids_quote,
         volume_asks_quote: volume_asks_quote,
-        volume_bids_base: self.volume_bids_base,
-        volume_asks_base: self.volume_asks_base,
+        volume_bids_base:  volume_bids_base,
+        volume_asks_base:  volume_asks_base
       )
     end
 
@@ -84,7 +92,7 @@ module Arke::Orderbook
       " " * indentation + line
     end
 
-    def to_s_side(side, indentation = 0)
+    def to_s_side(side, indentation=0)
       chunks = []
       self[side].each do |price, data|
         chunks << indent("%-05.5f       %s" % [price, data.inspect], indentation)
@@ -92,13 +100,13 @@ module Arke::Orderbook
       chunks.join("\n")
     end
 
-    def to_s(indentation = 0)
-    [
-      indent("asks", indentation),
-      to_s_side(:sell, indentation + 2),
-      indent("bids", indentation),
-      to_s_side(:buy, indentation + 2),
-    ].join("\n")
+    def to_s(indentation=0)
+      [
+        indent("asks", indentation),
+        to_s_side(:sell, indentation + 2),
+        indent("bids", indentation),
+        to_s_side(:buy, indentation + 2),
+      ].join("\n")
     end
   end
 end
