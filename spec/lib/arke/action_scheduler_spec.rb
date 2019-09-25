@@ -22,7 +22,7 @@ describe Arke::ActionScheduler do
   let(:order_buy) { Arke::Order.new(market, 1, 1, :buy, "limit", 9) }
   let(:order_sell) { Arke::Order.new(market, 1.1, 1, :sell, "limit", 10) }
   let(:order_sell2) { Arke::Order.new(market, 1.4, 1, :sell, "limit", 11) }
-  let(:order_buy2) { Arke::Order.new(market, 1.4, 3, :buy, "limit", 12) }
+  let(:order_buy2) { Arke::Order.new(market, 0.9, 3, :buy, "limit", 12) }
   before { target.configure_market(exchange_config["market"]) }
 
   context "current and desired orderbooks are empty" do
@@ -69,16 +69,18 @@ describe Arke::ActionScheduler do
 
   context "current and desired orderbooks aren't empty" do
     it "creates needed orders" do
+      current_openorders.add_order(order_buy)
+      current_openorders.add_order(order_sell)
+
       desired_orderbook.update(order_buy)
       desired_orderbook.update(order_sell)
       desired_orderbook.update(order_sell2)
       desired_orderbook.update(order_buy2)
-      current_openorders.add_order(order_buy)
-      current_openorders.add_order(order_sell)
+
       expect(action_scheduler.schedule).to \
         eq([
-             Arke::Action.new(:order_create, target, order: order_sell2),
              Arke::Action.new(:order_create, target, order: order_buy2),
+             Arke::Action.new(:order_create, target, order: order_sell2),
            ])
     end
 
@@ -186,6 +188,48 @@ describe Arke::ActionScheduler do
            ])
     end
 
+    it "stops overlapping orders first (buy == sell on market price PUMP)" do
+      order_sell = Arke::Order.new(market, 2.0, 1, :sell, "limit", 1)
+      order_buy  = Arke::Order.new(market, 1.0, 1, :buy,  "limit", 2)
+
+      current_openorders.add_order(order_buy)
+      current_openorders.add_order(order_sell)
+
+      desired_orderbook.update(Arke::Order.new(market, 2.1, 1, :sell))
+      desired_orderbook.update(Arke::Order.new(market, 2.0, 1, :buy))
+      actions = action_scheduler.schedule
+
+      expect(actions).to \
+        eq([
+             Arke::Action.new(:order_stop, target, id: 1, order: order_sell),
+             Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.1, 1, :sell)),
+
+             Arke::Action.new(:order_stop, target, id: 2, order: order_buy),
+             Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.0, 1, :buy)),
+           ])
+    end
+
+    it "stops overlapping orders first (buy == sell on market price DUMP)" do
+      order_sell = Arke::Order.new(market, 2.0, 1, :sell, "limit", 1)
+      order_buy  = Arke::Order.new(market, 1.0, 1, :buy,  "limit", 2)
+
+      current_openorders.add_order(order_buy)
+      current_openorders.add_order(order_sell)
+
+      desired_orderbook.update(Arke::Order.new(market, 1.0, 1, :sell))
+      desired_orderbook.update(Arke::Order.new(market, 0.9, 1, :buy))
+      actions = action_scheduler.schedule
+
+      expect(actions).to \
+        eq([
+             Arke::Action.new(:order_stop, target, id: 2, order: order_buy),
+             Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 0.9, 1, :buy)),
+
+             Arke::Action.new(:order_stop, target, id: 1, order: order_sell),
+             Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 1.0, 1, :sell)),
+
+           ])
+    end
 
     it "raises error if any ask price is lower than big price" do
       desired_orderbook.update(Arke::Order.new(market, 2.2, 1,  :sell))
@@ -193,8 +237,6 @@ describe Arke::ActionScheduler do
       desired_orderbook.update(Arke::Order.new(market, 2.1, 1,  :buy))
       desired_orderbook.update(Arke::Order.new(market, 1.9, 1,  :buy))
       expect { action_scheduler.schedule }.to raise_error(Arke::ActionScheduler::InvalidOrderBook)
-
     end
-
   end
 end

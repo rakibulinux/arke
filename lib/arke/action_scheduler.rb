@@ -48,7 +48,11 @@ module Arke
 
     def schedule
       list = []
-      if @desired_ob.best_price(:sell) <= @desired_ob.best_price(:buy)
+      desired_best_sell = @desired_ob.best_price(:sell)
+      desired_best_buy = @desired_ob.best_price(:buy)
+      current_best_sell = @current_ob.best_price(:sell)
+
+      if !desired_best_buy.nil? && !desired_best_sell.nil? && desired_best_sell <= desired_best_buy
         raise InvalidOrderBook.new("Ask price < Bid price")
       end
 
@@ -83,10 +87,8 @@ module Arke
           end
         end
       end
-      desired_best_buy = @desired_ob.best_price(:buy)
-      current_best_sell = @current_ob.best_price(:sell)
 
-      if desired_best_buy.nil? || current_best_sell.nil? || desired_best_buy > current_best_sell
+      if desired_best_buy.nil? || current_best_sell.nil? || desired_best_buy >= current_best_sell
         @actions += sort_cancel_create_weaved_by_amount(list, :sell)
         @actions += sort_cancel_create_weaved_by_amount(list, :buy)
       else
