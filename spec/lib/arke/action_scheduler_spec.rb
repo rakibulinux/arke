@@ -185,5 +185,16 @@ describe Arke::ActionScheduler do
              Arke::Action.new(:order_stop, target, id: 11, order: order_buy_11),
            ])
     end
+
+
+    it "raises error if any ask price is lower than big price" do
+      desired_orderbook.update(Arke::Order.new(market, 2.2, 1,  :sell))
+      desired_orderbook.update(Arke::Order.new(market, 2.0, 1,  :sell))
+      desired_orderbook.update(Arke::Order.new(market, 2.1, 1,  :buy))
+      desired_orderbook.update(Arke::Order.new(market, 1.9, 1,  :buy))
+      expect { action_scheduler.schedule }.to raise_error(Arke::ActionScheduler::InvalidOrderBook)
+
+    end
+
   end
 end

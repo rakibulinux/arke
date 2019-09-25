@@ -2,6 +2,7 @@
 
 module Arke
   class ActionScheduler
+    class InvalidOrderBook < StandardError; end
     include Helpers::Precision
     attr_accessor :actions
 
@@ -47,6 +48,10 @@ module Arke
 
     def schedule
       list = []
+      if @desired_ob.best_price(:sell) <= @desired_ob.best_price(:buy)
+        raise InvalidOrderBook.new("Ask price < Bid price")
+      end
+
       %i[buy sell].each do |side|
         current = @current_ob[side]
         desired = @desired_ob[side]
