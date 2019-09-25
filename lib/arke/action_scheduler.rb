@@ -56,30 +56,22 @@ module Arke
         raise InvalidOrderBook.new("Ask price < Bid price")
       end
 
+      # stop orders
       %i[buy sell].each do |side|
         current = @current_ob[side]
-        desired = @desired_ob[side]
 
-        current.each do |price, orders|
-          # FIXME: we need to manage the amount here too, not only the price
-          amount = orders.values.map(&:amount).sum
-          next if current_contains?(desired, price, amount)
-
+        current.each do |_price, orders|
           orders.each do |id, order|
-            # stop order that was in current orderbook but not in desired one
             list.push(Action.new(:order_stop, @target, id: id, order: order))
           end
         end
       end
 
+      # create orders
       %i[buy sell].each do |side|
-        current = @current_ob[side]
         desired = @desired_ob[side]
 
         desired.each do |price, amount|
-          next if desired_contains?(current, price, amount)
-
-          # create an order if current orderbook doesn't have it
           price = apply_precision(price, @target.quote_precision)
           amount = apply_precision(amount, @target.base_precision, side == :sell ? @target.min_ask_amount : @target.min_bid_amount)
           if price.positive? && amount.positive?
