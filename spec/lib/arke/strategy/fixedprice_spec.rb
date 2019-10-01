@@ -1,8 +1,12 @@
+# frozen_string_literal: true
+
 require "rails_helper"
 
 describe Arke::Strategy::Fixedprice do
-  let(:strategy) { Arke::Strategy::Fixedprice.new([], target, config, nil, nil) }
-  let(:target) { Arke::Exchange.create(config["target"]) }
+  let(:strategy) { Arke::Strategy::Fixedprice.new([], target, config, nil) }
+  let(:account) { Arke::Exchange.create(config["target"]) }
+  let(:target) { Arke::Market.new(config["target"]["market"], account) }
+
   let(:price) { 123 }
   let(:random_delta) { 0 }
   let(:side) { "both" }
@@ -13,23 +17,23 @@ describe Arke::Strategy::Fixedprice do
 
   let(:config) do
     {
-      "type" => "fixedprice",
+      "type"   => "fixedprice",
       "params" => {
-        "price" => price,
-        "random_delta" => random_delta,
-        "spread_bids" => spread_bids,
-        "spread_asks" => spread_asks,
+        "price"           => price,
+        "random_delta"    => random_delta,
+        "spread_bids"     => spread_bids,
+        "spread_asks"     => spread_asks,
         "limit_bids_base" => limit_bids_base,
         "limit_asks_base" => limit_asks_base,
-        "levels_size" => 0.01,
-        "levels_count" => 5,
-        "side" => side,
+        "levels_size"     => 0.01,
+        "levels_count"    => 5,
+        "side"            => side,
       },
       "target" => {
         "driver" => "bitfaker",
         "market" => {
-          "id" => "BTCUSD",
-          "base" => "BTC",
+          "id"    => "BTCUSD",
+          "base"  => "BTC",
           "quote" => "USD",
         },
       }
@@ -39,8 +43,8 @@ describe Arke::Strategy::Fixedprice do
   let(:target_config) do
     {
       "driver" => "rubykube",
-      "host" => "http://www.example.com",
-      "key" => nil,
+      "host"   => "http://www.example.com",
+      "key"    => nil,
       "secret" => nil,
     }
   end
@@ -52,25 +56,24 @@ describe Arke::Strategy::Fixedprice do
   before(:each) do
     target.fetch_balances
   end
-  before { target.configure_market(config["target"]["market"]) }
 
   context "running both sides" do
     let(:side) { "both" }
     it "outputs a target orberbook" do
-      expect(target_bids.to_hash).to eq({
+      expect(target_bids.to_hash).to eq(
         120.49099999999997 => 0.3,
         120.50079999999998 => 0.3,
         120.51059999999998 => 0.3,
         120.52039999999998 => 0.3,
-        120.5302 => 0.3,
-      })
-      expect(target_asks.to_hash).to eq({
+        120.5302           => 0.3
+      )
+      expect(target_asks.to_hash).to eq(
         124.24010000000001 => 0.2,
-        124.2502 => 0.2,
+        124.2502           => 0.2,
         124.26030000000002 => 0.2,
         124.27040000000002 => 0.2,
-        124.28050000000003 => 0.2,
-      })
+        124.28050000000003 => 0.2
+      )
     end
   end
 
@@ -78,26 +81,26 @@ describe Arke::Strategy::Fixedprice do
     let(:side) { "asks" }
     it "outputs a target orberbook" do
       expect(target_bids.to_hash).to eq({})
-      expect(target_asks.to_hash).to eq({
+      expect(target_asks.to_hash).to eq(
         124.24010000000001 => 0.2,
-        124.2502 => 0.2,
+        124.2502           => 0.2,
         124.26030000000002 => 0.2,
         124.27040000000002 => 0.2,
-        124.28050000000003 => 0.2,
-      })
+        124.28050000000003 => 0.2
+      )
     end
   end
 
   context "running bids side only" do
     let(:side) { "bids" }
     it "outputs a target orberbook" do
-      expect(target_bids.to_hash).to eq({
+      expect(target_bids.to_hash).to eq(
         120.49099999999997 => 0.3,
         120.50079999999998 => 0.3,
         120.51059999999998 => 0.3,
         120.52039999999998 => 0.3,
-        120.5302 => 0.3,
-      })
+        120.5302           => 0.3
+      )
       expect(target_asks.to_hash).to eq({})
     end
   end
@@ -108,20 +111,20 @@ describe Arke::Strategy::Fixedprice do
     let(:spread_bids) { 0 }
 
     it "outputs a target orberbook" do
-      expect(target_bids.to_hash).to eq({
+      expect(target_bids.to_hash).to eq(
         122.94999999999997 => 0.3,
         122.95999999999998 => 0.3,
         122.96999999999998 => 0.3,
         122.97999999999999 => 0.3,
-        122.99 => 0.3,
-      })
-      expect(target_asks.to_hash).to eq({
-        123.01 => 0.2,
+        122.99             => 0.3
+      )
+      expect(target_asks.to_hash).to eq(
+        123.01             => 0.2,
         123.02000000000001 => 0.2,
         123.03000000000002 => 0.2,
         123.04000000000002 => 0.2,
-        123.05000000000003 => 0.2,
-      })
+        123.05000000000003 => 0.2
+      )
     end
   end
 end

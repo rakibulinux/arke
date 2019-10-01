@@ -8,12 +8,9 @@ module Arke::Exchange
       @connection = Faraday.new("https://#{opts['host']}") do |builder|
         builder.adapter(opts[:faraday_adapter] || :em_synchrony)
       end
-
-      @orderbook = Arke::Orderbook::Orderbook.new(@market)
     end
 
     def start
-      update_orderbook
     end
 
     def build_order(data, side)
@@ -25,9 +22,9 @@ module Arke::Exchange
       )
     end
 
-    def update_orderbook
-      orderbook = Arke::Orderbook::Orderbook.new(@market)
-      snapshot = JSON.parse(@connection.get("api/spot/v3/instruments/#{@market}/book").body)
+    def update_orderbook(market)
+      orderbook = Arke::Orderbook::Orderbook.new(market)
+      snapshot = JSON.parse(@connection.get("api/spot/v3/instruments/#{market}/book").body)
 
       Array(snapshot['bids']).each do |order|
         orderbook.update(
@@ -39,7 +36,7 @@ module Arke::Exchange
           build_order(order, :sell)
         )
       end
-      @orderbook = orderbook
+      orderbook
     end
 
     def markets

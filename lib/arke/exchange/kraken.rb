@@ -13,11 +13,9 @@ module Arke::Exchange
         builder.adapter(opts[:faraday_adapter] || :em_synchrony)
       end
       kraken_pair
-      @orderbook = Arke::Orderbook::Orderbook.new(@market)
     end
 
     def start
-      update_orderbook
     end
 
     def build_order(data, side)
@@ -29,9 +27,9 @@ module Arke::Exchange
       )
     end
 
-    def update_orderbook
-      orderbook = Arke::Orderbook::Orderbook.new(@market)
-      snapshot = JSON.parse(@rest_conn.get("/0/public/Depth?pair=#{@market.upcase}").body)
+    def update_orderbook(market)
+      orderbook = Arke::Orderbook::Orderbook.new(market)
+      snapshot = JSON.parse(@rest_conn.get("/0/public/Depth?pair=#{market.upcase}").body)
       result = snapshot['result']
       return orderbook if result.nil? or result.values.nil?
 
@@ -42,7 +40,7 @@ module Arke::Exchange
         orderbook.update(build_order(order, :sell))
       end
 
-      @orderbook = orderbook
+      orderbook
     end
 
     def kraken_pair

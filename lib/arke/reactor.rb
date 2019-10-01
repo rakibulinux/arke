@@ -1,11 +1,4 @@
-require "ostruct"
-require "faraday"
-require "faraday_middleware"
-require "em-synchrony"
-require "em-synchrony/em-http"
-
-require "arke/exchange"
-require "arke/strategy"
+# frozen_string_literal: true
 
 module Arke
   # Main event ractor loop
@@ -16,6 +9,7 @@ module Arke
     def initialize(strategies_configs, accounts_configs)
       @shutdown = false
       init_accounts(accounts_configs)
+      update_balances
       init_strategies(strategies_configs)
     end
 
@@ -27,85 +21,82 @@ module Arke
     def init_accounts(accounts_configs)
       @accounts = {}
       accounts_configs.each do |config|
-        @accounts[config["id"]] = Arke::Exchange.create(config)
+        account = @accounts[config["id"]] = Arke::Exchange.create(config)
+        executor = ActionExecutor.new(config["id"], account)
+        account.executor = executor
       end
     end
 
-    def build_exchange_with_market(config)
-      ex = @accounts[config["account_id"]]
-      raise "Account not found id: #{config["account_id"]}" unless ex
-      new_ex = ex.clone
-      new_ex.configure_market(config["market"])
-      new_ex
+    def build_market(config)
+      Market.new(config["market"], get_account(config["account_id"]))
+    end
+
+    def get_account(id)
+      account = @accounts[id]
+      raise "Account not found id: #{id}" unless @accounts[id]
+
+      account
     end
 
     def init_strategies(strategies_configs)
-      update_balances
-      @strategies = strategies_configs.map do |config|
-        begin
-          sources = Array(config["sources"]).map { |config| build_exchange_with_market(config) }
-          target = config["target"] ? build_exchange_with_market(config["target"]) : nil
-          executor = ActionExecutor.new(config["id"], target, sources)
-	        strategy = Arke::Strategy.create(sources, target, config, executor, self)
-          OpenStruct.new({
-            id: config["id"],
-            target: target,
-            sources: sources,
-            executor: executor,
-            strategy: strategy,
-            debug: config["debug"] ? true : false,
-          })
-        rescue StandardError => e
-          report_fatal(e, config["id"])
-          nil
-        end
-      end.compact
+      strategies = []
+      strategies_configs.map do |config|
+        sources = Array(config["sources"]).map {|config| build_market(config) }
+        target = config["target"] ? build_market(config["target"]) : nil
+        strategies << Arke::Strategy.create(sources, target, config, self)
+      rescue StandardError => e
+        report_fatal(e, config["id"])
+      end
+      @strategies = strategies
     end
 
     def find_strategy(id)
-      strategy = @strategies.find{|s| s.id == id}
+      return nil if id.nil?
+
+      strategy = @strategies.find {|s| s.id == id }
       raise StrategyNotFound.new("with id: #{id}") unless strategy
-      strategy.strategy
+
+      strategy
     end
 
     def run
       EM.synchrony do
         trap("INT") { stop }
+        @accounts.each do |id, account|
+          account.start
+        end
 
         Fiber.new do
-          EM::Synchrony::add_periodic_timer(23) { update_balances }
+          EM::Synchrony.add_periodic_timer(23) { update_balances }
         end.resume
 
         @strategies.each do |strategy|
           Fiber.new do
-            begin
-              Arke::Log.info("ID:#{strategy.id} Purging open orders on #{strategy.target.driver}")
-              strategy.target.cancel_all_orders
-              strategy.target.start
-              strategy.executor.start
+            Arke::Log.info("ID:#{strategy.id} Purging open orders on #{strategy.target.account.driver}")
+            strategy.target.account.cancel_all_orders(strategy.target.id)
+            strategy.target.account.executor.start
 
-              if strategy.strategy.delay_the_first_execute
-                Arke::Log.warn("ID:#{strategy.id} Delaying the first execution")
-              else
-                tick(strategy)
-              end
-
-              if strategy.strategy.period_random_delay
-                add_periodic_random_timer(strategy)
-              else
-                strategy.timer = EM::Synchrony::add_periodic_timer(strategy.strategy.period) { tick(strategy) }
-              end
-            rescue StandardError => e
-              report_fatal(e, strategy.id)
+            if strategy.delay_the_first_execute
+              Arke::Log.warn("ID:#{strategy.id} Delaying the first execution")
+            else
+              tick(strategy)
             end
+
+            if strategy.period_random_delay
+              add_periodic_random_timer(strategy)
+            else
+              strategy.timer = EM::Synchrony.add_periodic_timer(strategy.period) { tick(strategy) }
+            end
+          rescue StandardError => e
+            report_fatal(e, strategy.id)
           end.resume
         end
       end
     end
 
     def add_periodic_random_timer(strategy)
-      delay = strategy.strategy.period + rand(strategy.strategy.period_random_delay)
-      strategy.timer = EM::Synchrony::add_timer(delay) do
+      delay = strategy.period + rand(strategy.period_random_delay)
+      strategy.timer = EM::Synchrony.add_timer(delay) do
         tick(strategy)
         add_periodic_random_timer(strategy)
       end
@@ -113,51 +104,60 @@ module Arke
     end
 
     def tick(strategy)
-      begin
-        update_orderbooks(strategy)
-        execute_strategy(strategy)
-      rescue StandardError => e
-        Log.error "ID:#{strategy.id} #{e}"
-        Log.error "#{e}: #{e.backtrace.join("\n")}"
+      unless strategy.target.account.ws
+        Log.warn "ID:#{strategy.id} Skipping strategy execution since the websocket is not connected"
+        return
       end
+
+      linked_strategy = find_strategy(strategy.linked_strategy_id)
+      if linked_strategy && linked_strategy.target.account.ws
+        Log.warn "ID:#{strategy.id} Skipping strategy execution since linked strategy websocket is not connected"
+        return
+      end
+
+      update_orderbooks(strategy)
+      execute_strategy(strategy)
+    rescue StandardError => e
+      Log.error "ID:#{strategy.id} #{e}"
+      Log.error "#{e}: #{e.backtrace.join("\n")}"
     end
 
     def update_balances
       @accounts.values.each do |ex|
         unless ex.respond_to?(:get_balances)
-          raise "ACCOUNT_ID:#{ex.account_id} Exchange #{ex.driver} doesn't support get_balances".red
+          raise "ACCOUNT:#{ex.id} Exchange #{ex.driver} doesn't support get_balances".red
         end
+
         begin
-          Log.info "ACCOUNT_ID:#{ex.account_id} Fetching balances on #{ex.driver}"
+          Log.info "ACCOUNT:#{ex.id} Fetching balances on #{ex.driver}"
           ex.fetch_balances
         rescue StandardError => e
-          Log.error("ACCOUNT_ID:#{ex.account_id} Fetching balances on #{ex.driver} failed")
+          Log.error("ACCOUNT:#{ex.id} Fetching balances on #{ex.driver} failed")
         end
       end
     end
 
     def update_orderbooks(strategy)
-      strategy.sources.each do |ex|
-        Arke::Log.debug "ID:#{strategy.id} Update #{ex.driver} #{ex.market} orderbook"
-        ex.update_orderbook
+      strategy.sources.each do |market|
+        Arke::Log.debug "ID:#{strategy.id} Update #{market.account.driver} #{market.id} orderbook"
+        market.update_orderbook
       end
     end
 
     def execute_strategy(strategy)
-      desired_orderbook = strategy.strategy.call
+      desired_orderbook = strategy.call
 
-      strategy.strategy.debug_infos.each do |label, data|
-        ::Arke::Log.debug "#{label}: #{data}".yellow
-      end if strategy.debug
-
-      unless desired_orderbook
-        Log.debug "ID:#{strategy.id} No desired orderbook returned by the strategy"
-        return
+      if strategy.debug
+        strategy.debug_infos.each do |label, data|
+          ::Arke::Log.debug "#{label}: #{data}".yellow
+        end
       end
+      return unless desired_orderbook
+
       Log.debug "ID:#{strategy.id} Current Orderbook\n#{strategy.target.open_orders}"
       Log.debug "ID:#{strategy.id} Desired Orderbook\n#{desired_orderbook}"
       actions = ActionScheduler.new(strategy.target.open_orders, desired_orderbook, strategy.target).schedule
-      strategy.executor.push(actions)
+      strategy.target.account.executor.push(actions)
     end
 
     # Stops workers and strategy execution
@@ -170,7 +170,7 @@ module Arke
       else
         Fiber.new do
           @strategies.each do |strategy|
-            strategy.target.cancel_all_orders
+            strategy.target.account.cancel_all_orders(strategy.target.id)
             EM.stop
           end
         end.resume

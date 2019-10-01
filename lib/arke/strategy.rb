@@ -1,13 +1,15 @@
-require 'arke/strategy/base'
-require 'arke/strategy/copy'
+# frozen_string_literal: true
+
+require "arke/strategy/base"
+require "arke/strategy/copy"
 
 module Arke
   # Strategy module, contains Strategy types implementation
   module Strategy
     # Fabric method, creates proper Exchange instance
     # * takes +config+ (hash) and passes to +Strategy+ initializer
-    def self.create(sources, target, config, executor, reactor)
-      strategy_class(config["type"]).new(sources, target, config, executor, reactor)
+    def self.create(sources, target, config, reactor)
+      strategy_class(config["type"]).new(sources, target, config, reactor)
     end
 
     # Takes +type+ - +String+

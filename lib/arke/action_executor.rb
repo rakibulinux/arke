@@ -1,67 +1,38 @@
-require "singleton"
-
 module Arke
   class ActionExecutor
     include Arke::Helpers::Precision
-    attr_accessor :exchanges
-    attr_reader :id
+    attr_reader :id, :account
 
-    def initialize(id, target, sources)
-      @exchanges = {}
+    def initialize(id, account)
+      @account = account
       @id = id
-      Array(sources).each do |source|
-        @exchanges[source.driver.to_sym] = { delay: source.delay.to_f }
-      end
-      @exchanges[target.driver.to_sym] = { delay: target.delay.to_f }
-      create_queues
-      self
+      @queue = EM::Queue.new
     end
 
     def start
-      @exchanges.each do |ex, config|
-        config[:timer] = EM::Synchrony::add_periodic_timer(config[:delay]) do
-          unless config[:queue].empty?
-            config[:queue].pop do |action|
-              schedule(action)
-            end
+      @timer = EM::Synchrony.add_periodic_timer(account.delay) do
+        unless @queue.empty?
+          @queue.pop do |action|
+            schedule(action)
           end
         end
       end
     end
 
     def push(actions)
-      clear_queue(actions[0].destination.driver.to_sym) unless actions.empty?
+      # TODO: limit queue size by removing old create order actions once we reached a threashold and display a WARN
       actions.each do |action|
-        ex = action.destination.driver.to_sym
-        @exchanges[ex][:queue] << action
+        @queue << action
       end
     end
 
     def stop
-      @exchanges.each do |ex, config|
-        config[:queue].close()
-        Arke::Log.debug "ID:#{id} Closed queue for #{ex}"
-        config[:timer].cancel()
-      end
+      @queue.close()
+      Arke::Log.debug "ID:#{id} Closed queue for #{account}"
+      @timer.cancel()
     end
 
     private
-
-    def create_queues
-      @exchanges.each do |ex, config|
-        config[:queue] = EM::Queue.new
-        Arke::Log.debug "ID:#{id} Created queue for #{ex}"
-      end
-    end
-
-    def clear_queue(ex)
-      until @exchanges[ex][:queue].empty?
-        @exchanges[ex][:queue].pop do |action|
-          Arke::Log.debug "ID:#{id} Clearing action #{action}"
-        end
-      end
-      Arke::Log.debug "ID:#{id} Cleared queue for #{ex}"
-    end
 
     def execute
       Fiber.new { yield }.resume
@@ -78,19 +49,23 @@ module Arke
           amount = apply_precision(order.amount, action.destination.base_precision.to_f,
             order.side == :sell ? action.destination.min_ask_amount.to_f : action.destination.min_bid_amount.to_f)
           begin
-            response = action.destination.create_order(Arke::Order.new(order.market, price, amount, order.side))
+            order = Arke::Order.new(order.market, price, amount, order.side)
+            response = action.destination.account.create_order(order)
             if response.respond_to?(:status) && response.status >= 300
               Log.warn "ID:#{id} Failed to create order #{order} status:#{response.status}(#{response.reason_phrase}) body:#{response.body}"
+            else
+              order.id = response.env.body["id"]
+              action.destination.open_orders.add_order(order)
             end
-          rescue StandardError
-            Log.error "ID:#{id} #{$!}"
+          rescue StandardError => e
+            Log.error "ID:#{id} #{e}\n#{e.backtrace.join("\n")}"
           end
         end
       when :order_stop
         execute do
           begin
             Arke::Log.info "ID:#{id} Canceling order: #{action.params}"
-            action.destination.stop_order(action.params[:id])
+            action.destination.account.stop_order(action.params[:order])
           rescue StandardError
             Log.error "ID:#{id} #{$!}"
           end

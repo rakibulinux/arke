@@ -12,18 +12,19 @@ describe Arke::ActionScheduler do
         "id"    => "ETHUSDT",
         "base"  => "ETH",
         "quote" => "USDT",
+        "base_precision" => 4,
+        "quote_precision" => 4,
       },
     }
   end
   let(:current_openorders) { Arke::Orderbook::OpenOrders.new(market) }
   let(:desired_orderbook) { Arke::Orderbook::Orderbook.new(market) }
-  let(:target) { Arke::Exchange.create(exchange_config) }
+  let(:target) { Arke::Market.new(exchange_config["market"], Arke::Exchange::Bitfaker.new(exchange_config)) }
   let(:action_scheduler) { Arke::ActionScheduler.new(current_openorders, desired_orderbook, target) }
   let(:order_buy) { Arke::Order.new(market, 1, 1, :buy, "limit", 9) }
   let(:order_sell) { Arke::Order.new(market, 1.1, 1, :sell, "limit", 10) }
   let(:order_sell2) { Arke::Order.new(market, 1.4, 1, :sell, "limit", 11) }
   let(:order_buy2) { Arke::Order.new(market, 0.9, 3, :buy, "limit", 12) }
-  before { target.configure_market(exchange_config["market"]) }
 
   context "current and desired orderbooks are empty" do
     it "creates no action" do

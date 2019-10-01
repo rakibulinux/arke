@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Arke::Exchange
   class Rubykube < Base
     # Takes config (hash), strategy(+Arke::Strategy+ instance)
@@ -5,13 +7,15 @@ module Arke::Exchange
     # * creates @connection for RestApi
     attr_accessor :orderbook
 
+    WEBSOCKET_CONNECTION_RETRY_DELAY = 2
+
     def initialize(config)
       super
       @peatio_route = config["peatio_route"] || "peatio"
       @barong_route = config["barong_route"] || "barong"
       @ranger_route = config["ranger_route"] || "ranger"
-      @ws_url = "#{config["ws"]}/api/v2/#{@ranger_route}/private/?stream=order&stream=trade"
-      @connection = Faraday.new(:url => "#{config["host"]}/api/v2") do |builder|
+      @ws_url = "#{config['ws']}/api/v2/#{@ranger_route}/private/?stream=order&stream=trade"
+      @connection = Faraday.new(url: "#{config['host']}/api/v2") do |builder|
         builder.response :json
         builder.response :logger if opts["debug"]
         builder.adapter(@adapter)
@@ -19,13 +23,13 @@ module Arke::Exchange
       end
     end
 
+
     def start
-      fetch_openorders
+      Arke::Log.info "ACCOUNT:#{id} Websocket connecting"
+      @ws = Faye::WebSocket::Client.new(@ws_url, [], headers: generate_headers)
 
-      @ws = Faye::WebSocket::Client.new(@ws_url, [], { :headers => generate_headers })
-
-      @ws.on(:open) do |e|
-        p [:open]
+      @ws.on(:open) do |_e|
+        Arke::Log.info "ACCOUNT:#{id} Websocket connected"
       end
 
       @ws.on(:message) do |e|
@@ -33,8 +37,12 @@ module Arke::Exchange
       end
 
       @ws.on(:close) do |e|
-        on_close(e)
         @ws = nil
+        Arke::Log.error "ACCOUNT:#{id} Websocket disconnected: #{e.code} Reason: #{e.reason}"
+        Fiber.new do
+          EM::Synchrony.sleep(WEBSOCKET_CONNECTION_RETRY_DELAY)
+          start
+        end.resume
       end
     end
 
@@ -43,53 +51,52 @@ module Arke::Exchange
       @connection.get "/#{barong_route}/identity/ping"
     end
 
-    def cancel_all_orders
-      response = post(
+    def cancel_all_orders(market)
+      post(
         "#{@peatio_route}/market/orders/cancel",
-        { market: @market.downcase }
+        market: market.downcase
       )
-      @open_orders.clear if response.env.status == 201
     end
 
     # Takes +order+ (+Arke::Order+ instance)
     # * creates +order+ via RestApi
     def create_order(order)
       params = {
-        market: @market.downcase,
-        side: order.side.to_s,
-        volume: order.amount,
+        market:   order.market.downcase,
+        side:     order.side.to_s,
+        volume:   order.amount,
         ord_type: order.type,
-        price: order.price,
+        price:    order.price,
       }
       params.delete(:price) if order.type == "market"
       response = post("#{@peatio_route}/market/orders", params)
       if order.type == "limit" && response.env.status == 201 && response.env.body["id"]
         order.id = response.env.body["id"]
-        @open_orders.add_order(order)
       end
-      response
+      order
     end
 
     # Takes +order+ (+Arke::Order+ instance)
     # * cancels +order+ via RestApi
-    def stop_order(id)
+    def stop_order(order)
       response = post(
-        "#{@peatio_route}/market/orders/#{id}/cancel"
+        "#{@peatio_route}/market/orders/#{order.id}/cancel"
       )
-      @open_orders.remove_order(id)
+      @deleted_order.call(order)
 
       response
     end
 
     def get_balances
       response = get("#{@peatio_route}/account/balances")
-      raise "#{response.body}" if response.status != 200
+      raise response.body.to_s if response.status != 200
+
       response.body.map do |data|
         {
           "currency" => data["currency"],
-          "free" => data["balance"].to_f,
-          "locked" => data["locked"].to_f,
-          "total" => data["balance"].to_f + data["locked"].to_f,
+          "free"     => data["balance"].to_f,
+          "locked"   => data["locked"].to_f,
+          "total"    => data["balance"].to_f + data["locked"].to_f,
         }
       end
     end
@@ -102,48 +109,51 @@ module Arke::Exchange
       get("#{@peatio_route}/account/deposit_address/#{currency}").body
     end
 
-    def fetch_openorders
+    def fetch_openorders(market)
+      orders = []
       max_limit = 1000
-      total = get("#{@peatio_route}/market/orders", { market: "#{@market.downcase}", limit: 1, page: 1, state: "wait" }).headers["Total"]
-      (total.to_f / max_limit.to_f).ceil.times do |page|
-        response = get("#{@peatio_route}/market/orders", { market: "#{@market.downcase}", limit: max_limit, page: page + 1, state: "wait" }).body.each do |o|
+      total = get("#{@peatio_route}/market/orders", market: market.downcase.to_s, limit: 1, page: 1, state: "wait").headers["Total"]
+      (total.to_f / max_limit).ceil.times do |page|
+        get("#{@peatio_route}/market/orders", market: market.downcase.to_s, limit: max_limit, page: page + 1, state: "wait").body.each do |o|
           order = Arke::Order.new(o["market"].upcase, o["price"].to_f, o["remaining_volume"].to_f, o["side"].to_sym)
           order.id = o["id"]
-          @open_orders.add_order(order)
+          orders << order
         end
       end
+      orders
     end
 
-    def build_order(data, side)
+    def build_order(data, side, market)
       Arke::Order.new(
-        @market,
+        market,
         data[0].to_f,
         data[1].to_f,
         side
       )
     end
 
-    def update_orderbook
-      orderbook = Arke::Orderbook::Orderbook.new(@market)
+    def update_orderbook(market)
+      orderbook = Arke::Orderbook::Orderbook.new(market)
       limit = @opts["limit"] || 1000
-      snapshot = @connection.get("#{@peatio_route}/public/markets/#{@market.downcase}/depth", { limit: limit }).body
+      snapshot = @connection.get("#{@peatio_route}/public/markets/#{market.downcase}/depth", limit: limit).body
       Array(snapshot["bids"]).each do |order|
         orderbook.update(
-          build_order(order, :buy)
+          build_order(order, :buy, market)
         )
       end
       Array(snapshot["asks"]).each do |order|
         orderbook.update(
-          build_order(order, :sell)
+          build_order(order, :sell, market)
         )
       end
-      @orderbook = orderbook
+      orderbook
     end
 
-    def get_market_infos
+    def get_market_infos(market)
       response = @connection.get("#{@peatio_route}/public/markets").body
-      infos = response.select { |m| m["id"] == @market.downcase }.first
-      raise "Market #{@market} not found" unless infos
+      infos = response.select {|m| m["id"].downcase == market.downcase }.first
+      raise "Market #{market} not found" unless infos
+
       infos
     end
 
@@ -153,7 +163,7 @@ module Arke::Exchange
     # * takes +conn+ - faraday connection
     # * takes +path+ - request url
     # * takes +params+ - body for +POST+ request
-    def post(path, params = nil)
+    def post(path, params=nil)
       response = @connection.post do |req|
         req.headers = generate_headers
         req.url path
@@ -162,7 +172,7 @@ module Arke::Exchange
       response
     end
 
-    def get(path, params = nil)
+    def get(path, params=nil)
       response = @connection.get do |req|
         req.headers = generate_headers
         req.url path, params
@@ -174,10 +184,10 @@ module Arke::Exchange
     def generate_headers
       nonce = Time.now.to_i.to_s
       {
-        "X-Auth-Apikey" => @api_key,
-        "X-Auth-Nonce" => nonce,
+        "X-Auth-Apikey"    => @api_key,
+        "X-Auth-Nonce"     => nonce,
         "X-Auth-Signature" => OpenSSL::HMAC.hexdigest("SHA256", @secret, nonce + @api_key),
-        "Content-Type" => "application/json",
+        "Content-Type"     => "application/json",
       }
     end
 
@@ -185,37 +195,24 @@ module Arke::Exchange
       kind == "bid" ? :buy : :sell
     end
 
-    def process_trade(trade, order)
-      notify_trade(trade, order)
-      if order.amount == trade.volume
-        @open_orders.remove_order(trade.order_id)
-      end
-    end
-
     def process_message(msg)
       # Arke::Log.debug "#{self.class}#process_message: #{msg}"
-      if trd = msg["trade"]
-        if order = @open_orders.get_by_id(:buy, trd["bid_id"])
-          trade = Arke::Trade.new(trd["market"], :buy, trd["volume"].to_f, trd["price"].to_f, trd["bid_id"])
-          process_trade(trade, order)
-        end
-
-        if order = @open_orders.get_by_id(:sell, trd["ask_id"])
-          trade = Arke::Trade.new(trd["market"], :sell, trd["volume"].to_f, trd["price"].to_f, trd["ask_id"])
-          process_trade(trade, order)
-        end
+      if msg["trade"]
+        trd = msg["trade"]
+        notify_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :buy, trd["volume"].to_f, trd["price"].to_f, trd["bid_id"]))
+        notify_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :sell, trd["volume"].to_f, trd["price"].to_f, trd["ask_id"]))
       end
 
-      if msg["order"] && msg["order"]["market"] == @market.downcase
+      if msg["order"]
         ord = msg["order"]
         side = side_from_kind(ord["kind"])
+        order = Arke::Order.new(ord["market"].upcase, ord["price"].to_f, ord["remaining_volume"].to_f, side)
+        order.id = ord["id"]
         case ord["state"]
         when "wait"
-          order = Arke::Order.new(ord["market"].upcase, ord["price"].to_f, ord["remaining_volume"].to_f, side)
-          order.id = ord["id"]
-          @open_orders.add_order(order)
+          @created_order.call(order)
         when "cancel", "done"
-          @open_orders.remove_order(ord["id"]) if @open_orders.exist?(side, ord["price"].to_f, ord["id"])
+          @deleted_order.call(order)
         end
       end
     end
@@ -223,10 +220,6 @@ module Arke::Exchange
     def on_message(e)
       msg = JSON.parse(e.data)
       process_message(msg)
-    end
-
-    def on_close(e)
-      Arke::Log.info "Closing code: #{e.code} Reason: #{e.reason}"
     end
   end
 end

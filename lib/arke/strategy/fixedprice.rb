@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Arke::Strategy
   # * aggregates one exchange orderbook to open one order per level (param: level_count)
   # * side: asks, bids, both (default: both)
@@ -8,7 +10,7 @@ module Arke::Strategy
     include Arke::Helpers::Splitter
     include Arke::Helpers::Spread
 
-    def initialize(sources, target, config, executor, reactor)
+    def initialize(sources, target, config, reactor)
       super
       params = @config["params"] || {}
       @levels_size = params["levels_size"].to_f
@@ -19,17 +21,18 @@ module Arke::Strategy
       @spread_asks = params["spread_asks"].to_f
       @limit_asks_base = params["limit_asks_base"].to_f
       @limit_bids_base = params["limit_bids_base"].to_f
-      @side_asks = %w{asks both}.include?(@side)
-      @side_bids = %w{bids both}.include?(@side)
-      raise "Price must not be zero" if @price == 0
-      Arke::Log.info "Initializing #{self.class} strategy with order_back #{@enable_orderback ? "enabled": "disabled"}"
+      @side_asks = %w[asks both].include?(@side)
+      @side_bids = %w[bids both].include?(@side)
+      raise "Price must not be zero" if @price.zero?
+
+      Arke::Log.info "Initializing #{self.class} strategy with order_back #{@enable_orderback ? 'enabled' : 'disabled'}"
     end
 
     def call
-      raise "This strategy doesn't support sources" if sources.size != 0
+      raise "This strategy doesn't support sources" unless sources.empty?
 
-      assert_currency_found(target, target.base)
-      assert_currency_found(target, target.quote)
+      assert_currency_found(target.account, target.base)
+      assert_currency_found(target.account, target.quote)
       split_opts = {
         step_size: @levels_size,
       }
@@ -39,16 +42,16 @@ module Arke::Strategy
       price_points_asks = @side_asks ? split_constant(:asks, top_ask, @levels_count, split_opts) : nil
       price_points_bids = @side_bids ? split_constant(:bids, top_bid, @levels_count, split_opts) : nil
       ob = Arke::Orderbook::Orderbook.new(
-        target.market,
-        buy: price_points_bids ? ::RBTree[price_points_bids.map{|price| [price, 1]}] : ::RBTree.new,
-        sell: price_points_asks ? ::RBTree[price_points_asks.map{|price| [price, 1]}] : ::RBTree.new,
+        target.id,
+        buy:              price_points_bids ? ::RBTree[price_points_bids.map {|price| [price, 1] }] : ::RBTree.new,
+        sell:             price_points_asks ? ::RBTree[price_points_asks.map {|price| [price, 1] }] : ::RBTree.new,
         volume_bids_base: price_points_bids ? price_points_bids.size : 0,
-        volume_asks_base: price_points_asks ? price_points_asks.size : 0,
-        )
+        volume_asks_base: price_points_asks ? price_points_asks.size : 0
+      )
       ob_spread = ob.spread(@spread_bids, @spread_asks)
 
-      limit_bids_quote = target.balance(target.quote)["total"]
-      target_base_total = target.balance(target.base)["total"]
+      limit_bids_quote = target.account.balance(target.quote)["total"]
+      target_base_total = target.account.balance(target.base)["total"]
       limit_bids_base = @limit_bids_base
 
       if target_base_total < @limit_asks_base
@@ -61,7 +64,7 @@ module Arke::Strategy
       ob_adjusted = ob_spread.adjust_volume(
         limit_bids_base,
         limit_asks_base,
-        limit_bids_quote,
+        limit_bids_quote
       )
 
       push_debug("0_asks_price_points", price_points_asks)

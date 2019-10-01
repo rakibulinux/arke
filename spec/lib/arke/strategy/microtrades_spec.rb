@@ -4,8 +4,9 @@ require "rails_helper"
 
 describe Arke::Strategy::Microtrades do
   let(:reactor) { double(:reactor) }
-  let(:strategy) { Arke::Strategy::Microtrades.new([], target, config, nil, reactor) }
-  let(:target) { Arke::Exchange.create(config["target"]) }
+  let(:strategy) { Arke::Strategy::Microtrades.new([], target, config, reactor) }
+  let(:account) { Arke::Exchange.create(account_config) }
+  let(:target) { Arke::Market.new(config["target"]["market"], account) }
   let(:price) { 123 }
   let(:random_delta) { 0 }
   let(:side) { "both" }
@@ -17,6 +18,12 @@ describe Arke::Strategy::Microtrades do
   let(:min_price) { 100 }
   let(:max_price) { 100 }
 
+  let(:account_config) do
+    {
+      "id" => 1,
+      "driver" => "bitfaker",
+    }
+  end
   let(:config) do
     {
       "type"   => "microtrades",
@@ -55,8 +62,7 @@ describe Arke::Strategy::Microtrades do
   let(:target_asks) { target_orderbook[:sell] }
 
   before(:each) do
-    target.fetch_balances
-    target.configure_market(config["target"]["market"])
+    target.account.fetch_balances
   end
 
   context "strategy not linked to an other" do
@@ -71,9 +77,9 @@ describe Arke::Strategy::Microtrades do
   end
 
   context "strategy is linked to an other" do
-    let(:source) { Arke::Exchange.create(config["target"]) }
+    let(:source) { Arke::Market.new(config["target"]["market"], account) }
     let(:linked_strategy_id) { 12 }
-    let(:linked_strategy) { Arke::Strategy::Base.new([source], target, config, nil, reactor) }
+    let(:linked_strategy) { Arke::Strategy::Base.new([source], target, config, reactor) }
 
     it "uses orderbook of linked strategy to define the price of sell and buy orders" do
       expect(reactor).to receive(:find_strategy).with(linked_strategy_id).exactly(:twice).and_return(linked_strategy)
@@ -85,7 +91,7 @@ describe Arke::Strategy::Microtrades do
     it "limits the amount of sell and buy orders to 60% of linked strategy open orders total supply" do
       expect(reactor).to receive(:find_strategy).with(linked_strategy_id).exactly(:twice).and_return(linked_strategy)
       expect(strategy).to receive(:rand).exactly(:twice).and_return(600)
-      linked_strategy.target.update_orderbook
+      linked_strategy.target.start
 
       expect(linked_strategy.target.open_orders.total_side_amount(:buy)).to eq(245.24247407000001)
       expect(linked_strategy.target.open_orders.total_side_amount(:sell)).to eq(562.5895608799999)
@@ -97,7 +103,7 @@ describe Arke::Strategy::Microtrades do
     it "does not limit the amount of sell and buy orders when it doesn't exceed 60% of linked strategy open orders total supply" do
       expect(reactor).to receive(:find_strategy).with(linked_strategy_id).exactly(:twice).and_return(linked_strategy)
       expect(strategy).to receive(:rand).exactly(:twice).and_return(100)
-      linked_strategy.target.update_orderbook
+      linked_strategy.target.start
 
       expect(linked_strategy.target.open_orders.total_side_amount(:buy)).to eq(245.24247407000001)
       expect(linked_strategy.target.open_orders.total_side_amount(:sell)).to eq(562.5895608799999)

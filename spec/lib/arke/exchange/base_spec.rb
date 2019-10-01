@@ -36,15 +36,12 @@ describe Arke::Exchange::Binance do
     ]
   end
 
- before { base.configure_market(market_config["market"]) }
-
   context "getting balance" do
     before(:each) do
       base.instance_variable_set(:@balances, balances)
     end
 
     it "returns the balance info of the currency "do
-      expect(base.balances).to eq(balances)
       expect(base.balance("BTC")).to eq(balance_btc)
       expect(base.balance("LTC")).to eq(balance_ltc)
       expect(base.balance("USD")).to eq(nil)
@@ -66,15 +63,15 @@ describe Arke::Exchange::Binance do
     it "notifies trade when the market id match" do
       strategy.stub(:orderback)
       base.register_on_trade_cb(&strategy.method(:orderback))
-      expect(strategy).to receive(:orderback).once.with(trade, order)
-      base.notify_trade(trade, order)
+      expect(strategy).to receive(:orderback).once.with(trade)
+      base.notify_trade(trade)
     end
 
     it "doesn't notify then the market doesn't match" do
       strategy.stub(:orderback)
       base.register_on_trade_cb(&strategy.method(:orderback))
       expect(strategy).not_to receive(:orderback).with(trade, order)
-      base.notify_trade(incorrect_trade, order)
+      base.notify_trade(incorrect_trade)
     end
   end
 end

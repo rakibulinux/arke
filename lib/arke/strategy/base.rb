@@ -1,27 +1,29 @@
+# frozen_string_literal: true
+
 module Arke::Strategy
   # Base class for all strategies
   class Base
-    attr_reader :debug_infos, :period, :period_random_delay
-    attr_reader :sources, :target, :id
+    attr_accessor :timer
+    attr_reader :debug_infos, :period, :period_random_delay, :linked_strategy_id
+    attr_reader :sources, :target, :id, :debug
 
-    Sides = %w{asks bids both}
+    SIDES = %w[asks bids both].freeze
+    DEFAULT_PERIOD = 10
 
-    DefaultPeriod = 10
-
-    def initialize(sources, target, config, executor, reactor)
+    def initialize(sources, target, config, reactor)
       @config = config
       @id = @config["id"]
       @volume_ratio = config["volume_ratio"]
       @spread = config["spread"]
       @precision = config["precision"]
-      @debug = !!config["debug"]
+      @debug = config["debug"] ? true : false
       @debug_infos = {}
-      @period = (config["period"] || DefaultPeriod).to_f
+      @period = (config["period"] || DEFAULT_PERIOD).to_f
       @period_random_delay = config["period_random_delay"]
       params = @config["params"] || {}
-      @side = Sides.include?(params["side"]) ? params["side"] : "both"
+      @linked_strategy_id = params["linked_strategy_id"]
+      @side = SIDES.include?(params["side"]) ? params["side"] : "both"
       @trades = []
-      @executor = executor
       @sources = sources
       @target = target
       @reactor = reactor
@@ -34,13 +36,12 @@ module Arke::Strategy
 
     def push_debug(step_name, step_data)
       return unless @debug
+
       @debug_infos[step_name] = step_data
     end
 
-    def assert_currency_found(ex, currency)
-      unless ex.balance(currency)
-        raise "ID:#{id} Currency #{currency} not found on #{ex.driver}".red
-      end
+    def assert_currency_found(account, currency)
+      raise "ID:#{id} Currency #{currency} not found on #{account.driver}".red unless account.balance(currency)
     end
 
     def source

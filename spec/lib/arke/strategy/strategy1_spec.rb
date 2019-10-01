@@ -1,9 +1,10 @@
 require "rails_helper"
 
 describe Arke::Strategy::Strategy1 do
-  let(:strategy) { Arke::Strategy::Strategy1.new([source], target, config, nil, nil) }
-  let(:source) { Arke::Exchange.create(config["sources"].first) }
-  let(:target) { Arke::Exchange.create(config["target"]) }
+  let(:strategy) { Arke::Strategy::Strategy1.new([source], target, config, nil) }
+  let(:account) { Arke::Exchange.create(account_config) }
+  let(:source) { Arke::Market.new(config["sources"].first["market"], account) }
+  let(:target) { Arke::Market.new(config["target"]["market"], account) }
   let(:side) { "both" }
   let(:spread_asks) { 0.01 }
   let(:spread_bids) { 0.02 }
@@ -25,7 +26,7 @@ describe Arke::Strategy::Strategy1 do
         "min_order_back_amount" => 0.001,
       },
       "target" => {
-        "driver" => "bitfaker",
+        "account_id" => 1,
         "market" => {
           "id" => "BTCUSD",
           "base" => "BTC",
@@ -33,7 +34,7 @@ describe Arke::Strategy::Strategy1 do
         },
       },
       "sources" => [
-        "driver" => "bitfaker",
+        "account_id" => 1,
         "market" => {
           "id" => "BTCUSD",
           "base" => "BTC",
@@ -43,18 +44,19 @@ describe Arke::Strategy::Strategy1 do
     }
   end
 
+  let(:account_config) do
+    {
+      "id" => 1,
+      "driver" => "bitfaker",
+    }
+  end
   let(:target_orderbook) { strategy.call }
   let(:target_bids) { target_orderbook[:buy] }
   let(:target_asks) { target_orderbook[:sell] }
 
-  before do
-    target.configure_market(config["target"]["market"])
-    source.configure_market(config["sources"].first["market"])
-  end
-
   before(:each) do
-    source.fetch_balances
-    target.fetch_balances
+    source.account.fetch_balances
+    target.account.fetch_balances
     source.start
   end
 
@@ -167,7 +169,7 @@ describe Arke::Strategy::Strategy1 do
   context "callback method is functioning" do
     it "registers a callback" do
       strategy
-      expect(target.instance_variable_get(:@trades_cb).length).to eq(1)
+      expect(target.account.instance_variable_get(:@trades_cb).length).to eq(1)
     end
   end
 end

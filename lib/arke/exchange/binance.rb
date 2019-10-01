@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Arke::Exchange
   class Binance < Base
     attr_reader :last_update_id
@@ -5,13 +7,10 @@ module Arke::Exchange
 
     def initialize(opts)
       super
-      @ws_url = "wss://stream.binance.com:9443/ws/#{@market}@depth"
       @client = ::Binance::Client::REST.new(api_key: @api_key, secret_key: @secret, adapter: @adapter)
-    end
-
-    def start
-      update_orderbook
-      @ws = Faye::WebSocket::Client.new(@ws_url)
+      @min_notional = {}
+      @min_quantity = {}
+      @base_precision = {}
     end
 
     def build_order(data, side)
@@ -24,20 +23,20 @@ module Arke::Exchange
     end
 
     def new_trade(data)
-      taker_type = data['b'] > data['a'] ? :buy : :sell
-      market = data['s']
+      taker_type = data["b"] > data["a"] ? :buy : :sell
+      market = data["s"]
       pm_id = @platform_markets[market]
 
       trade = Trade.new(
-        price: data['p'],
-        amount: data['q'],
+        price:              data["p"],
+        amount:             data["q"],
         platform_market_id: pm_id,
-        taker_type: taker_type
+        taker_type:         taker_type
       )
-      @opts[:on_trade].call(trade, market) if @opts[:on_trade]
+      @opts[:on_trade]&.call(trade, market)
     end
 
-    def listen_trades(markets_list = nil)
+    def listen_trades(markets_list=nil)
       markets_list.each do |market|
         ws = Faye::WebSocket::Client.new("wss://stream.binance.com:9443/ws/#{market.downcase}@trade")
 
@@ -48,37 +47,38 @@ module Arke::Exchange
       end
     end
 
-    def update_orderbook
-      orderbook = Arke::Orderbook::Orderbook.new(@market)
+    def update_orderbook(market)
+      orderbook = Arke::Orderbook::Orderbook.new(market)
       limit = @opts["limit"] || 1000
-      snapshot = @client.depth(symbol: @market.upcase, limit: limit)
-      Array(snapshot['bids']).each do |order|
+      snapshot = @client.depth(symbol: market.upcase, limit: limit)
+      Array(snapshot["bids"]).each do |order|
         orderbook.update(
           build_order(order, :buy)
         )
       end
-      Array(snapshot['asks']).each do |order|
+      Array(snapshot["asks"]).each do |order|
         orderbook.update(
           build_order(order, :sell)
         )
       end
-      @orderbook = orderbook
+      orderbook
     end
 
     def markets
       @client.exchange_info["symbols"]
-      .filter { |s| s["status"] == "TRADING" }
-      .map { |s| s["symbol"] }
+             .filter {|s| s["status"] == "TRADING" }
+             .map {|s| s["symbol"] }
     end
 
     def get_amount(order)
-      @min_notional = get_min_notional unless @min_notional
+      min_notional = @min_notional[order.market] ||= get_min_notional(order.market)
+      base_precision = @base_precision[order.market] ||= get_base_precision(order.market)
       percentage = 0.2
       notional = order.price * order.amount
-      if notional > @min_notional
+      if notional > min_notional
         order.amount
-      elsif (@min_notional * percentage) < notional
-        amount = (@min_notional/order.price).ceil(@base_precision.to_f)
+      elsif (min_notional * percentage) < notional
+        return (min_notional / order.price).ceil(base_precision)
       else
         raise "Amount of order too small"
       end
@@ -86,18 +86,17 @@ module Arke::Exchange
 
     def create_order(order)
       amount = get_amount(order)
-      unless amount == 0
-        raw_order = {
-          symbol: @market.upcase,
-          side: order.side.upcase,
-          type: 'LIMIT',
-          time_in_force: 'GTC',
-          quantity: amount,
-          price: order.price,
-        }
-        pp raw_order
-        @client.create_order!(raw_order)
-      end
+      return if amount.zero?
+
+      raw_order = {
+        symbol:        order.market.upcase,
+        side:          order.side.upcase,
+        type:          "LIMIT",
+        time_in_force: "GTC",
+        quantity:      amount,
+        price:         order.price,
+      }
+      @client.create_order!(raw_order)
     end
 
     def get_balances
@@ -105,27 +104,49 @@ module Arke::Exchange
       balances.map do |data|
         {
           "currency" => data["asset"],
-          "free" => data["free"].to_f,
-          "locked" => data["locked"].to_f,
-          "total" => data["free"].to_f + data["locked"].to_f,
+          "free"     => data["free"].to_f,
+          "locked"   => data["locked"].to_f,
+          "total"    => data["free"].to_f + data["locked"].to_f,
         }
       end
     end
 
-    def fetch_openorders
-      @client.open_orders(symbol: @market).each do |o|
+    def fetch_openorders(market)
+      @client.open_orders(symbol: market).map do |o|
         remaining_volume = o["origQty"].to_f - o["executedQty"].to_f
-        order = Arke::Order.new(o["symbol"], o["price"].to_f, remaining_volume, o["side"].downcase.to_sym)
-        order.id = o["orderId"]
-        @open_orders.add_order(order)
+        Arke::Order.new(
+          o["symbol"],
+          o["price"].to_f,
+          remaining_volume,
+          o["side"].downcase.to_sym,
+          o["type"].downcase.to_sym,
+          o["orderId"]
+        )
       end
-      @open_orders
     end
 
-    def get_min_notional
-      @client.exchange_info['symbols']
-        .find { |s| s["symbol"] == @market }['filters']
-        .find { |f| f['filterType'] == 'MIN_NOTIONAL' }['minNotional'].to_f
+    def get_base_precision(market)
+      min_quantity = @min_quantity[market] ||= get_min_quantity(market)
+      return 0 if min_quantity >= 1
+
+      n = 0
+      while min_quantity < 1
+        n += 1
+        min_quantity *= 10
+      end
+      n
+    end
+
+    def get_min_quantity(market)
+      @client.exchange_info["symbols"]
+             .find {|s| s["symbol"] == market }["filters"]
+             .find {|f| f["filterType"] == "LOT_SIZE" }["minQty"].to_f
+    end
+
+    def get_min_notional(market)
+      @client.exchange_info["symbols"]
+             .find {|s| s["symbol"] == market }["filters"]
+             .find {|f| f["filterType"] == "MIN_NOTIONAL" }["minNotional"].to_f
     end
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "bitx"
 module BitX
   class Configuration
@@ -6,14 +8,14 @@ module BitX
 
   def self.conn
     return @conn if @conn
-    @conn = Faraday.new(url: 'https://api.mybitx.com')  do |builder|
+
+    @conn = Faraday.new(url: "https://api.mybitx.com") do |builder|
       builder.adapter(configuration.adapter)
       builder.response :logger if configuration.debug == true
     end
     @conn.headers[:user_agent] = "bitx-ruby/#{BitX::VERSION::STRING}"
     @conn
   end
-
 end
 
 module Arke::Exchange
@@ -30,9 +32,7 @@ module Arke::Exchange
       end
     end
 
-    def start
-      update_orderbook
-    end
+    def start; end
 
     def build_order(data, side)
       Arke::Order.new(
@@ -47,16 +47,16 @@ module Arke::Exchange
       BitX.balance.map do |data|
         {
           "currency" => data[:asset],
-          "free" => data[:balance].to_f,
-          "locked" => data[:reserved].to_f,
-          "total" => data[:balance].to_f + data[:reserved].to_f,
+          "free"     => data[:balance].to_f,
+          "locked"   => data[:reserved].to_f,
+          "total"    => data[:balance].to_f + data[:reserved].to_f,
         }
       end
     end
 
-    def update_orderbook
-      orderbook = Arke::Orderbook::Orderbook.new(@market)
-      snapshot = BitX.orderbook(@market)
+    def update_orderbook(market)
+      orderbook = Arke::Orderbook::Orderbook.new(market)
+      snapshot = BitX.orderbook(market)
       snapshot[:bids].each do |order|
         orderbook.update(
           build_order(order, :buy)
@@ -67,22 +67,22 @@ module Arke::Exchange
           build_order(order, :sell)
         )
       end
-      @orderbook = orderbook
+      orderbook
     end
 
     def markets
-      BitX.tickers.map { |t| t[:pair] }
+      BitX.tickers.map {|t| t[:pair] }
     end
 
     def create_order(order)
-      type = order.side == :buy ? 'BID' : 'ASK'
+      type = order.side == :buy ? "BID" : "ASK"
       params = {
-        pair: @market.upcase,
-        type: type,
+        pair:   order.market.upcase,
+        type:   type,
         volume: order.amount.to_f,
-        price: order.price.to_f
+        price:  order.price.to_f
       }
-      path = '/api/1/postorder'
+      path = "/api/1/postorder"
       BitX.conn.basic_auth(@api_key, @secret)
       BitX.conn.post(path, params)
     end

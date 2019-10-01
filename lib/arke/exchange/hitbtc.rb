@@ -7,16 +7,13 @@ module Arke::Exchange
 
       @ws_url = "wss://#{opts['host']}/api/2/ws"
       @connection = Faraday.new("https://#{opts['host']}") do |builder|
-        builder.adapter(opts[:faraday_adapter] || :em_synchrony)
         builder.use FaradayMiddleware::ParseJson, :content_type => /\bjson$/
+        builder.adapter(@adapter)
       end
       @connection.basic_auth(@api_key, @secret)
-
-      @orderbook = Arke::Orderbook::Orderbook.new(@market)
     end
 
     def start
-      update_orderbook
     end
 
     def build_order(data, side)
@@ -28,9 +25,9 @@ module Arke::Exchange
       )
     end
 
-    def update_orderbook
-      orderbook = Arke::Orderbook::Orderbook.new(@market)
-      snapshot = @connection.get("/api/2/public/orderbook/#{@market.upcase}").body
+    def update_orderbook(market)
+      orderbook = Arke::Orderbook::Orderbook.new(market)
+      snapshot = @connection.get("/api/2/public/orderbook/#{market.upcase}").body
       Array(snapshot['bid']).each do |order|
         orderbook.update(
           build_order(order, :buy)
@@ -41,11 +38,10 @@ module Arke::Exchange
           build_order(order, :sell)
         )
       end
-      @orderbook = orderbook
+      orderbook
     end
 
     def get_balances
-      update_orderbook
       balances = @connection.get("/api/2/trading/balance").body
       balances.map do |data|
         {

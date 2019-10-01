@@ -8,7 +8,7 @@ module Arke::Strategy
     include Arke::Helpers::Splitter
     include Arke::Helpers::Spread
 
-    def initialize(sources, target, config, executor, reactor)
+    def initialize(sources, target, config, reactor)
       super
       params = @config["params"] || {}
       @levels_size = params["levels_size"].to_f
@@ -19,13 +19,12 @@ module Arke::Strategy
       @limit_bids_base = params["limit_bids_base"].to_f
       @side_asks = %w{asks both}.include?(@side)
       @side_bids = %w{bids both}.include?(@side)
-      Arke::Log.info "-==== Copy Strategy ====-"
     end
 
     def call
       raise "This strategy supports only one exchange source" if sources.size > 1
-      assert_currency_found(target, target.base)
-      assert_currency_found(target, target.quote)
+      assert_currency_found(target.account, target.base)
+      assert_currency_found(target.account, target.quote)
       split_opts = {
         step_size: @levels_size,
       }
@@ -38,9 +37,9 @@ module Arke::Strategy
       ob_spread = ob.spread(@spread_bids, @spread_asks)
 
       limit_asks_quote = nil
-      limit_bids_quote = target.balance(target.quote)["total"]
+      limit_bids_quote = target.account.balance(target.quote)["total"]
 
-      target_base_total = target.balance(target.base)["total"]
+      target_base_total = target.account.balance(target.base)["total"]
       limit_bids_base = @limit_bids_base
 
       if target_base_total < @limit_asks_base
