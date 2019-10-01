@@ -19,9 +19,7 @@ module Arke::Strategy
       @limit_bids_base = params["limit_bids_base"].to_f
       @side_asks = %w{asks both}.include?(@side)
       @side_bids = %w{bids both}.include?(@side)
-      @enable_orderback = false
       Arke::Log.info "-==== Copy Strategy ====-"
-      Arke::Log.info "min order back amount: #{source.min_order_back_amount}"
     end
 
     def call

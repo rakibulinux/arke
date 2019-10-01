@@ -22,6 +22,7 @@ describe Arke::Strategy::Strategy1 do
         "levels_size" => 0.01,
         "levels_count" => 5,
         "side" => side,
+        "min_order_back_amount" => 0.001,
       },
       "target" => {
         "driver" => "bitfaker",

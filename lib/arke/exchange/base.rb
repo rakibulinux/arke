@@ -6,7 +6,7 @@ module Arke::Exchange
 
     attr_reader :delay, :open_orders, :market, :driver, :opts, :account_id
     attr_reader :balances, :base, :quote, :base_precision, :quote_precision
-    attr_reader :min_ask_amount, :min_bid_amount, :min_order_back_amount
+    attr_reader :min_ask_amount, :min_bid_amount
     attr_accessor :timer
 
     DefaultDelay = 1
@@ -37,7 +37,6 @@ module Arke::Exchange
       @min_bid_amount = market["min_bid_amount"]
       @open_orders = Arke::Orderbook::OpenOrders.new(@market)
       @orderbook = Arke::Orderbook::Orderbook.new(@market)
-      @min_order_back_amount = market["min_order_back_amount"].to_f
     end
 
     def info(msg)

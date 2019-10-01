@@ -1,9 +1,9 @@
 require "rails_helper"
 
-describe Arke::Strategy::Example1 do
+describe Arke::Strategy::Orderback do
   include_context "mocked rubykube"
 
-  let(:strategy) { Arke::Strategy::Example1.new([source], target, config, executor, nil) }
+  let(:strategy) { Arke::Strategy::Orderback.new([source], target, config, executor, nil) }
   let(:config) do
     {
       "id" => 1,
@@ -18,6 +18,7 @@ describe Arke::Strategy::Example1 do
         "levels_count" => 5,
         "side" => "both",
         "enable_orderback" => true,
+        "min_order_back_amount" => 1,
       },
       "target" => {
         "driver" => "rubykube",
@@ -55,10 +56,19 @@ describe Arke::Strategy::Example1 do
   before { source.configure_market(config["sources"].first["market"]) }
   let(:executor) { Arke::ActionExecutor.new(config["id"], target, source) }
 
+  context "callback method is functioning" do
+    it "registers a callback" do
+      strategy
+      expect(target.instance_variable_get(:@trades_cb).length).to eq(1)
+    end
+  end
+
   context "Creates an order back on trade event" do
     let(:order) { Arke::Order.new("ethusd", 1.21, 2.14, :buy) }
     let(:order_id) { target.create_order(order).body["id"] }
     let(:trade_executed) { { "trade" => { "ask_id" => order_id, "at" => 1546605232, "bid_id" => order_id, "id" => order_id, "kind" => "ask", "market" => "ethusd", "price" => "1.21", "volume" => "2.14" } } }
+    let(:low_trade_executed_1) { { "trade" => { "ask_id" => order_id, "at" => 1546605232, "bid_id" => order_id, "id" => order_id, "kind" => "ask", "market" => "ethusd", "price" => "1.21", "volume" => "0.14" } } }
+    let(:low_trade_executed_2) { { "trade" => { "ask_id" => order_id, "at" => 1546605232, "bid_id" => order_id, "id" => order_id, "kind" => "ask", "market" => "ethusd", "price" => "1.21", "volume" => "2" } } }
     let(:order_back) { Arke::Order.new("ethusd", 1.2221, 2.14, :sell) }
 
     it "recieves notify_trade" do
@@ -70,6 +80,31 @@ describe Arke::Strategy::Example1 do
       strategy
       EM.synchrony do
         target.send(:process_message, trade_executed)
+        EM::Synchrony.add_timer(0.015) do
+          expect(executor.instance_variable_get(:@exchanges)[:rubykube][:queue].instance_variable_get(:@sink).first.params[:order]).to eq(order_back)
+          EventMachine.stop
+        end
+      end
+
+
+    end
+
+    it "doesn't create an order back because of low amount" do
+      strategy
+      EM.synchrony do
+        target.send(:process_message, low_trade_executed_1)
+        EM::Synchrony.add_timer(0.015) do
+          expect(executor.instance_variable_get(:@exchanges)[:rubykube][:queue].instance_variable_get(:@sink).first).to eq nil
+          EventMachine.stop
+        end
+      end
+    end
+
+    it "creates an order back from two executed trades" do
+      strategy
+      EM.synchrony do
+        target.send(:process_message, low_trade_executed_1)
+        target.send(:process_message, low_trade_executed_2)
         EM::Synchrony.add_timer(0.015) do
           expect(executor.instance_variable_get(:@exchanges)[:rubykube][:queue].instance_variable_get(:@sink).first.params[:order]).to eq(order_back)
           EventMachine.stop

@@ -56,6 +56,7 @@ strategies:
     levels_count: 5
     side: both
     enable_orderback: false
+    min_order_back_amount: 0.0002
 
   target:
     account_id: 1
@@ -76,7 +77,6 @@ strategies:
       quote: USDT
       base_precision: 8
       quote_precision: 8
-      min_order_back_amount: 0.0002
 
 - id: BTCUSDT-micro
   type: microtrades
@@ -156,18 +156,19 @@ Orders amount are set according to the source orders volume of the same price le
 
 This strategy behaves like the *Copy* strategy and have the ability to order back the liquidity from the source exchange market.
 An soon as an order is matched, the strategy creates an order on the source exchange with the matched amount and the same price without the spread. This way if the spread configured is higher than the exchanges fee the P&L will be positive.
-Notice that the amount of the trade must be higher than the *min_order_back_amount* parameter set on the source exchange for the order back to be created, otherwise the trade will be ignored.
 
-| Field              | Description                                                  |
-| ------------------ | ------------------------------------------------------------ |
-| `spread_bids`      | Spread for bids side (in percentage)                         |
-| `spread_asks`      | Spread for asks side (in percentage)                         |
-| `limit_asks_base`  | Sum of amounts of orders of ask side                         |
-| `limit_bids_base`  | Sum of amounts of orders of bid side                         |
-| `levels_size`      | Minimum price difference between orders                      |
-| `levels_count`     | Number of orders for each side                               |
-| `side`             | Side where orders will be created (valid: `asks`, `bids`, `both`) |
-| `enable_orderback` | Flag for enabling orderback, could be: `true` or `false`     |
+| Field                   | Description                                                  |
+| ----------------------- | ------------------------------------------------------------ |
+| `spread_bids`           | Spread for bids side (in percentage)                         |
+| `spread_asks`           | Spread for asks side (in percentage)                         |
+| `limit_asks_base`       | Sum of amounts of orders of ask side                         |
+| `limit_bids_base`       | Sum of amounts of orders of bid side                         |
+| `levels_size`           | Minimum price difference between orders                      |
+| `levels_count`          | Number of orders for each side                               |
+| `side`                  | Side where orders will be created (valid: `asks`, `bids`, `both`) |
+| `enable_orderback`      | Flag for enabling orderback, could be: `true` or `false`     |
+| `min_order_back_amount` | The amount of the trade must be higher than this value for the order back to be created, otherwise the trade will be ignored. |
+
 
 
 
@@ -208,14 +209,13 @@ It is commonly used to create candles on a market with low activity.
 
 #### Market configuration
 
-| Field                  | Description                                                  |
-| ---------------------- | ------------------------------------------------------------ |
-| `id`                   | ID of market                                                 |
-| `base`                 | Base currency of market                                      |
-| `quote`                | Quote currency of market                                     |
-| `base_precision`       | Base precision of market                                     |
-| `quote_precision`      | Quote precision of market                                    |
-| `min_orderback_amount` | OPTIONAL. This parameter is used by strategies which support order back, see strategies documentation for more details. |
+| Field                   | Description                                                  |
+| ----------------------- | ------------------------------------------------------------ |
+| `id`                    | ID of market                                                 |
+| `base`                  | Base currency of market                                      |
+| `quote`                 | Quote currency of market                                     |
+| `base_precision`        | Base precision of market                                     |
+| `quote_precision`       | Quote precision of market                                    |
 
 
 

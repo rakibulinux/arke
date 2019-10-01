@@ -124,11 +124,4 @@ describe Arke::Strategy::Fixedprice do
       })
     end
   end
-
-  context "callback method is functioning" do
-    it "registers a callback" do
-      strategy
-      expect(target.instance_variable_get(:@trades_cb).length).to eq(1)
-    end
-  end
 end

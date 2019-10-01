@@ -38,6 +38,7 @@ require "arke/strategy/base"
 require "arke/strategy/copy"
 require "arke/strategy/fixedprice"
 require "arke/strategy/microtrades"
+require "arke/strategy/orderback"
 require "arke/strategy/strategy1"
 require "arke/strategy/example1"
 
