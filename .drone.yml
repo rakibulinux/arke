@@ -4,7 +4,7 @@ name: default
 
 steps:
   - name: Run rspec
-    image: ruby:2.6.3
+    image: ruby:2.6.5
     environment:
       DATABASE_HOST: database
       RAILS_ENV: test
