@@ -70,6 +70,11 @@ module Arke::Exchange
       }
       params.delete(:price) if order.type == "market"
       response = post("#{@peatio_route}/market/orders", params)
+
+      if response.status >= 300
+        Arke::Log.warn "ACCOUNT:#{id} Failed to create order #{order} status:#{response.status}(#{response.reason_phrase}) body:#{response.body}"
+      end
+
       if order.type == "limit" && response.env.status == 201 && response.env.body["id"]
         order.id = response.env.body["id"]
       end
@@ -79,12 +84,7 @@ module Arke::Exchange
     # Takes +order+ (+Arke::Order+ instance)
     # * cancels +order+ via RestApi
     def stop_order(order)
-      response = post(
-        "#{@peatio_route}/market/orders/#{order.id}/cancel"
-      )
-      @deleted_order.call(order)
-
-      response
+      post("#{@peatio_route}/market/orders/#{order.id}/cancel")
     end
 
     def get_balances
@@ -196,7 +196,7 @@ module Arke::Exchange
     end
 
     def process_message(msg)
-      # Arke::Log.debug "#{self.class}#process_message: #{msg}"
+      Arke::Log.info "#{self.class}#process_message: #{msg}"
       if msg["trade"]
         trd = msg["trade"]
         notify_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :buy, trd["volume"].to_f, trd["price"].to_f, trd["bid_id"]))
@@ -210,9 +210,9 @@ module Arke::Exchange
         order.id = ord["id"]
         case ord["state"]
         when "wait"
-          @created_order.call(order)
+          notify_created_order(order)
         when "cancel", "done"
-          @deleted_order.call(order)
+          notify_deleted_order(order)
         end
       end
     end

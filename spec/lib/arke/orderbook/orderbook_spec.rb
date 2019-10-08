@@ -1,27 +1,29 @@
+# frozen_string_literal: true
+
 describe Arke::Orderbook::Orderbook do
-  let(:market)     { 'ethusd' }
+  let(:market)     { "ethusd" }
   let(:orderbook)  { Arke::Orderbook::Orderbook.new(market) }
 
-  context 'orderbook#add' do
+  context "orderbook#add" do
     let(:order_buy)   { Arke::Order.new(market, 1, 1, :buy) }
     let(:order_sell)  { Arke::Order.new(market, 1, 1, :sell) }
     let(:order_sell2) { Arke::Order.new(market, 1, 1, :sell) }
 
-    it 'adds buy order to orderbook' do
+    it "adds buy order to orderbook" do
       orderbook.update(order_buy)
 
       expect(orderbook.book[:buy]).not_to be_nil
       expect(orderbook.book[:buy][order_buy.price]).not_to be_nil
     end
 
-    it 'adds sell order to orderbook' do
+    it "adds sell order to orderbook" do
       orderbook.update(order_sell)
 
       expect(orderbook.book[:sell]).not_to be_nil
       expect(orderbook.book[:sell][order_sell.price]).not_to be_nil
     end
 
-    it 'updates order with the same price' do
+    it "updates order with the same price" do
       orderbook.update(order_sell)
       orderbook.update(order_sell2)
 
@@ -29,10 +31,10 @@ describe Arke::Orderbook::Orderbook do
     end
   end
 
-  context 'orderbook#remove' do
-    let(:order_buy)   { Arke::Order.new(market, 1, 1, :buy) }
+  context "orderbook#remove" do
+    let(:order_buy) { Arke::Order.new(market, 1, 1, :buy) }
 
-    it 'removes correct order from orderbook' do
+    it "removes correct order from orderbook" do
       orderbook.update(order_buy)
       orderbook.update(Arke::Order.new(market, order_buy.price, 1, :buy))
       orderbook.update(Arke::Order.new(market, 11, 1, :sell))
@@ -44,7 +46,7 @@ describe Arke::Orderbook::Orderbook do
       expect(orderbook.book[:sell]).not_to be_nil
     end
 
-    it 'does nothing if non existing id' do
+    it "does nothing if non existing id" do
       orderbook.update(order_buy)
 
       orderbook.delete(Arke::Order.new(market, 10, 1, :buy))
@@ -54,12 +56,12 @@ describe Arke::Orderbook::Orderbook do
     end
   end
 
-  context 'orderbook#merge' do
+  context "orderbook#merge" do
     let(:ob1) { Arke::Orderbook::Orderbook.new(market) }
     let(:ob2) { Arke::Orderbook::Orderbook.new(market) }
     let(:ob3) { Arke::Orderbook::Orderbook.new(market) }
 
-    it 'merges two orderbooks into one' do
+    it "merges two orderbooks into one" do
       ob1.update(Arke::Order.new(market, 10, 10, :sell))
       ob1.update(Arke::Order.new(market, 20, 15, :sell))
       ob1.update(Arke::Order.new(market, 25, 5, :sell))
@@ -83,12 +85,12 @@ describe Arke::Orderbook::Orderbook do
   context "adjust_volume" do
     let(:price_points_buy) { [8, 6] }
     let(:price_points_sell) { [6, 8] }
-    let(:order_sell_0)     { Arke::Order.new('ethusd', 5, 1, :sell) }
-    let(:order_sell_1)     { Arke::Order.new('ethusd', 8, 1, :sell) }
-    let(:order_sell_2)     { Arke::Order.new('ethusd', 2, 1, :sell) }
-    let(:order_buy_0)      { Arke::Order.new('ethusd', 5, 1, :buy) }
-    let(:order_buy_1)      { Arke::Order.new('ethusd', 8, 1, :buy) }
-    let(:order_buy_2)      { Arke::Order.new('ethusd', 9, 1, :buy) }
+    let(:order_sell_0)     { Arke::Order.new("ethusd", 5, 1, :sell) }
+    let(:order_sell_1)     { Arke::Order.new("ethusd", 8, 1, :sell) }
+    let(:order_sell_2)     { Arke::Order.new("ethusd", 2, 1, :sell) }
+    let(:order_buy_0)      { Arke::Order.new("ethusd", 5, 1, :buy) }
+    let(:order_buy_1)      { Arke::Order.new("ethusd", 8, 1, :buy) }
+    let(:order_buy_2)      { Arke::Order.new("ethusd", 9, 1, :buy) }
 
     before(:each) do
       orderbook.update(order_sell_0)
@@ -100,34 +102,34 @@ describe Arke::Orderbook::Orderbook do
     end
 
     it "adjusts volume based on base volume requirements" do
-      book = orderbook.aggregate(price_points_buy, price_points_sell)
-              .to_ob
-              .adjust_volume(0.2, 0.3)
-      expect(book[:buy].to_hash).to eq({
-        5.0 => 0.06666666666666667,
-        8.5 => 0.13333333333333333,
-      })
-      expect(book[:sell].to_hash).to eq({
+      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1, 0.1)
+                      .to_ob
+                      .adjust_volume(0.2, 0.3)
+      expect(book[:buy].to_hash).to eq(
+        6.000000000000001 => 0.009523809523809525,
+        8.5               => 0.19047619047619047
+      )
+      expect(book[:sell].to_hash).to eq(
         3.5 => 0.19999999999999998,
-        8.0 => 0.09999999999999999,
-      })
-      expect(book.volume_bids_base).to eq(0.2)
+        8.0 => 0.09999999999999999
+      )
+      expect(book.volume_bids_base).to eq(0.19999999999999998)
       expect(book.volume_asks_base).to eq(0.3)
-      expect(book.volume_bids_quote).to eq(1.4666666666666666)
+      expect(book.volume_bids_quote).to eq(1.6761904761904762)
       expect(book.volume_asks_quote).to eq(1.5)
     end
 
     it "stops when reaching quote limit" do
-      book = orderbook.aggregate(price_points_buy, price_points_sell)
-              .to_ob
-              .adjust_volume(0.2, 0.3, 1.1, 1.2)
-      expect(book[:buy].to_hash).to eq({
-        8.5 => 0.12941176470588237,
-      })
-      expect(book[:sell].to_hash).to eq({
+      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1, 0.1)
+                      .to_ob
+                      .adjust_volume(0.2, 0.3, 1.1, 1.2)
+      expect(book[:buy].to_hash).to eq(
+        8.5 => 0.12941176470588237
+      )
+      expect(book[:sell].to_hash).to eq(
         3.5 => 0.19999999999999998,
-        8.0 => 0.0625,
-      })
+        8.0 => 0.0625
+      )
       expect(book.volume_bids_base).to eq(0.12941176470588237)
       expect(book.volume_asks_base).to eq(0.26249999999999996)
       expect(book.volume_bids_quote).to eq(1.1)
@@ -135,37 +137,35 @@ describe Arke::Orderbook::Orderbook do
     end
 
     it "does nothing if the orderbook volume is lower than the provided limit" do
-      book = orderbook.aggregate(price_points_buy, price_points_sell)
-              .to_ob
-              .adjust_volume(4, 6)
-      expect(book[:buy].to_hash).to eq({
-        5.0 => 1,
-        8.5 => 2,
-      })
-      expect(book[:sell].to_hash).to eq({
+      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1, 0.1)
+                      .to_ob
+                      .adjust_volume(4, 6)
+      expect(book[:buy].to_hash).to eq(
+        6.000000000000001 => 0.1,
+        8.5               => 2
+      )
+      expect(book[:sell].to_hash).to eq(
         3.5 => 2,
-        8.0 => 1,
-      })
-      expect(book.volume_bids_base).to eq(3)
+        8.0 => 1
+      )
+      expect(book.volume_bids_base).to eq(2.1)
       expect(book.volume_asks_base).to eq(3)
     end
 
     it "does nothing if the limits are nil" do
-      book = orderbook.aggregate(price_points_buy, price_points_sell)
-              .to_ob
-              .adjust_volume(nil, nil)
-      expect(book[:buy].to_hash).to eq({
-        5.0 => 1,
-        8.5 => 2,
-      })
-      expect(book[:sell].to_hash).to eq({
+      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1, 0.1)
+                      .to_ob
+                      .adjust_volume(nil, nil)
+      expect(book[:buy].to_hash).to eq(
+        6.000000000000001 => 0.1,
+        8.5               => 2
+      )
+      expect(book[:sell].to_hash).to eq(
         3.5 => 2,
-        8.0 => 1,
-      })
-      expect(book.volume_bids_base).to eq(3)
+        8.0 => 1
+      )
+      expect(book.volume_bids_base).to eq(2.1)
       expect(book.volume_asks_base).to eq(3)
     end
-
   end
-
 end

@@ -7,7 +7,7 @@ module Arke
 
       def execute
         Arke::Log.level = Logger::Severity.const_get(conf["log_level"].upcase || "INFO")
-        Arke::Reactor.new(strategies_configs, accounts_configs).run
+        Arke::Reactor.new(strategies_configs, accounts_configs, dry?).run
       end
     end
   end

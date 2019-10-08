@@ -6,8 +6,9 @@ module Arke
     class StrategyNotFound < StandardError; end
 
     # * @shutdown is a flag which controls strategy execution
-    def initialize(strategies_configs, accounts_configs)
+    def initialize(strategies_configs, accounts_configs, dry_run)
       @shutdown = false
+      @dry_run = dry_run
       init_accounts(accounts_configs)
       update_balances
       init_strategies(strategies_configs)
@@ -22,7 +23,7 @@ module Arke
       @accounts = {}
       accounts_configs.each do |config|
         account = @accounts[config["id"]] = Arke::Exchange.create(config)
-        executor = ActionExecutor.new(config["id"], account)
+        executor = ActionExecutor.new(account)
         account.executor = executor
       end
     end
@@ -72,9 +73,11 @@ module Arke
 
         @strategies.each do |strategy|
           Fiber.new do
-            Arke::Log.info("ID:#{strategy.id} Purging open orders on #{strategy.target.account.driver}")
-            strategy.target.account.cancel_all_orders(strategy.target.id)
-            strategy.target.account.executor.start
+            unless @dry_run
+              Arke::Log.info("ID:#{strategy.id} Purging open orders on #{strategy.target.account.driver}")
+              strategy.target.account.cancel_all_orders(strategy.target.id)
+              strategy.target.account.executor.start
+            end
 
             if strategy.delay_the_first_execute
               Arke::Log.warn("ID:#{strategy.id} Delaying the first execution")
@@ -110,7 +113,7 @@ module Arke
       end
 
       linked_strategy = find_strategy(strategy.linked_strategy_id)
-      if linked_strategy && linked_strategy.target.account.ws
+      if linked_strategy && linked_strategy.target.account.ws.nil?
         Log.warn "ID:#{strategy.id} Skipping strategy execution since linked strategy websocket is not connected"
         return
       end
@@ -156,6 +159,8 @@ module Arke
 
       Log.debug "ID:#{strategy.id} Current Orderbook\n#{strategy.target.open_orders}"
       Log.debug "ID:#{strategy.id} Desired Orderbook\n#{desired_orderbook}"
+      return if @dry_run
+
       actions = ActionScheduler.new(strategy.target.open_orders, desired_orderbook, strategy.target).schedule
       strategy.target.account.executor.push(actions)
     end

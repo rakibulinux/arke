@@ -50,6 +50,10 @@ module Arke::Orderbook
       get(side) ? get(side).first : nil
     end
 
+    def better_or_equal(side, a, b)
+      side == :buy ? a >= b : a <= b
+    end
+
     def better(side, a, b)
       side == :buy ? a > b : a < b
     end

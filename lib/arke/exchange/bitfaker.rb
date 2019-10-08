@@ -10,7 +10,6 @@ module Arke::Exchange
     end
 
     def start
-      load_orderbook
     end
 
     def cancel_all_orders(_market)
@@ -101,19 +100,10 @@ module Arke::Exchange
 
     private
 
-    def load_orderbook
-      raise "File #{@path} not found" unless File.exist?(@path)
-
-      fixture = YAML.load_file(@path)
-      orders = fixture[1]
-      orders.each {|order| add_order(order) }
-    end
-
     def add_order(order)
       _id, price, amount = order
       side = amount.negative? ? :sell : :buy
       amount = amount.abs
-      @created_order&.call(Arke::Order.new("ETHUSD", price, amount, side))
     end
   end
 end

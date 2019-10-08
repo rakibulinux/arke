@@ -21,6 +21,8 @@ module Arke::Exchange
       @balances = nil
       @timer = nil
       @trades_cb = []
+      @created_order_cb = []
+      @deleted_order_cb = []
       load_platform_markets(opts["driver"]) if opts[:load_platform_markets]
     end
 
@@ -38,16 +40,24 @@ module Arke::Exchange
     end
 
     def register_on_created_order(&cb)
-      @created_order = cb
+      @created_order_cb << cb
     end
 
     def register_on_deleted_order(&cb)
-      @deleted_order = cb
+      @deleted_order_cb << cb
     end
 
     # Is executed in exchange when trade event is pushed to the websocket
     def notify_trade(trade)
-      @trades_cb.each {|cb| cb.call(trade) }
+      @trades_cb.each {|cb| cb&.call(trade) }
+    end
+
+    def notify_created_order(order)
+      @created_order_cb.each {|cb| cb&.call(order) }
+    end
+
+    def notify_deleted_order(order)
+      @deleted_order_cb.each {|cb| cb&.call(order) }
     end
 
     def start

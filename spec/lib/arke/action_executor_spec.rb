@@ -30,7 +30,7 @@ describe Arke::ActionExecutor do
   let(:target) { Arke::Market.new(config["target"]["market"], account) }
   let(:market) { config["target"]["market"]['id'] }
   let(:sources) { }
-  let(:action_executor) { Arke::ActionExecutor.new(config["id"], account) }
+  let(:action_executor) { Arke::ActionExecutor.new(account) }
   let(:actions) { [] }
 
   context "actions are empty, delay 1 sec" do

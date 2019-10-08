@@ -3,9 +3,9 @@ module Arke
     include Arke::Helpers::Precision
     attr_reader :id, :account
 
-    def initialize(id, account)
+    def initialize(account)
       @account = account
-      @id = id
+      @id = account.id
       @queue = EM::Queue.new
     end
 
@@ -28,7 +28,7 @@ module Arke
 
     def stop
       @queue.close()
-      Arke::Log.debug "ID:#{id} Closed queue for #{account}"
+      Arke::Log.debug "ACCOUNT:#{id} Closed queue for #{account}"
       @timer.cancel()
     end
 
@@ -43,35 +43,29 @@ module Arke
       when :order_create
         execute do
           order = action.params[:order]
-          Arke::Log.info "ID:#{id} Creating order: #{order}"
+          Arke::Log.info "ACCOUNT:#{id} Creating order: #{order}"
           order = action.params[:order]
           price = apply_precision(order.price, action.destination.quote_precision)
           amount = apply_precision(order.amount, action.destination.base_precision.to_f,
             order.side == :sell ? action.destination.min_ask_amount.to_f : action.destination.min_bid_amount.to_f)
           begin
             order = Arke::Order.new(order.market, price, amount, order.side)
-            response = action.destination.account.create_order(order)
-            if response.respond_to?(:status) && response.status >= 300
-              Log.warn "ID:#{id} Failed to create order #{order} status:#{response.status}(#{response.reason_phrase}) body:#{response.body}"
-            else
-              order.id = response.env.body["id"]
-              action.destination.open_orders.add_order(order)
-            end
+            action.destination.account.create_order(order)
           rescue StandardError => e
-            Log.error "ID:#{id} #{e}\n#{e.backtrace.join("\n")}"
+            Log.error "ACCOUNT:#{id} #{e}\n#{e.backtrace.join("\n")}"
           end
         end
       when :order_stop
         execute do
           begin
-            Arke::Log.info "ID:#{id} Canceling order: #{action.params}"
+            Arke::Log.info "ACCOUNT:#{id} Canceling order: #{action.params}"
             action.destination.account.stop_order(action.params[:order])
           rescue StandardError
-            Log.error "ID:#{id} #{$!}"
+            Log.error "ACCOUNT:#{id} #{$!}"
           end
         end
       else
-        Arke::Log.error "ID:#{id} Unknown Action type: #{action.type}"
+        Arke::Log.error "ACCOUNT:#{id} Unknown Action type: #{action.type}"
       end
     end
   end

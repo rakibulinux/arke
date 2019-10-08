@@ -89,7 +89,28 @@ describe Arke::Exchange::Rubykube do
   context "rubykube#process_message" do
     let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
     let(:updated_order) { Arke::Order.new("ETHUSD", 1.0, 0.5, :buy) }
-    let(:order_partially_fullfilled) { {"order" => {"id" => order_id, "at" => 1_546_605_232, "market" => "ethusd", "kind" => "bid", "price" => "1", "state" => "wait", "remaining_volume" => "0.5", "origin_volume" => "1"}} }
+    let(:order_partially_fullfilled) do
+      {
+        "order" => {
+          "id"               => order_id,
+          "market"           => "ethusd",
+          "kind"             => "bid",
+          "side"             => "sell",
+          "ord_type"         => "limit",
+          "price"            => "1",
+          "state"            => "wait",
+          "remaining_volume" => "0.5",
+          "origin_volume"    => "1",
+          "executed_volume"  => "0.0",
+          "avg_price"        => "0.0",
+          "at"               => 1_570_537_877,
+          "created_at"       => 1_570_537_877,
+          "updated_at"       => 1_570_538_020,
+          "trades_count"     => 0
+        }
+      }
+    end
+
     let(:order_id) { rubykube.create_order(order).id }
     let(:order_cancelled) { {"order" => {"id" => order_id, "at" => 1_546_605_232, "market" => "ethusd", "kind" => "bid", "price" => "1", "state" => "cancel", "remaining_volume" => "1.0", "origin_volume" => "1.0"}} }
     let(:trade_executed) { {"trade" => {"ask_id" => order_id, "at" => 1_546_605_232, "bid_id" => order_id, "id" => order_id, "kind" => "ask", "market" => "ethusd", "price" => "1", "volume" => "1.0"}} }
