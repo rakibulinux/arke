@@ -26,19 +26,20 @@ module Arke::Exchange
     end
 
     def update_orderbook
+      orderbook = Arke::Orderbook::Orderbook.new(@market)
       snapshot = JSON.parse(@connection.get("api/spot/v3/instruments/#{@market}/book").body)
 
       Array(snapshot['bids']).each do |order|
-        @orderbook.update(
+        orderbook.update(
           build_order(order, :buy)
         )
       end
       Array(snapshot['asks']).each do |order|
-        @orderbook.update(
+        orderbook.update(
           build_order(order, :sell)
         )
       end
-      @orderbook
+      @orderbook = orderbook
     end
 
     def markets

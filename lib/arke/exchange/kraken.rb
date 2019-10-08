@@ -30,18 +30,19 @@ module Arke::Exchange
     end
 
     def update_orderbook
+      orderbook = Arke::Orderbook::Orderbook.new(@market)
       snapshot = JSON.parse(@rest_conn.get("/0/public/Depth?pair=#{@market.upcase}").body)
       result = snapshot['result']
-      return @orderbook if result.nil? or result.values.nil?
+      return orderbook if result.nil? or result.values.nil?
 
       Array(result.values.first['bids']).each do |order|
-        @orderbook.update(build_order(order, :buy))
+        orderbook.update(build_order(order, :buy))
       end
       Array(result.values.first['asks']).each do |order|
-        @orderbook.update(build_order(order, :sell))
+        orderbook.update(build_order(order, :sell))
       end
 
-      @orderbook
+      @orderbook = orderbook
     end
 
     def kraken_pair

@@ -29,18 +29,19 @@ module Arke::Exchange
     end
 
     def update_orderbook
+      orderbook = Arke::Orderbook::Orderbook.new(@market)
       snapshot = @connection.get("/api/2/public/orderbook/#{@market.upcase}").body
       Array(snapshot['bid']).each do |order|
-        @orderbook.update(
+        orderbook.update(
           build_order(order, :buy)
         )
       end
       Array(snapshot['ask']).each do |order|
-        @orderbook.update(
+        orderbook.update(
           build_order(order, :sell)
         )
       end
-      @orderbook
+      @orderbook = orderbook
     end
 
     def get_balances
