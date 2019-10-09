@@ -6,7 +6,7 @@ class Account < ApplicationRecord
   has_many :trades
   has_and_belongs_to_many :robots
 
-  ## validates :api_key, :name, presence: true, on: :create
+  validates :name, presence: true
   ## validates :api_key, with: :key_validator, strict: true
 
   ## after_create :create_api_key

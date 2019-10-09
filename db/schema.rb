@@ -2,11 +2,11 @@
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
 #
-# Note that this schema.rb definition is the authoritative source for your
-# database schema. If you need to create the application database on another
-# system, you should be using db:schema:load, not running all the migrations
-# from scratch. The latter is a flawed and unsustainable approach (the more migrations
-# you'll amass, the slower it'll run and the greater likelihood for issues).
+# This file is the source Rails uses to define your schema when running `rails
+# db:schema:load`. When creating a new database, `rails db:schema:load` tends to
+# be faster and is potentially less error prone than running all of your
+# migrations from scratch. Old migrations may fail to apply correctly if those
+# migrations use external dependencies or application code.
 #
 # It's strongly recommended that you check this file into your version control system.
 
@@ -33,7 +33,6 @@ ActiveRecord::Schema.define(version: 2019_08_03_182417) do
     t.bigint "account_id"
     t.string "currency"
     t.decimal "amount", precision: 10
-    t.decimal "available", precision: 10
     t.decimal "locked", precision: 10
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -57,8 +56,8 @@ ActiveRecord::Schema.define(version: 2019_08_03_182417) do
     t.string "quote"
     t.integer "base_precision"
     t.integer "quote_precision"
-    t.decimal "min_ask_amount", precision: 32, scale: 16, default: "0.0", null: false
-    t.decimal "min_bid_amount", precision: 32, scale: 16, default: "0.0", null: false
+    t.decimal "min_price", precision: 32, scale: 16, default: "0.0", null: false
+    t.decimal "min_amount", precision: 32, scale: 16, default: "0.0", null: false
     t.string "state"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

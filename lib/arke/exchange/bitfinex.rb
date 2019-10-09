@@ -7,9 +7,9 @@ module Arke::Exchange
       @ws_url = "wss://%s/ws/2" % opts["host"]
       @orderbook = Arke::Orderbook::Orderbook.new(@market)
       @connection = Faraday.new(:url => "https://#{opts["host"]}") do |builder|
+        builder.use FaradayMiddleware::ParseJson, :content_type => /\bjson$/
         builder.adapter(opts[:faraday_adapter] || :em_synchrony)
         builder.response :logger if opts["debug"]
-        builder.use FaradayMiddleware::ParseJson, :content_type => /\bjson$/
       end
     end
 

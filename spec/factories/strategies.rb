@@ -7,7 +7,7 @@ FactoryBot.define do
     target_market { create(:market, :ethusd) }
     name { Faker::Alphanumeric.alpha(7) }
     driver { %w(copy microtrades).sample }
-    interval { Faker::Number.number(1) }
+    interval { Faker::Number.number(digits: 1) }
     params { JSON.dump({}) }
     state { 'active' }
   end
