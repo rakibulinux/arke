@@ -2,18 +2,31 @@ class Market < ApplicationRecord
   belongs_to :exchange
   has_one :ticker
 
-  validates :name, presence: true
-  validate :exchange_market_uniqueness
+  validates :exchange_id,
+            :name,
+            :base,
+            :quote,
+            :state,
+            presence: true
+  
+  validates :base_precision,
+            :quote_precision,
+            :min_amount,
+            :min_price,
+            numericality: { greater_than_or_equal_to: 0, only_integer: true }
+  
+  validate  :exchange_market_uniqueness
 
   def to_h
     {
-      "id" => name,
+      "exchange_id" => :id,
+      "name" => name,
       "base" => base,
       "quote" => quote,
       "base_precision" => base_precision,
-      "quote_precision" => base_precision,
-      "min_ask_amount" => min_ask_amount,
-      "min_bid_amount" => min_bid_amount,
+      "quote_precision" => quote_precision,
+      "min_price" => min_amount,
+      "min_amount" => min_amount,
     }
   end
 
