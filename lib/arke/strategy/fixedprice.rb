@@ -39,14 +39,26 @@ module Arke::Strategy
 
       delta = rand(0..@random_delta) - (@random_delta / 2)
       top_ask = top_bid = @price + delta
-      price_points_asks = @side_asks ? split_constant(:asks, top_ask, @levels_count, split_opts) : nil
-      price_points_bids = @side_bids ? split_constant(:bids, top_bid, @levels_count, split_opts) : nil
+      price_points_asks = @side_asks ? split_constant(:asks, top_ask, @levels_count, split_opts) : []
+      price_points_bids = @side_bids ? split_constant(:bids, top_bid, @levels_count, split_opts) : []
+      volume_asks_base = 0.0
+      volume_bids_base = 0.0
+      default_ask_amount = @limit_asks_base / @levels_count
+      default_bid_amount = @limit_bids_base / @levels_count
+      ob_asks = price_points_asks.map do |price|
+        volume_asks_base += default_ask_amount
+        [price, default_ask_amount]
+      end
+      ob_bids = price_points_bids.map do |price|
+        volume_bids_base += default_bid_amount
+        [price, default_bid_amount]
+      end
       ob = Arke::Orderbook::Orderbook.new(
         target.id,
-        buy:              price_points_bids ? ::RBTree[price_points_bids.map {|price| [price, 1] }] : ::RBTree.new,
-        sell:             price_points_asks ? ::RBTree[price_points_asks.map {|price| [price, 1] }] : ::RBTree.new,
-        volume_bids_base: price_points_bids ? price_points_bids.size : 0,
-        volume_asks_base: price_points_asks ? price_points_asks.size : 0
+        sell:             price_points_asks ? ::RBTree[ob_asks] : ::RBTree.new,
+        buy:              price_points_bids ? ::RBTree[ob_bids] : ::RBTree.new,
+        volume_asks_base: volume_asks_base,
+        volume_bids_base: volume_bids_base,
       )
       ob_spread = ob.spread(@spread_bids, @spread_asks)
 

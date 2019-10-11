@@ -196,7 +196,7 @@ module Arke::Exchange
     end
 
     def process_message(msg)
-      Arke::Log.info "#{self.class}#process_message: #{msg}"
+      Arke::Log.debug "#{self.class}#process_message: #{msg}"
       if msg["trade"]
         trd = msg["trade"]
         notify_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :buy, trd["volume"].to_f, trd["price"].to_f, trd["bid_id"]))

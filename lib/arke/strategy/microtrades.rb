@@ -55,11 +55,11 @@ module Arke::Strategy
 
     def get_price(side)
       if @linked_strategy_id
-        linked_source = @reactor.find_strategy(@linked_strategy_id).source
-        top_ask = linked_source.orderbook[:sell].first
-        top_bid = linked_source.orderbook[:buy].first
+        linked_target = @reactor.find_strategy(@linked_strategy_id).target
+        top_ask = linked_target.open_orders[:sell].first
+        top_bid = linked_target.open_orders[:buy].first
         if [top_ask, top_bid].include?(nil)
-          raise EmptyOrderBook.new("Linked strategy orderbook is empty (top_ask:#{top_ask} top_bid: #{top_bid})")
+          raise EmptyOrderBook.new("Linked strategy orderbook is empty (top_ask:#{top_ask.inspect} top_bid: #{top_bid.inspect})")
         end
 
         price = side == :buy ? top_ask.first : top_bid.first

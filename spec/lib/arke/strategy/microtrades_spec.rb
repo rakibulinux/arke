@@ -20,7 +20,7 @@ describe Arke::Strategy::Microtrades do
 
   let(:account_config) do
     {
-      "id" => 1,
+      "id"     => 1,
       "driver" => "bitfaker",
     }
   end
@@ -83,7 +83,8 @@ describe Arke::Strategy::Microtrades do
 
     it "uses orderbook of linked strategy to define the price of sell and buy orders" do
       expect(reactor).to receive(:find_strategy).with(linked_strategy_id).exactly(:twice).and_return(linked_strategy)
-      linked_strategy.source.update_orderbook
+      linked_strategy.target.start
+
       expect(strategy.get_price(:buy)).to eq(145.8030)
       expect(strategy.get_price(:sell)).to eq(131.8410)
     end
@@ -111,7 +112,6 @@ describe Arke::Strategy::Microtrades do
       expect(strategy.get_amount(:buy)).to eq 100
       expect(strategy.get_amount(:sell)).to eq 100
     end
-
 
     it "raise an error if the orderbook is empty" do
       expect(reactor).to receive(:find_strategy).with(linked_strategy_id).exactly(:twice).and_return(linked_strategy)
