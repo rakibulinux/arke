@@ -5,13 +5,14 @@ module Arke::Exchange
   class Base
     include ::Arke::Helpers::Precision
 
-    attr_reader :delay, :driver, :opts, :id, :ws
+    attr_reader :delay, :driver, :opts, :id, :ws, :host, :key, :secret
     attr_accessor :timer, :executor
 
     DEFAULT_DELAY = 1
 
     def initialize(opts)
       @driver = opts["driver"]
+      @host = opts["host"]
       @api_key = opts["key"]
       @secret = opts["secret"]
       @id = opts["id"]
