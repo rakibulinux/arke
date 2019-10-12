@@ -188,8 +188,8 @@ It creates an order arround the reference *price* with a random value *random_de
 | `side`            | Side where orders will be created (valid: `asks`, `bids`, `both`) |
 | `price`           | Reference price for the strategy to create orderbook         |
 | `random_delta`    | Random value for deviation of the reference price (maximum deviation = random_delta / 2) |
-
-
+| `min_amount`      | Minimum amount of order                                                                  |
+| `max_amount`      | Maximum amount of order                                                                  |
 
 ##### Microtrades strategy
 

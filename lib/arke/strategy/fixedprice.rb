@@ -19,8 +19,13 @@ module Arke::Strategy
       @spread_asks = params["spread_asks"].to_f
       @limit_asks_base = params["limit_asks_base"].to_f
       @limit_bids_base = params["limit_bids_base"].to_f
-      @side_asks = %w{asks both}.include?(@side)
-      @side_bids = %w{bids both}.include?(@side)
+
+      @side_asks = %w[asks both].include?(@side)
+      @side_bids = %w[bids both].include?(@side)
+
+      @min_amount = (params["min_amount"] || 0.001).to_f
+      @max_amount = (params["max_amount"] || 1.0).to_f
+
       raise "Price must not be zero" if @price == 0
       Arke::Log.info "Initializing #{self.class} strategy with order_back #{@enable_orderback ? "enabled": "disabled"}"
     end
@@ -30,21 +35,23 @@ module Arke::Strategy
 
       assert_currency_found(target, target.base)
       assert_currency_found(target, target.quote)
-      split_opts = {
-        step_size: @levels_size,
-      }
 
       delta = rand(0..@random_delta) - (@random_delta / 2)
       top_ask = top_bid = @price + delta
-      price_points_asks = @side_asks ? split_constant(:asks, top_ask, @levels_count, split_opts) : nil
-      price_points_bids = @side_bids ? split_constant(:bids, top_bid, @levels_count, split_opts) : nil
+
+      price_points_asks = @side_asks ? split_constant(:asks, top_ask, @levels_count, step_size: @levels_size) : nil
+      price_points_bids = @side_bids ? split_constant(:bids, top_bid, @levels_count, step_size: @levels_size) : nil
+
+      sell = ::RBTree[price_points_asks.map {|price| [price, rand(@min_amount..@max_amount)] }] if price_points_asks
+      buy  = ::RBTree[price_points_bids.map {|price| [price, rand(@min_amount..@max_amount)] }] if price_points_bids
+
       ob = Arke::Orderbook::Orderbook.new(
         target.market,
-        buy: price_points_bids ? ::RBTree[price_points_bids.map{|price| [price, 1]}] : ::RBTree.new,
-        sell: price_points_asks ? ::RBTree[price_points_asks.map{|price| [price, 1]}] : ::RBTree.new,
+        sell:             sell || ::RBTree.new,
+        buy:              buy || ::RBTree.new,
         volume_bids_base: price_points_bids ? price_points_bids.size : 0,
-        volume_asks_base: price_points_asks ? price_points_asks.size : 0,
-        )
+        volume_asks_base: price_points_asks ? price_points_asks.size : 0
+      )
       ob_spread = ob.spread(@spread_bids, @spread_asks)
 
       limit_bids_quote = target.balance(target.quote)["total"]
