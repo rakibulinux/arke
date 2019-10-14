@@ -16,9 +16,11 @@ describe Arke::Exchange::Huobi do
   end
   let(:market_config) do
     {
-      "id"    => "ETHUSDT",
-      "base"  => "ETH",
-      "quote" => "USDT",
+      "id"             => "ETHUSDT",
+      "base"           => "ETH",
+      "quote"          => "USDT",
+      "min_ask_amount" => 0.01,
+      "min_bid_amount" => 0.01,
     }
   end
   let!(:market) { Arke::Market.new(market_config, huobi) }

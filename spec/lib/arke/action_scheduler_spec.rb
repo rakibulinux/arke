@@ -9,11 +9,13 @@ describe Arke::ActionScheduler do
       "driver" => "rubykube",
       "host"   => "http://www.example.com",
       "market" => {
-        "id"    => "ETHUSDT",
-        "base"  => "ETH",
-        "quote" => "USDT",
-        "base_precision" => 4,
+        "id"              => "ETHUSDT",
+        "base"            => "ETH",
+        "quote"           => "USDT",
+        "base_precision"  => 4,
         "quote_precision" => 4,
+        "min_ask_amount"  => 0.01,
+        "min_bid_amount"  => 0.01,
       },
     }
   end

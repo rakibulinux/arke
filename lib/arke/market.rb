@@ -20,6 +20,12 @@ class Arke::Market
     @open_orders = Arke::Orderbook::OpenOrders.new(id)
     @orderbook = Arke::Orderbook::Orderbook.new(id)
     register_callbacks
+    check_config
+  end
+
+  def check_config
+    raise "min_ask_amount is missing in market #{id} configuration" unless @min_ask_amount
+    raise "min_bid_amount is missing in market #{id} configuration" unless @min_bid_amount
   end
 
   def start

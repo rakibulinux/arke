@@ -28,6 +28,15 @@ module Arke::Strategy
       Arke::Log.info "Initializing #{self.class} strategy with order_back #{@enable_orderback ? 'enabled' : 'disabled'}"
     end
 
+    #
+    # Volume formulas with linear repartition:
+    #
+    # (1) SumAmounts = MinAmount * LevelsCount + MaxAmount * LevelsCount / 2
+    #
+    # From (1) we can deduce (2):
+    #
+    # (2) MaxAmount = 2 * SumAmounts / LevelsCount - 2 * MinAmount
+    #
     def call
       raise "This strategy doesn't support sources" unless sources.empty?
 
@@ -43,16 +52,28 @@ module Arke::Strategy
       price_points_bids = @side_bids ? split_constant(:bids, top_bid, @levels_count, split_opts) : []
       volume_asks_base = 0.0
       volume_bids_base = 0.0
-      default_ask_amount = @limit_asks_base / @levels_count
-      default_bid_amount = @limit_bids_base / @levels_count
+
+      max_amount_ask = 2 * @limit_asks_base / @levels_count - 2 * target.min_ask_amount
+      max_amount_bid = 2 * @limit_bids_base / @levels_count - 2 * target.min_bid_amount
+
+      max_amount_ask = target.min_ask_amount if max_amount_ask.negative?
+      max_amount_bid = target.min_bid_amount if max_amount_bid.negative?
+
+      ask_amounts = split_linear(nil, max_amount_ask, @levels_count, last_value: target.min_ask_amount)
+      bid_amounts = split_linear(nil, max_amount_bid, @levels_count, last_value: target.min_bid_amount)
+
       ob_asks = price_points_asks.map do |price|
-        volume_asks_base += default_ask_amount
-        [price, default_ask_amount]
+        amount = ask_amounts.shift
+        volume_asks_base += amount
+        [price, amount]
       end
+
       ob_bids = price_points_bids.map do |price|
-        volume_bids_base += default_bid_amount
-        [price, default_bid_amount]
+        amount = bid_amounts.shift
+        volume_bids_base += amount
+        [price, amount]
       end
+
       ob = Arke::Orderbook::Orderbook.new(
         target.id,
         sell:             price_points_asks ? ::RBTree[ob_asks] : ::RBTree.new,

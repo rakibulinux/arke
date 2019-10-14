@@ -40,9 +40,11 @@ describe Arke::Strategy::Orderback do
       "sources" => [
         "account_id" => 1,
         "market"     => {
-          "id"    => "BTCUSD",
-          "base"  => "BTC",
-          "quote" => "USD",
+          "id"             => "BTCUSD",
+          "base"           => "BTC",
+          "quote"          => "USD",
+          "min_ask_amount" => 0.001,
+          "min_bid_amount" => 0.001,
         },
       ],
     }

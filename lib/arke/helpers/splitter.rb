@@ -9,6 +9,7 @@ module Arke::Helpers
     def split_constant(side, best_price, count, opts={})
       step_size = opts[:step_size].to_f
       raise "missing step_size option" if step_size.zero?
+
       result = []
       count.times do
         price = combine(side, result.last || best_price, step_size)
@@ -17,15 +18,15 @@ module Arke::Helpers
       result
     end
 
-    def split_linear(side, best_price, count, opts={})
-      raise "missing last_price option" unless opts[:last_price]
+    def split_linear(side, best_value, count, opts={})
+      raise "missing last_value option" unless opts[:last_value]
 
-      step = combine(side, 0, opts[:last_price] - best_price) / count
-      raise "illegal range (best_price > last_price)" if step.negative?
+      step = combine(side, 0, opts[:last_value] - best_value).to_f / count
+      raise "illegal range (best_value > last_value)" if step.negative?
 
       result = []
       count.times do |i|
-        price = combine(side, best_price, (i + 1) * step)
+        price = combine(side, best_value, (i + 1) * step)
         result << price if price.positive?
       end
       result

@@ -11,9 +11,11 @@ describe Arke::Exchange::Hitbtc do
   end
   let(:market_config) do
     {
-      "id"    => "ETHUSD",
-      "base"  => "ETH",
-      "quote" => "USD",
+      "id"             => "ETHUSD",
+      "base"           => "ETH",
+      "quote"          => "USD",
+      "min_ask_amount" => 0.01,
+      "min_bid_amount" => 0.01,
     }
   end
   let!(:market) { Arke::Market.new(market_config, hitbtc) }

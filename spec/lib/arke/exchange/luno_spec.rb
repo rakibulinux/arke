@@ -10,9 +10,11 @@ describe Arke::Exchange::Luno do
   end
   let(:market_config) do
     {
-      "id"    => "XBTZAR",
-      "base"  => "XBT",
-      "quote" => "ZAR",
+      "id"             => "XBTZAR",
+      "base"           => "XBT",
+      "quote"          => "ZAR",
+      "min_ask_amount" => 0.001,
+      "min_bid_amount" => 0.001,
     }
   end
   let!(:market) { Arke::Market.new(market_config, luno) }

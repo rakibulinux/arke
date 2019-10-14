@@ -43,6 +43,8 @@ describe Arke::Strategy::Microtrades do
           "quote"           => "USD",
           "base_precision"  => 4,
           "quote_precision" => 4,
+          "min_ask_amount"  => 0.001,
+          "min_bid_amount"  => 0.001,
         },
       }
     }

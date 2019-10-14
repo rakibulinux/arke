@@ -1,14 +1,19 @@
+# frozen_string_literal: true
+
 describe Arke::Exchange::Binance do
   let(:faraday_adapter) { :em_synchrony }
   let(:base) do
-    Arke::Exchange::Base.new({ "driver" => "base" })
+    Arke::Exchange::Base.new("driver" => "base")
   end
 
-  let(:market_config) do {
-    "market" => {
-      "id" => "ETHUSDt",
-      "base" => "ETH",
-      "quote" => "USDT",
+  let(:market_config) do
+    {
+      "market" => {
+        "id"             => "ETHUSDt",
+        "base"           => "ETH",
+        "quote"          => "USDT",
+        "min_ask_amount" => 0.01,
+        "min_bid_amount" => 0.01,
       },
     }
   end
@@ -16,16 +21,16 @@ describe Arke::Exchange::Binance do
   let(:balance_btc) do
     {
       "currency" => "BTC",
-      "balance" => 4723846.89208129,
-      "locked" => 0.0,
+      "balance"  => 4_723_846.89208129,
+      "locked"   => 0.0,
     }
   end
 
   let(:balance_ltc) do
     {
       "currency" => "LTC",
-      "balance" => 4763468.68006011,
-      "locked" => 100.0,
+      "balance"  => 4_763_468.68006011,
+      "locked"   => 100.0,
     }
   end
 
@@ -41,7 +46,7 @@ describe Arke::Exchange::Binance do
       base.instance_variable_set(:@balances, balances)
     end
 
-    it "returns the balance info of the currency "do
+    it "returns the balance info of the currency " do
       expect(base.balance("BTC")).to eq(balance_btc)
       expect(base.balance("LTC")).to eq(balance_ltc)
       expect(base.balance("USD")).to eq(nil)
@@ -55,8 +60,8 @@ describe Arke::Exchange::Binance do
   end
 
   context "notify_trade" do
-    let(:trade) { Arke::Trade.new("ethusdt", :sell, 0.1, 180.0132, 632478) }
-    let(:incorrect_trade) { Arke::Trade.new("btcusdt", :sell, 0.1, 180.0132, 632479) }
+    let(:trade) { Arke::Trade.new("ethusdt", :sell, 0.1, 180.0132, 632_478) }
+    let(:incorrect_trade) { Arke::Trade.new("btcusdt", :sell, 0.1, 180.0132, 632_479) }
     let(:order) { Arke::Order.new("ETHUSDT", 2, 1, :buy) }
     let(:strategy) { double(:strategy) }
 

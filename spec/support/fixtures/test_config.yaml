@@ -14,14 +14,30 @@ strategies:
 - type: copy
   target:
     account_id: 1
-    market: 'ETHUSD'
+    market:
+      id: 10
+      market: 'ETHUSD'
+      min_ask_amount: 0.01
+      min_bid_amount: 0.01
   sources:
     - account_id: 2
-      market: 'ETHUSD'
+      market:
+        id: 11
+        market: 'ETHUSD'
+        min_ask_amount: 0.01
+        min_bid_amount: 0.01
 - type: copy
   target:
     account_id: 1
-    market: 'BTCUSD'
+    market:
+      id: 20
+      market: 'BTCUSD'
+      min_ask_amount: 0.01
+      min_bid_amount: 0.01
   sources:
     - account_id: 2
-      market: 'BTCUSD'
+      market:
+        id: 21
+        market: 'BTCUSD'
+        min_ask_amount: 0.01
+        min_bid_amount: 0.01
