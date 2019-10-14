@@ -23,7 +23,6 @@ module Arke::Exchange
       end
     end
 
-
     def start
       Arke::Log.info "ACCOUNT:#{id} Websocket connecting"
       @ws = Faye::WebSocket::Client.new(@ws_url, [], headers: generate_headers)

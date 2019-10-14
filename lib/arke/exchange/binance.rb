@@ -148,5 +148,8 @@ module Arke::Exchange
              .find {|s| s["symbol"] == market }["filters"]
              .find {|f| f["filterType"] == "MIN_NOTIONAL" }["minNotional"].to_f
     end
+
+    # TODO: Implement start method for binance.
+    def start; end
   end
 end

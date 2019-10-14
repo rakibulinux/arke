@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Arke::Strategy
   # * aggregates one exchange orderbook to open one order per level (param: level_count)
   # * side: asks, bids, both (default: both)
@@ -17,8 +19,8 @@ module Arke::Strategy
       @spread_asks = params["spread_asks"].to_f
       @limit_asks_base = params["limit_asks_base"].to_f
       @limit_bids_base = params["limit_bids_base"].to_f
-      @side_asks = %w{asks both}.include?(@side)
-      @side_bids = %w{bids both}.include?(@side)
+      @side_asks = %w[asks both].include?(@side)
+      @side_bids = %w[bids both].include?(@side)
     end
 
     def call
@@ -26,14 +28,18 @@ module Arke::Strategy
 
       assert_currency_found(target.account, target.base)
       assert_currency_found(target.account, target.quote)
+
       split_opts = {
         step_size: @levels_size,
       }
+
       top_ask = source.orderbook[:sell].first
       top_bid = source.orderbook[:buy].first
+
       price_points_asks = @side_asks ? split_constant(:asks, top_ask.first, @levels_count, split_opts) : nil
       price_points_bids = @side_bids ? split_constant(:bids, top_bid.first, @levels_count, split_opts) : nil
-      ob_agg = source.orderbook.aggregate(price_points_bids, price_points_asks)
+
+      ob_agg = source.orderbook.aggregate(price_points_bids, price_points_asks, target.min_ask_amount, target.min_bid_amount)
       ob = ob_agg.to_ob
 
       limit_asks_quote = nil
@@ -44,7 +50,7 @@ module Arke::Strategy
 
       if target_base_total < @limit_asks_base
         limit_asks_base = target_base_total
-        Arke::Log.warn("#{target.base} balance on #{target.driver} is #{target_base_total} lower then the limit set to #{@limit_asks_base}")
+        Arke::Log.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower then the limit set to #{@limit_asks_base}")
       else
         limit_asks_base = @limit_asks_base
       end

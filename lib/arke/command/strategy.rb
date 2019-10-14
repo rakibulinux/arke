@@ -38,14 +38,14 @@ module Arke
           dax
         end
 
-        def execute()
+        def execute
           config = build_config(strategy_name, orderbook)
           dax = build_dax(config)
           s = Arke::Strategy.create(config)
           s.call(dax)
           s.debug_infos.each do |name, data|
             puts name
-            if data.kind_of?(Arke::Orderbook::Orderbook)
+            if data.is_a?(Arke::Orderbook::Orderbook)
               puts data.to_s(2)
             else
               pp data

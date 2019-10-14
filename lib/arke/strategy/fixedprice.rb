@@ -23,9 +23,15 @@ module Arke::Strategy
       @limit_bids_base = params["limit_bids_base"].to_f
       @side_asks = %w[asks both].include?(@side)
       @side_bids = %w[bids both].include?(@side)
-      raise "Price must not be zero" if @price.zero?
 
       Arke::Log.info "Initializing #{self.class} strategy with order_back #{@enable_orderback ? 'enabled' : 'disabled'}"
+      check_config
+    end
+
+    def check_config
+      raise "ID:#{id} Price must not be zero" if @price.zero?
+      raise "ID:#{id} levels_size is missing" unless @levels_size
+      raise "ID:#{id} levels_count is missing" unless @levels_count
     end
 
     #
@@ -42,6 +48,7 @@ module Arke::Strategy
 
       assert_currency_found(target.account, target.base)
       assert_currency_found(target.account, target.quote)
+
       split_opts = {
         step_size: @levels_size,
       }
@@ -79,7 +86,7 @@ module Arke::Strategy
         sell:             price_points_asks ? ::RBTree[ob_asks] : ::RBTree.new,
         buy:              price_points_bids ? ::RBTree[ob_bids] : ::RBTree.new,
         volume_asks_base: volume_asks_base,
-        volume_bids_base: volume_bids_base,
+        volume_bids_base: volume_bids_base
       )
       ob_spread = ob.spread(@spread_bids, @spread_asks)
 
@@ -89,7 +96,7 @@ module Arke::Strategy
 
       if target_base_total < @limit_asks_base
         limit_asks_base = target_base_total
-        Arke::Log.warn("#{target.base} balance on #{target.driver} is #{target_base_total} lower then the limit set to #{@limit_asks_base}")
+        Arke::Log.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower then the limit set to #{@limit_asks_base}")
       else
         limit_asks_base = @limit_asks_base
       end

@@ -129,4 +129,27 @@ describe Arke::Strategy::Fixedprice do
       )
     end
   end
+
+  context "requested volume is low compared to market min order amount" do
+    let(:side) { "both" }
+    let(:limit_asks_base) { 0.002 }
+    let(:limit_bids_base) { 0.002 }
+
+    it "outputs a target orberbook" do
+      expect(target_bids.to_hash).to eq(
+        120.49099999999997 => 0.00039999999999999996,
+        120.50079999999998 => 0.00039999999999999996,
+        120.51059999999998 => 0.00039999999999999996,
+        120.52039999999998 => 0.00039999999999999996,
+        120.5302           => 0.00039999999999999996
+      )
+      expect(target_asks.to_hash).to eq(
+        124.24010000000001 => 0.00039999999999999996,
+        124.2502           => 0.00039999999999999996,
+        124.26030000000002 => 0.00039999999999999996,
+        124.27040000000002 => 0.00039999999999999996,
+        124.28050000000003 => 0.00039999999999999996
+      )
+    end
+  end
 end

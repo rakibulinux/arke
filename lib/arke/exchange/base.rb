@@ -88,8 +88,7 @@ module Arke::Exchange
 
     def balance(currency)
       return nil unless @balances
-
-      @balances.find {|b| b["currency"] == currency }
+      @balances.find {|b| b["currency"].casecmp?(currency) }
     end
 
     def build_query(params)

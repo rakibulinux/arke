@@ -55,7 +55,7 @@ module Arke
       return nil if id.nil?
 
       strategy = @strategies.find {|s| s.id == id }
-      raise StrategyNotFound.new("with id: #{id}") unless strategy
+      raise StrategyNotFound.new("Strategy not found with id: #{id}") unless strategy
 
       strategy
     end

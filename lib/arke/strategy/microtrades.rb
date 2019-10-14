@@ -21,11 +21,16 @@ module Arke::Strategy
       @price_difference = params["price_difference"] || 0.02 if linked_strategy_id
       @enable_orderback = false
       @sides = SIDES_MAP[@side]
+      check_config
       Arke::Log.info "ID:#{id} Market infos: #{market_infos}"
       Arke::Log.info "ID:#{id} Min amount: #{@min_amount}"
       Arke::Log.info "ID:#{id} Max amount: #{@max_amount}"
-      raise "min amount must not be zero" if @min_amount.zero?
-      raise "max amount must not be zero" if @max_amount.zero?
+    end
+
+    def check_config
+      raise "ID:#{id} Min amount must not be zero" if @min_amount.zero?
+      raise "ID:#{id} Max amount must not be zero" if @max_amount.zero?
+      raise "ID:#{id} Min amount should be lower than max amount" if @min_amount > @max_amount
     end
 
     def delay_the_first_execute
