@@ -6,7 +6,18 @@ class Account < ApplicationRecord
   has_many :trades
   has_and_belongs_to_many :robots
 
-  validates :name, presence: true
+  validates :name, presence: true, length: { minimum: 2 }
+  validates :exchange_id, presence: true, numericality: { only_integer: true }
+  validates :user_id, presence: true, uniqueness: true, numericality: { only_integer: true }
+  
+  def to_h
+    {
+      "user_id" => user_id,
+      "exchange_id" => exchange_id,
+      "name" => name,
+    }
+  end
+
   ## validates :api_key, with: :key_validator, strict: true
 
   ## after_create :create_api_key
