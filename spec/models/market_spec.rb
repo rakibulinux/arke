@@ -30,10 +30,10 @@ RSpec.describe Market, type: :model do
         name:            :BTCUSD,
         base:            :USD,
         quote:           :BTC,
-        base_precision:  3,
-        quote_precision: 3,
-        min_price:       10_000,
-        min_amount:      10_000,
+        base_precision:  1,
+        quote_precision: 4,
+        min_price:       100,
+        min_amount:      10,
         state:           :disabled
       }
     end
