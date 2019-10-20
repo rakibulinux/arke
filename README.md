@@ -234,3 +234,25 @@ It is commonly used to create candles on a market with low activity.
 | ------------ | ------------------------------------------------------- |
 | `account_id` | ID of account which will place order on target exchange |
 | `market`     | Market configuration you can see above                  |
+
+### InfluxDB
+
+Example converting CSV to influx:
+```
+./bin/convert.awk tmp/ltcusdt_ohlvc_1m.csv | gzip > tmp/ltcusdt_1m.txt.gz
+```
+
+Create the schema and CQ:
+```
+cat db/influxdb.sql | influx
+```
+
+How to import data
+```
+influx -import -compressed -path tmp/ethusdt_1m.txt.gz -precision=ns
+```
+
+Build the other candles
+```
+cat bin/build_candles.sql| influx -database arke_development
+```

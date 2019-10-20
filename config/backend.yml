@@ -30,7 +30,19 @@ services:
       VAULT_DEV_ROOT_TOKEN_ID: changeme
       VAULT_ADDR: http://vault:8200
 
+  influxdb:
+    image: influxdb:1.7.8
+    container_name: influxdb
+    ports:
+      - "8083:8083"
+      - "8086:8086"
+    volumes:
+      - influx_data:/var/lib/influxdb
+    environment:
+       INFLUXDB_ADMIN_ENABLED: "true"
+
 volumes:
   db_data:
   redis_data:
   vault_data:
+  influx_data:
