@@ -32,6 +32,7 @@ require "arke/order"
 require "arke/trade"
 require "arke/action_executor"
 require "arke/action_scheduler"
+require "arke/influxdb"
 
 require "arke/orderbook/base"
 require "arke/orderbook/orderbook"
