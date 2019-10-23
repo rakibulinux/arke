@@ -9,9 +9,6 @@ module Arke::Exchange
       @path = opts["orderbook"] || File.join("./spec/support/fixtures/bitfinex.yaml")
     end
 
-    def start
-    end
-
     def cancel_all_orders(_market)
       puts "order cancelled"
     end

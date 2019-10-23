@@ -28,9 +28,9 @@ module Arke::Strategy
     end
 
     def check_config
-      raise "ID:#{id} Min amount must not be zero" if @min_amount.zero?
-      raise "ID:#{id} Max amount must not be zero" if @max_amount.zero?
-      raise "ID:#{id} Min amount should be lower than max amount" if @min_amount > @max_amount
+      raise "ID:#{id} min_amount must be bigger than zero" unless @min_amount.positive?
+      raise "ID:#{id} max_amount must be bigger than zero" unless @max_amount.positive?
+      raise "ID:#{id} min_amount should be lower than max_amount" if @min_amount > @max_amount
     end
 
     def delay_the_first_execute

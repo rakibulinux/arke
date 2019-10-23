@@ -92,49 +92,56 @@ describe Arke::Exchange::Rubykube do
     let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
     let(:updated_order) { Arke::Order.new("ETHUSD", 1.0, 0.5, :buy) }
     let(:order_partially_fullfilled) do
-      {
-        "order" => {
-          "id"               => order_id,
-          "market"           => "ethusd",
-          "kind"             => "bid",
-          "side"             => "sell",
-          "ord_type"         => "limit",
-          "price"            => "1",
-          "state"            => "wait",
-          "remaining_volume" => "0.5",
-          "origin_volume"    => "1",
-          "executed_volume"  => "0.0",
-          "avg_price"        => "0.0",
-          "at"               => 1_570_537_877,
-          "created_at"       => 1_570_537_877,
-          "updated_at"       => 1_570_538_020,
-          "trades_count"     => 0
-        }
-      }
+      OpenStruct.new(
+        "data": {
+          "order" => {
+            "id"               => order_id,
+            "market"           => "ethusd",
+            "kind"             => "bid",
+            "side"             => "sell",
+            "ord_type"         => "limit",
+            "price"            => "1",
+            "state"            => "wait",
+            "remaining_volume" => "0.5",
+            "origin_volume"    => "1",
+            "executed_volume"  => "0.0",
+            "avg_price"        => "0.0",
+            "at"               => 1_570_537_877,
+            "created_at"       => 1_570_537_877,
+            "updated_at"       => 1_570_538_020,
+            "trades_count"     => 0
+          }
+        }.to_json
+      )
     end
 
     let(:order_id) { rubykube.create_order(order).id }
-    let(:order_cancelled) { {"order" => {"id" => order_id, "at" => 1_546_605_232, "market" => "ethusd", "kind" => "bid", "price" => "1", "state" => "cancel", "remaining_volume" => "1.0", "origin_volume" => "1.0"}} }
-    let(:trade_executed) { {"trade" => {"ask_id" => order_id, "at" => 1_546_605_232, "bid_id" => order_id, "id" => order_id, "kind" => "ask", "market" => "ethusd", "price" => "1", "volume" => "1.0"}} }
+    let(:order_cancelled) do
+      OpenStruct.new("data": {"order" => {"id" => order_id, "at" => 1_546_605_232, "market" => "ethusd", "kind" => "bid", "price" => "1", "state" => "cancel", "remaining_volume" => "1.0", "origin_volume" => "1.0"}}.to_json)
+    end
+
+    let(:trade_executed) do
+      OpenStruct.new("data": {"trade" => {"ask_id" => order_id, "at" => 1_546_605_232, "bid_id" => order_id, "id" => order_id, "kind" => "ask", "market" => "ethusd", "price" => "1", "volume" => "1.0"}}.to_json)
+    end
 
     before do
       rubykube.create_order(order).id
     end
 
     it "updates order when partially fullfilled" do
-      rubykube.send(:process_message, order_partially_fullfilled)
+      rubykube.send(:ws_read_message, :private, order_partially_fullfilled)
       expect(market.open_orders[:buy][1].length).to eq(1)
       expect(market.open_orders[:buy][1][order_id]).to eq(updated_order)
     end
 
     it "removes order when cancelled" do
-      rubykube.send(:process_message, order_cancelled)
+      rubykube.send(:ws_read_message, :private, order_cancelled)
       expect(market.open_orders[:buy].length).to eq(0)
     end
 
     it "sends a callback on executed trade" do
-      expect(rubykube).to receive(:notify_trade).twice
-      rubykube.send(:process_message, trade_executed)
+      expect(rubykube).to receive(:notify_private_trade).twice
+      rubykube.send(:ws_read_message, :private, trade_executed)
     end
   end
 

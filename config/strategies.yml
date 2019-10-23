@@ -1,74 +1,76 @@
-log_level: INFO
+log_level: DEBUG
+
 accounts:
-- id: 1
-  driver: bitfaker
+- id: demo
+  driver: rubykube
   debug: false
-  host: "http://www.devkube.com"
-  ws: "ws://www.devkube.com"
-  key: "1e91304459024a43"
-  secret: "87b900c9de2c00c91689710f6184b12a"
+  host: "https://demo.openware.com"
+  ws: "wss://demo.openware.com"
+  key: "bbd00510b6a40ad6"
+  secret: "d8f3609b30491cd04f1d3b8ed99b4a37"
+  delay: 0.1
+
+- id: bitfaker
+  driver: bitfaker
   delay: 1
 
-- id: 2
-  driver: bitfaker
-  host: "api.binance.com"
-  key:
-  secret:
+- id: binance
+  driver: binance
+  debug: true
+  delay: 1
+
+- id: bitfinex
+  driver: bitfinex
   delay: 1
 
 strategies:
-- id: 1
+- id: copy-FTHUSD
   type: copy
   debug: true
   enabled: true
-  period: 10
+  period: 90
   params:
     spread_bids: 0.003
     spread_asks: 0.003
-    limit_asks_base: 0.05
-    limit_bids_base: 0.05
+    limit_asks_base: 10
+    limit_bids_base: 10
     levels_size: 0.25
-    levels_count: 10
+    levels_count: 5
     side: both
-    enable_orderback: false
   target:
-    account_id: 1
+    account_id: demo
     market:
-      id: BTCUSD
-      base: BTC
-      quote: USD
+      id: fthusd
+      base: fth
+      quote: usd
       base_precision: 2
       quote_precision: 2
-      min_ask_amount: 1.5
-      min_bid_amount: 1.5
+      min_bid_amount: 0.01
+      min_ask_amount: 0.01
   sources:
-  - account_id: 2
+  - account_id: binance
     market:
-      id: BTCUSD
-      base: BTC
-      quote: USD
-      base_precision: 8
-      quote_precision: 8
-      min_order_back_amount: 1.5
+      id: ETHUSDT
+      base: ETH
+      quote: USDT
 
-- id: 2
+- id: microtrades-FTHUSD
   type: microtrades
   debug: true
+  enabled: true
   period: 5
   period_random_delay: 10
   params:
-    linked_strategy_id: 1
+    linked_strategy_id: copy-FTHUSD
     min_amount: 0.05
-    max_amount: 10
-    min_price: 100
-    max_price: 1000
+    max_amount: 0.30
   target:
-      account_id: 1
+      account_id: demo
       market:
-        id: BTCUSD
-        base: btc
+        id: fthusd
+        base: fth
         quote: usd
         base_precision: 2
         quote_precision: 2
-        min_ask_amount: 1.5
-        min_bid_amount: 1.5
+        min_ask_amount: 0.01
+        min_bid_amount: 0.01

@@ -1,20 +1,14 @@
+# frozen_string_literal: true
+
 module Arke::Helpers
   module Commands
-
     def conf
       @conf ||= YAML.load_file(config)
     end
 
     def strategies_configs
-      if conf["strategies"] && conf["strategies"].is_a?(Array)
-        strategies = conf["strategies"]
-      else
-        strategies = []
-      end
-
-      if conf["strategy"] && conf["strategy"].is_a?(Hash)
-        strategies << conf["strategy"]
-      end
+      strategies = conf["strategies"]&.is_a?(Array) ? conf["strategies"] : []
+      strategies << conf["strategy"] if conf["strategy"]&.is_a?(Hash)
 
       if dry?
         strategies.map! do |s|
@@ -25,7 +19,7 @@ module Arke::Helpers
       end
       strategies.filter! do |s|
         if s["enabled"] == false
-          Arke::Log.warn "Strategy ID:#{s["id"]} disabled"
+          Arke::Log.warn "Strategy ID:#{s['id']} disabled"
           false
         else
           true
@@ -35,32 +29,27 @@ module Arke::Helpers
     end
 
     def accounts_configs
-      if conf["accounts"] && conf["accounts"].is_a?(Array)
-        accounts = conf["accounts"]
+      if conf["accounts"]&.is_a?(Array)
+        conf["accounts"]
       else
-        accounts = []
+        []
       end
-      accounts
     end
 
     def safe_yield(blk, *args)
-      begin
-        account = accounts_configs.select { |a| a["id"] == args.first["account_id"] }.first
-        blk.call(*args, account)
-      rescue StandardError => e
-        Arke::Log.error "#{e}: #{e.backtrace.join("\n")}"
-      end
+      account = accounts_configs.select {|a| a["id"] == args.first["account_id"] }.first
+      blk.call(*args, account)
+    rescue StandardError => e
+      Arke::Log.error "#{e}: #{e.backtrace.join("\n")}"
     end
 
     def each_platform(&blk)
       strategies_configs.each do |c|
-        puts "Strategy ID #{c["id"]}"
+        puts "Strategy ID #{c['id']}"
         Array(c["sources"]).each do |ex|
           safe_yield(blk, ex)
         end
-        if c["target"]
-          safe_yield(blk, c["target"])
-        end
+        safe_yield(blk, c["target"]) if c["target"]
       end
     end
   end

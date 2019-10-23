@@ -7,10 +7,30 @@ module Arke::Exchange
 
     def initialize(opts)
       super
+      @host ||= "https://api.binance.com"
       @client = ::Binance::Client::REST.new(api_key: @api_key, secret_key: @secret, adapter: @adapter)
       @min_notional = {}
       @min_quantity = {}
       @base_precision = {}
+    end
+
+    def ws_connect_public
+      streams = markets.map {|market| "#{market.downcase}@aggTrade.b10" }.join("/")
+      @ws_url = "wss://stream.binance.com:9443/stream?streams=#{streams}"
+      ws_connect(:public)
+    end
+
+    def ws_read_public_message(msg)
+      d = msg["data"]
+      case d["e"]
+      when "aggTrade"
+        trade = ::Arke::PublicTrade.new(d["a"], d["s"], d["m"] ? :buy : :sell, d["q"], d["p"], d["T"])
+      when "trade"
+        trade = ::Arke::PublicTrade.new(d["t"], d["s"], d["m"] ? :buy : :sell, d["q"], d["p"], d["T"])
+      else
+        raise "Unsupported event type #{d['e']}"
+      end
+      notify_public_trade(trade)
     end
 
     def build_order(data, side)
@@ -34,17 +54,6 @@ module Arke::Exchange
         taker_type:         taker_type
       )
       @opts[:on_trade]&.call(trade, market)
-    end
-
-    def listen_trades(markets_list=nil)
-      markets_list.each do |market|
-        ws = Faye::WebSocket::Client.new("wss://stream.binance.com:9443/ws/#{market.downcase}@trade")
-
-        ws.on(:message) do |e|
-          msg = JSON.parse(e.data)
-          new_trade(msg)
-        end
-      end
     end
 
     def update_orderbook(market)
@@ -148,8 +157,5 @@ module Arke::Exchange
              .find {|s| s["symbol"] == market }["filters"]
              .find {|f| f["filterType"] == "MIN_NOTIONAL" }["minNotional"].to_f
     end
-
-    # TODO: Implement start method for binance.
-    def start; end
   end
 end

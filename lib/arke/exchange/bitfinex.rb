@@ -6,6 +6,7 @@ module Arke::Exchange
 
     def initialize(opts)
       super
+      opts["host"] ||= "api.bitfinex.com"
       @ws_url = "wss://%s/ws/2" % opts["host"]
       @connection = Faraday.new(url: "https://#{opts['host']}") do |builder|
         builder.response :json

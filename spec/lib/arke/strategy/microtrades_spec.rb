@@ -6,7 +6,9 @@ describe Arke::Strategy::Microtrades do
   let(:reactor) { double(:reactor) }
   let(:strategy) { Arke::Strategy::Microtrades.new([], target, config, reactor) }
   let(:account) { Arke::Exchange.create(account_config) }
-  let(:target) { Arke::Market.new(config["target"]["market"], account) }
+  let(:target_mode) { Arke::Helpers::Flags::DEFAULT_TARGET_FLAGS }
+  let(:source_mode) { Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS }
+  let(:target) { Arke::Market.new(config["target"]["market"], account, target_mode) }
   let(:price) { 123 }
   let(:random_delta) { 0 }
   let(:side) { "both" }
@@ -79,7 +81,7 @@ describe Arke::Strategy::Microtrades do
   end
 
   context "strategy is linked to an other" do
-    let(:source) { Arke::Market.new(config["target"]["market"], account) }
+    let(:source) { Arke::Market.new(config["target"]["market"], account, source_mode) }
     let(:linked_strategy_id) { 12 }
     let(:linked_strategy) { Arke::Strategy::Base.new([source], target, config, reactor) }
 

@@ -179,4 +179,107 @@ describe Arke::Exchange::Binance do
       expect { binance.get_amount(small_order) }.to raise_error(Exception)
     end
   end
+
+  context "receive public trades events on websocket" do
+    #
+    # The Trade Streams push raw trade information; each trade has a unique buyer and seller.
+    #
+    # {
+    #   "e": "trade",     // Event type
+    #   "E": 123456789,   // Event time
+    #   "s": "BNBBTC",    // Symbol
+    #   "t": 12345,       // Trade ID
+    #   "p": "0.001",     // Price
+    #   "q": "100",       // Quantity
+    #   "b": 88,          // Buyer order ID
+    #   "a": 50,          // Seller order ID
+    #   "T": 123456785,   // Trade time
+    #   "m": true,        // Is the buyer the market maker?
+    #   "M": true         // Ignore
+    # }
+
+    let(:trade_event) do
+      OpenStruct.new(
+        "type": "message",
+        "data":
+                {
+                  "stream" => "engbtc@trade",
+                  "data"   => {
+                    "e" => "trade",
+                    "E" => 1_571_640_883_301,
+                    "s" => "ENGBTC",
+                    "t" => 6_026_899,
+                    "p" => "0.00003700",
+                    "q" => "1242.00000000",
+                    "b" => 61_844_192,
+                    "a" => 61_844_772,
+                    "T" => 1_571_640_883_296,
+                    "m" => true,
+                    "M" => true
+                  }
+                }.to_json
+      )
+    end
+
+    #
+    # The Aggregate Trade Streams push trade information that is aggregated for a single taker order.
+    #
+    # {
+    #   "e": "aggTrade",  // Event type
+    #   "E": 123456789,   // Event time
+    #   "s": "BNBBTC",    // Symbol
+    #   "a": 12345,       // Aggregate trade ID
+    #   "p": "0.001",     // Price
+    #   "q": "100",       // Quantity
+    #   "f": 100,         // First trade ID
+    #   "l": 105,         // Last trade ID
+    #   "T": 123456785,   // Trade time
+    #   "m": true,        // Is the buyer the market maker?
+    #   "M": true         // Ignore
+    # }
+
+    let(:aggTrade_event) do
+      OpenStruct.new(
+        "type": "message",
+        "data": {
+          "stream" => "btcusdt@aggTrade",
+          "data"   => {
+            "e" => "aggTrade",
+            "E" => 1_571_514_775_998,
+            "s" => "BTCUSDT",
+            "a" => 173_732_494,
+            "p" => "7974.32000000",
+            "q" => "0.06003700",
+            "f" => 191_939_864,
+            "l" => 191_939_864,
+            "T" => 1_571_514_775_994,
+            "m" => false,
+            "M" => true
+          }
+        }.to_json
+      )
+    end
+
+    let(:trade) do
+      Arke::PublicTrade.new(6_026_899, "ENGBTC", :buy, "1242.00000000", "0.00003700", 1_571_640_883_296)
+    end
+
+    let(:aggTrade) do
+      Arke::PublicTrade.new(173_732_494, "BTCUSDT", :sell, "0.06003700", "7974.32000000", 1_571_514_775_994)
+    end
+
+    it "notifies aggTrade to registered callbacks" do
+      callback = double(:callback)
+      expect(callback).to receive(:call).with(aggTrade)
+      binance.register_on_public_trade_cb(&callback.method(:call))
+      binance.ws_read_message(:public, aggTrade_event)
+    end
+
+    it "notifies trade to registered callbacks" do
+      callback = double(:callback)
+      expect(callback).to receive(:call).with(trade)
+      binance.register_on_public_trade_cb(&callback.method(:call))
+      binance.ws_read_message(:public, trade_event)
+    end
+  end
 end

@@ -21,6 +21,17 @@ module Arke::Strategy
       @limit_bids_base = params["limit_bids_base"].to_f
       @side_asks = %w[asks both].include?(@side)
       @side_bids = %w[bids both].include?(@side)
+      check_config
+    end
+
+    def check_config
+      raise "levels_size must be higher than zero" if @levels_size <= 0
+      raise "levels_count must be minimum 1" if @levels_count <= 1
+      raise "spread_bids must be higher than zero" if @spread_bids.negative?
+      raise "spread_asks must be higher than zero" if @spread_asks.negative?
+      raise "limit_asks_base must be higher than zero" if @limit_asks_base <= 0
+      raise "limit_bids_base must be higher than zero" if @limit_bids_base <= 0
+      raise "side must be asks, bids or both" if !@side_asks && !@side_bids
     end
 
     def call
@@ -35,6 +46,7 @@ module Arke::Strategy
 
       top_ask = source.orderbook[:sell].first
       top_bid = source.orderbook[:buy].first
+      raise "Source order book is empty" if top_ask.nil? || top_bid.nil?
 
       price_points_asks = @side_asks ? split_constant(:asks, top_ask.first, @levels_count, split_opts) : nil
       price_points_bids = @side_bids ? split_constant(:bids, top_bid.first, @levels_count, split_opts) : nil

@@ -59,7 +59,7 @@ describe Arke::Exchange::Binance do
     end
   end
 
-  context "notify_trade" do
+  context "notify_private_trade" do
     let(:trade) { Arke::Trade.new("ethusdt", :sell, 0.1, 180.0132, 632_478) }
     let(:incorrect_trade) { Arke::Trade.new("btcusdt", :sell, 0.1, 180.0132, 632_479) }
     let(:order) { Arke::Order.new("ETHUSDT", 2, 1, :buy) }
@@ -67,16 +67,16 @@ describe Arke::Exchange::Binance do
 
     it "notifies trade when the market id match" do
       strategy.stub(:orderback)
-      base.register_on_trade_cb(&strategy.method(:orderback))
+      base.register_on_private_trade_cb(&strategy.method(:orderback))
       expect(strategy).to receive(:orderback).once.with(trade)
-      base.notify_trade(trade)
+      base.notify_private_trade(trade)
     end
 
     it "doesn't notify then the market doesn't match" do
       strategy.stub(:orderback)
-      base.register_on_trade_cb(&strategy.method(:orderback))
+      base.register_on_private_trade_cb(&strategy.method(:orderback))
       expect(strategy).not_to receive(:orderback).with(trade, order)
-      base.notify_trade(incorrect_trade)
+      base.notify_private_trade(incorrect_trade)
     end
   end
 end

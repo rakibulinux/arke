@@ -12,6 +12,17 @@ accounts:
   secret: ""
 strategies:
 - type: copy
+  debug: true
+  enabled: true
+  period: 90
+  params:
+    spread_bids: 0.003
+    spread_asks: 0.003
+    limit_asks_base: 0.05
+    limit_bids_base: 0.05
+    levels_size: 0.25
+    levels_count: 5
+    side: both
   target:
     account_id: 1
     market:
@@ -27,6 +38,17 @@ strategies:
         min_ask_amount: 0.01
         min_bid_amount: 0.01
 - type: copy
+  debug: true
+  enabled: true
+  period: 90
+  params:
+    spread_bids: 0.003
+    spread_asks: 0.003
+    limit_asks_base: 0.05
+    limit_bids_base: 0.05
+    levels_size: 0.25
+    levels_count: 5
+    side: both
   target:
     account_id: 1
     market:

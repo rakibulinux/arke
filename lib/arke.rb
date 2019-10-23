@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "clamp"
 require "rbtree"
 require "json"
@@ -20,6 +22,7 @@ require "arke/helpers/precision"
 require "arke/helpers/commands"
 require "arke/helpers/splitter"
 require "arke/helpers/spread"
+require "arke/helpers/flags"
 
 require "arke/configuration"
 require "arke/log"
@@ -32,6 +35,10 @@ require "arke/order"
 require "arke/trade"
 require "arke/action_executor"
 require "arke/action_scheduler"
+require "arke/influxdb"
+require "arke/recorder/reactor"
+require "arke/recorder/storage/json"
+require "arke/recorder/storage/influx"
 require "arke/influxdb"
 
 require "arke/orderbook/base"
@@ -59,6 +66,8 @@ require "arke/exchange/rubykube"
 
 require "arke/command"
 require "arke/command/console"
+require "arke/command/recorder"
+require "arke/command/strategy"
 require "arke/command/show"
 require "arke/command/start"
 require "arke/command/version"

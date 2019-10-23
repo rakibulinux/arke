@@ -9,6 +9,7 @@ module Arke::Strategy
   class Orderback < Base
     include Arke::Helpers::Splitter
     include Arke::Helpers::Spread
+    include Arke::Helpers::Flags
 
     DEFAULT_ORDERBACK_GRACE_TIME = 0.01
 
@@ -28,22 +29,40 @@ module Arke::Strategy
       @orderback_timer = params["orderback_timer"] || DEFAULT_ORDERBACK_GRACE_TIME
       Arke::Log.info "min order back amount: #{@min_order_back_amount}"
       Arke::Log.info "Initializing #{self.class} strategy with order_back #{@enable_orderback ? 'enabled' : 'disabled'}"
+      sources.each {|s| s.apply_flags(FETCH_PRIVATE_BALANCE) }
       register_callbacks
+      check_config
       @trades = {}
     end
 
-    def register_callbacks
-      target.account.register_on_trade_cb(&method(:notify_trade))
+    def check_config
+      raise "levels_size must be higher than zero" if @levels_size <= 0
+      raise "levels_count must be minimum 1" if @levels_count <= 1
+      raise "spread_bids must be higher than zero" if @spread_bids.negative?
+      raise "spread_asks must be higher than zero" if @spread_asks.negative?
+      raise "limit_asks_base must be higher than zero" if @limit_asks_base <= 0
+      raise "limit_bids_base must be higher than zero" if @limit_bids_base <= 0
+      raise "side must be asks, bids or both" if !@side_asks && !@side_bids
+
+      if @enable_orderback
+        if @min_order_back_amount < target.min_ask_amount || @min_order_back_amount < target.min_bid_amount
+          raise "min_order_back_amount is too small"
+        end
+      end
     end
 
-    def notify_trade(trade)
+    def register_callbacks
+      target.account.register_on_private_trade_cb(&method(:notify_private_trade))
+    end
+
+    def notify_private_trade(trade)
       return if @enable_orderback == false || trade.market.upcase != target.id.upcase
 
       order_buy = target.open_orders.get_by_id(:buy, trade.order_id)
       order_sell = target.open_orders.get_by_id(:sell, trade.order_id)
 
       if order_buy && order_sell
-        Arke::Log.error "ID:#{id} one order made a trade ?! order id:#{ trade.order_id }"
+        Arke::Log.error "ID:#{id} one order made a trade ?! order id:#{trade.order_id}"
         return
       end
       order_back(trade, order_buy) if order_buy
@@ -109,6 +128,8 @@ module Arke::Strategy
 
       top_ask = source.orderbook[:sell].first
       top_bid = source.orderbook[:buy].first
+      raise "Source order book is empty" if top_ask.nil? || top_bid.nil?
+
       price_points_asks = @side_asks ? split_constant(:asks, top_ask.first, @levels_count, split_opts) : nil
       price_points_bids = @side_bids ? split_constant(:bids, top_bid.first, @levels_count, split_opts) : nil
       ob_agg = source.orderbook.aggregate(

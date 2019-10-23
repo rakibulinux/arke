@@ -4,13 +4,13 @@ module Arke
   # Main event ractor loop
   class Reactor
     class StrategyNotFound < StandardError; end
+    include Arke::Helpers::Flags
 
     # * @shutdown is a flag which controls strategy execution
     def initialize(strategies_configs, accounts_configs, dry_run)
       @shutdown = false
       @dry_run = dry_run
       init_accounts(accounts_configs)
-      update_balances
       init_strategies(strategies_configs)
     end
 
@@ -21,6 +21,7 @@ module Arke
 
     def init_accounts(accounts_configs)
       @accounts = {}
+      @markets = []
       accounts_configs.each do |config|
         account = @accounts[config["id"]] = Arke::Exchange.create(config)
         executor = ActionExecutor.new(account)
@@ -28,8 +29,11 @@ module Arke
       end
     end
 
-    def build_market(config)
-      Market.new(config["market"], get_account(config["account_id"]))
+    def build_market(config, mode)
+      return nil unless config
+
+      @markets << Market.new(config["market"], get_account(config["account_id"]), mode)
+      @markets.last
     end
 
     def get_account(id)
@@ -42,8 +46,8 @@ module Arke
     def init_strategies(strategies_configs)
       strategies = []
       strategies_configs.map do |config|
-        sources = Array(config["sources"]).map {|config| build_market(config) }
-        target = config["target"] ? build_market(config["target"]) : nil
+        sources = Array(config["sources"]).map {|config| build_market(config, DEFAULT_SOURCE_FLAGS) }
+        target = build_market(config["target"], DEFAULT_TARGET_FLAGS)
         strategies << Arke::Strategy.create(sources, target, config, self)
       rescue StandardError => e
         report_fatal(e, config["id"])
@@ -63,11 +67,16 @@ module Arke
     def run
       EM.synchrony do
         trap("INT") { stop }
-        @accounts.each do |id, account|
-          account.start
+        @accounts.each do |_id, account|
+          account.ws_connect_private if account.flag?(WS_PRIVATE)
+        end
+
+        @markets.each do |market|
+          market.start
         end
 
         Fiber.new do
+          update_balances
           EM::Synchrony.add_periodic_timer(23) { update_balances }
         end.resume
 
@@ -127,6 +136,7 @@ module Arke
 
     def update_balances
       @accounts.values.each do |ex|
+        next unless ex.flag?(FETCH_PRIVATE_BALANCE)
         unless ex.respond_to?(:get_balances)
           raise "ACCOUNT:#{ex.id} Exchange #{ex.driver} doesn't support get_balances".red
         end
@@ -135,15 +145,19 @@ module Arke
           Log.info "ACCOUNT:#{ex.id} Fetching balances on #{ex.driver}"
           ex.fetch_balances
         rescue StandardError => e
-          Log.error("ACCOUNT:#{ex.id} Fetching balances on #{ex.driver} failed")
+          Log.error("ACCOUNT:#{ex.id} Fetching balances on #{ex.driver} failed: #{e}\n#{e.backtrace.join("\n")}")
         end
       end
     end
 
     def update_orderbooks(strategy)
       strategy.sources.each do |market|
-        Arke::Log.debug "ID:#{strategy.id} Update #{market.account.driver} #{market.id} orderbook"
-        market.update_orderbook
+        if market.flag?(FETCH_PUBLIC_ORDERBOOK)
+          Arke::Log.debug "ID:#{strategy.id} Update #{market.account.driver} #{market.id} orderbook"
+          market.update_orderbook
+        else
+          Arke::Log.debug "ID:#{strategy.id} DO NOT UPDATE #{market.account.driver} #{market.id} orderbook"
+        end
       end
     end
 

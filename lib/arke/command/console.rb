@@ -9,7 +9,6 @@ module Arke
           output.puts "Arke development console"
         end
 
-        # binding.pry
         Pry.config.prompt_name = "arke"
         Pry.config.requires = ["openssl"]
         Pry.start

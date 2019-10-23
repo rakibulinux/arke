@@ -7,8 +7,6 @@ module Arke::Exchange
     # * creates @connection for RestApi
     attr_accessor :orderbook
 
-    WEBSOCKET_CONNECTION_RETRY_DELAY = 2
-
     def initialize(config)
       super
       @peatio_route = config["peatio_route"] || "peatio"
@@ -21,28 +19,11 @@ module Arke::Exchange
         builder.adapter(@adapter)
         builder.ssl[:verify] = config["verify_ssl"] unless config["verify_ssl"].nil?
       end
+      apply_flags(FORCE_MARKET_LOWERCASE)
     end
 
-    def start
-      Arke::Log.info "ACCOUNT:#{id} Websocket connecting"
-      @ws = Faye::WebSocket::Client.new(@ws_url, [], headers: generate_headers)
-
-      @ws.on(:open) do |_e|
-        Arke::Log.info "ACCOUNT:#{id} Websocket connected"
-      end
-
-      @ws.on(:message) do |e|
-        on_message(e)
-      end
-
-      @ws.on(:close) do |e|
-        @ws = nil
-        Arke::Log.error "ACCOUNT:#{id} Websocket disconnected: #{e.code} Reason: #{e.reason}"
-        Fiber.new do
-          EM::Synchrony.sleep(WEBSOCKET_CONNECTION_RETRY_DELAY)
-          start
-        end.resume
-      end
+    def ws_connect_private
+      ws_connect(:private)
     end
 
     # Ping the api
@@ -156,6 +137,16 @@ module Arke::Exchange
       infos
     end
 
+    def generate_headers
+      nonce = Time.now.to_i.to_s
+      {
+        "X-Auth-Apikey"    => @api_key,
+        "X-Auth-Nonce"     => nonce,
+        "X-Auth-Signature" => OpenSSL::HMAC.hexdigest("SHA256", @secret, nonce + @api_key),
+        "Content-Type"     => "application/json",
+      }
+    end
+
     private
 
     # Helper method to perform post requests
@@ -180,26 +171,16 @@ module Arke::Exchange
     end
 
     # Helper method, generates headers to authenticate with +api_key+
-    def generate_headers
-      nonce = Time.now.to_i.to_s
-      {
-        "X-Auth-Apikey"    => @api_key,
-        "X-Auth-Nonce"     => nonce,
-        "X-Auth-Signature" => OpenSSL::HMAC.hexdigest("SHA256", @secret, nonce + @api_key),
-        "Content-Type"     => "application/json",
-      }
-    end
 
     def side_from_kind(kind)
       kind == "bid" ? :buy : :sell
     end
 
-    def process_message(msg)
-      Arke::Log.debug "#{self.class}#process_message: #{msg}"
+    def ws_read_private_message(msg)
       if msg["trade"]
         trd = msg["trade"]
-        notify_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :buy, trd["volume"].to_f, trd["price"].to_f, trd["bid_id"]))
-        notify_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :sell, trd["volume"].to_f, trd["price"].to_f, trd["ask_id"]))
+        notify_private_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :buy, trd["volume"].to_f, trd["price"].to_f, trd["bid_id"]))
+        notify_private_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :sell, trd["volume"].to_f, trd["price"].to_f, trd["ask_id"]))
       end
 
       if msg["order"]
@@ -216,9 +197,5 @@ module Arke::Exchange
       end
     end
 
-    def on_message(e)
-      msg = JSON.parse(e.data)
-      process_message(msg)
-    end
   end
 end

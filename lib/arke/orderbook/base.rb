@@ -3,7 +3,6 @@
 module Arke::Orderbook
   class Base
     attr_reader :book, :market
-    attr_reader :volume_bids_base, :volume_asks_base
     attr_reader :volume_bids_quote, :volume_asks_quote
 
     def initialize(market, opts={})
@@ -47,7 +46,25 @@ module Arke::Orderbook
     end
 
     def best_price(side)
-      get(side) ? get(side).first : nil
+      get(side)&.first
+    end
+
+    def stats(side)
+      price_range = (last(side).first - best_price(side)).abs
+      volume = side == :buy ? volume_bids_base : volume_asks_base
+
+      {
+        price_range: price_range,
+        volume:      volume,
+      }
+    end
+
+    def volume_bids_base
+      @volume_bids_base ||= @book[:buy].inject(0.0) {|sum, n| sum + n.last }
+    end
+
+    def volume_asks_base
+      @volume_asks_base ||= @book[:sell].inject(0.0) {|sum, n| sum + n.last }
     end
 
     def better_or_equal(side, a, b)
@@ -99,7 +116,7 @@ module Arke::Orderbook
     def to_s_side(side, indentation=0)
       chunks = []
       self[side].each do |price, data|
-        chunks << indent("%-05.5f       %s" % [price, data.inspect], indentation)
+        chunks << indent("%-05.8f       %s" % [price, data.inspect], indentation)
       end
       chunks.join("\n")
     end
