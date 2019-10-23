@@ -4,24 +4,12 @@ class Robot < ApplicationRecord
   #TODO link to credentials id
   has_and_belongs_to_many :accounts
 
-  def to_h
-    {
-      "id" => id,
-      "type" => driver,
-      "debug" => false,
-      "enabled" => state == 'enabled',
-      "period" => interval,
-      "params" => params && JSON.parse(params),
-      "target" => target.to_h.merge({
-                                      "market" => target_market.to_h,
-                                      "debug" => false,
-                                    }),
-      "sources" => [
-        source.to_h.merge({
-                            "market" => source_market.to_h,
-                            "debug" => false,
-                          }),
-      ]
-    }
-  end
+  STRATEGY_NAMES = %w[copy orderback fixedprice microtrades].freeze
+  STATES = %w[enabled disabled].freeze
+  validates :name, :strategy,
+            :state, presence: true
+  
+  validates :strategy, inclusion: {in: STRATEGY_NAMES}
+  validates :state, inclusion: {in: STATES}
+
 end

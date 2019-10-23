@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :ticker do
-    market { create(:market, :btcusd) }
+    association :market, :btcusd, strategy: :create
     mid {  Faker::Number.decimal(l_digits: 2) }
     bid {  Faker::Number.decimal(l_digits: 2) }
     ask {  Faker::Number.decimal(l_digits: 2) }

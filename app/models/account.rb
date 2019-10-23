@@ -1,12 +1,13 @@
 class Account < ApplicationRecord
-  belongs_to :user
-  belongs_to :exchange
+  belongs_to :user, required: true
+  belongs_to :exchange, required: true
 
   has_many :balances
   has_many :trades
   has_and_belongs_to_many :robots
 
-  validates :name, presence: true
+  validates :name, presence: true, length: { minimum: 3 }, format: { with: /\A[a-z]+[a-z0-9_-]*\z/}
+
   ## validates :api_key, with: :key_validator, strict: true
 
   ## after_create :create_api_key

@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :account do
-    user { create(:user) }
-    exchange { create(:exchange) }
-    name { Faker::Dessert.variety }
+    association :user, strategy: :create
+    association :exchange, strategy: :create
+    name { Faker::Internet.slug }
   end
 end

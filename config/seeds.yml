@@ -4,11 +4,17 @@ markets:
     quote:  USDT
     base_precision: 8
     quote_precision: 2
+    min_price: 100
+    min_amount: 0.1
+    state: 'enabled'
   - name:   ETHUSDT
     base:   ETH
     quote:  USDT
     base_precision: 5
     quote_precision: 2
+    min_price: 100
+    min_amount: 0.1
+    state: 'enabled'
 
 exchanges:
   - name: bitfaker

@@ -57,6 +57,7 @@ group :development, :test do
   gem 'webmock', '~> 3.5'
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
   gem 'bump', '~> 0.8'
+  gem 'shoulda-matchers', '~> 4.1.2'
 end
 
 group :development do
