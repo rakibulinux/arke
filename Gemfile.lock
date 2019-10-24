@@ -1,3 +1,11 @@
+GIT
+  remote: http://github.com/rubykube/vault-rails
+  revision: 6389cf63bc68254f9b86ca634204eee3fd838be0
+  specs:
+    vault-rails (0.5.0)
+      rails (>= 4.1)
+      vault (~> 0.5)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -251,9 +259,6 @@ GEM
       thread_safe (~> 0.1)
     vault (0.13.0)
       aws-sigv4
-    vault-rails (0.5.0)
-      rails (>= 4.1)
-      vault (~> 0.5)
     webmock (3.7.6)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
@@ -296,7 +301,7 @@ DEPENDENCIES
   simplecov
   spring
   spring-watcher-listen (~> 2.0.0)
-  vault-rails (~> 0.5.0)
+  vault-rails (~> 0.5.0)!
   webmock (~> 3.5)
 
 RUBY VERSION

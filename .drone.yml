@@ -13,7 +13,7 @@ steps:
       - gem update bundler
       - bundle --jobs $(nproc)
       - rake db:create db:migrate
-      - rspec spec/lib/arke
+      - rspec spec
 
   - name: Bump and tag
     image: rubykube/robox:1.0.1

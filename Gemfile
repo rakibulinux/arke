@@ -17,7 +17,7 @@ gem 'puma', '~> 3.11'
 gem 'redis', '~> 4.0'
 
 gem 'clamp', '~> 1.3.1'
-gem 'vault-rails', '~> 0.5.0'
+gem 'vault-rails', '~> 0.5.0', git: 'http://github.com/rubykube/vault-rails'
 gem 'rbtree', '~> 0.4.2'
 gem 'colorize', '~> 0.8.1'
 gem 'faraday', '~> 0.15.4'

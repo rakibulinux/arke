@@ -40,6 +40,8 @@ class CreateArkeTables < ActiveRecord::Migration[5.2]
       t.references :user, foreign_key: true
       t.references :exchange, foreign_key: true
       t.string :name
+      t.binary :api_key_encrypted
+      t.binary :api_secret_encrypted
 
       t.timestamps
     end

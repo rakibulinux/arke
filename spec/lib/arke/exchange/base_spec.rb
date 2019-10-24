@@ -66,14 +66,14 @@ describe Arke::Exchange::Binance do
     let(:strategy) { double(:strategy) }
 
     it "notifies trade when the market id match" do
-      strategy.stub(:orderback)
+      allow(strategy).to receive(:orderback)
       base.register_on_private_trade_cb(&strategy.method(:orderback))
       expect(strategy).to receive(:orderback).once.with(trade)
       base.notify_private_trade(trade)
     end
 
     it "doesn't notify then the market doesn't match" do
-      strategy.stub(:orderback)
+      allow(strategy).to receive(:orderback)
       base.register_on_private_trade_cb(&strategy.method(:orderback))
       expect(strategy).not_to receive(:orderback).with(trade, order)
       base.notify_private_trade(incorrect_trade)

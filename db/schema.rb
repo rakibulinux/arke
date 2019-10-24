@@ -16,6 +16,8 @@ ActiveRecord::Schema.define(version: 2019_08_03_182417) do
     t.bigint "user_id"
     t.bigint "exchange_id"
     t.string "name"
+    t.binary "api_key_encrypted"
+    t.binary "api_secret_encrypted"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["exchange_id"], name: "index_accounts_on_exchange_id"

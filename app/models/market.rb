@@ -3,7 +3,7 @@
 class Market < ApplicationRecord
   STATES = %w[enabled disabled hidden].freeze
 
-  belongs_to :exchange, required: true
+  belongs_to :exchange
   has_one :ticker
 
   validates :name, :base,
