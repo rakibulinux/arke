@@ -76,6 +76,24 @@ steps:
     when:
       branch:
         - master
+        
+  - name: "Notify staging"
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: arke_slack_webhook
+      channel:
+        from_secret: arke_slack_channel
+      template: >
+        {{#success build.status}}
+          [SUCCESS] (Arke) Branch {{ build.branch }} by {{ build.author }} staging has succeeded!
+          Visit https://github.com/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }} to check it out!
+        {{else}}
+          [FAILURE] Branch {{ build.branch }} by {{ build.author }} staging has failed!
+        {{/success}}
+        Check the build info here: {{ build.link }}
+    when:
+      status: [success, failure]
 
 services:
 - name: database
