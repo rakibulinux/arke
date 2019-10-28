@@ -3,7 +3,7 @@
 module Arke::Command
   class Root < ::Clamp::Command
     subcommand "start", "Starting the bot", Start
-    subcommand "recorder", "Manager recording", Recorder
+    subcommand "etl", "Manager recording", ETL
     subcommand "console", "Start a development console", Console
     subcommand "strategy", "Strategies subcommands", Strategy
     subcommand "show", "Show accounts informations", Show

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Arke::Recorder::Storage
+module Arke::ETL::Load
   class Influx
     def initialize(config)
       @config = config

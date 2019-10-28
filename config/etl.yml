@@ -1,0 +1,68 @@
+log_level: INFO
+
+jobs:
+
+  # - extract: Ping
+  #   transform:
+  #     - Debug:
+  #         id: pre_process
+  #     - Sample:
+  #         ratio: 0.1
+  #   process:
+  #     - transform:
+  #         - Debug:
+  #             id: after_process
+  #       load: Print
+
+  # # Store non sampled binance trades
+  # - extract:
+  #     Binance:
+  #       listen:
+  #         - public_trades
+  #   process:
+  #     - transform:
+  #         - Debug
+  #       load:
+  #         influx:
+  #           measurment: trades
+
+  # # Sample binance trades, store in influx and forward to arke AMQP
+  # - extract:
+  #     Binance:
+  #       listen:
+  #         - public_trades
+  #   transform:
+  #     - Sample:
+  #         ratio: 0.1
+  #     - Debug:
+  #         id: pre_process
+  #     - Generic:
+  #         field: market
+  #         apply: downcase!
+  #   process:
+  #     # - load:
+  #     #     influx:
+  #     #       measurment: trades-sampled
+  #     - transform:
+  #       - Debug:
+  #           id: post_process
+  #       load:
+  #         AMQP:
+  #           exchange: peatio.events.ranger
+
+
+  # # Listen peatio trades, store in influx and forward to arke AMQP
+  # - extract:
+  #     PeatioAMQP:
+  #       exchange: peatio.events.ranger
+  #       events:
+  #         - type: public
+  #           event: trades
+  #   process:
+  #     - load: Print
+  # # - load:
+  # #     Influx:
+  # #       measurment: trades
+  #     - load:
+  #         AMQP:
+  #           exchange: arke.events.ranger
