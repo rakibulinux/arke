@@ -1,4 +1,4 @@
-class Api::V1::TickersController < ApplicationController
+class Api::V1::TickersController < Api::V1::BaseController
 
   # GET /tickers
   def index

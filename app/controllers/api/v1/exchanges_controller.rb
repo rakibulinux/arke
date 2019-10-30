@@ -1,4 +1,4 @@
-class Api::V1::ExchangesController < ApplicationController
+class Api::V1::ExchangesController < Api::V1::BaseController
 
   # GET /exchanges
   def index

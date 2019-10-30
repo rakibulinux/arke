@@ -1,4 +1,4 @@
-class Api::V1::RobotsController < ApplicationController
+class Api::V1::RobotsController < Api::V1::BaseController
   before_action :set_robot, only: [:show, :update, :destroy]
 
   # GET /robots

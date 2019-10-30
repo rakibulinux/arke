@@ -16,7 +16,7 @@ describe Arke::ETL::Load::AMQP do
   end
 
   let(:public_trade) do
-    Arke::PublicTrade.new(1386, "fthusd", :sell, "0.5", "100.0", 1_571_997_959_000)
+    PublicTrade.new(id: 1386, market: "fthusd", taker_type: "sell", price: "100.0", amount: "0.5", created_at: 1_571_997_959_000)
   end
 
   context "receives public trade object" do

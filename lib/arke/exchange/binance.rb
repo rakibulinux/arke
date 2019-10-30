@@ -23,10 +23,21 @@ module Arke::Exchange
     def ws_read_public_message(msg)
       d = msg["data"]
       case d["e"]
+      # "m": true, Is the buyer the market maker?
+      # in API we expose taker_type
       when "aggTrade"
-        trade = ::Arke::PublicTrade.new(d["a"], d["s"], d["m"] ? :buy : :sell, d["q"], d["p"], d["T"])
+        trade = ::PublicTrade.new(
+          id: d["a"],
+          exchange: "binance",
+          market: d["s"],
+          taker_type: d["m"] ? "sell" : "buy",
+          amount: d["q"],
+          price: d["p"],
+          total: (d["p"].to_d * d["q"].to_d),
+          created_at: d["T"]
+        )
       when "trade"
-        trade = ::Arke::PublicTrade.new(d["t"], d["s"], d["m"] ? :buy : :sell, d["q"], d["p"], d["T"])
+        trade = ::Arke::PublicTrade.new(d["t"], d["s"], d["m"] ? :sell : :buy, d["q"], d["p"], (d["p"].to_d * d["q"].to_d), d["T"])
       else
         raise "Unsupported event type #{d['e']}"
       end

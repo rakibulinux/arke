@@ -1,4 +1,4 @@
-class Api::V1::MarketsController < ApplicationController
+class Api::V1::MarketsController < Api::V1::BaseController
 
   # GET /markets
   def index

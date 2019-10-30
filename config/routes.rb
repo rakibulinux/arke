@@ -11,6 +11,16 @@ Rails.application.routes.draw do
 
       get 'users/me', to: 'users#me'
     end
+
+    namespace :v2 do
+      namespace :public do
+        namespace :markets do
+          resources :kline, path: "/:market/k-line", only: [:index]
+          resources :trades, path: "/:market/trades", only: [:index]
+          resources :tickers, only: [:index]
+        end
+      end
+    end
   end
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 end

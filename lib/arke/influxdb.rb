@@ -7,7 +7,7 @@ module Arke
   module InfluxDB
     class << self
       def client(opts={})
-        @client ||= ::InfluxDB::Client.new(config.merge(opts))
+        ::InfluxDB::Client.new(config.merge(opts))
       end
 
       def config

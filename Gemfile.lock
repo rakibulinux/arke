@@ -70,6 +70,7 @@ GEM
     amqp (1.8.0)
       amq-protocol (>= 2.2.0)
       eventmachine
+    api-pagination (4.8.2)
     aws-eventstream (1.0.3)
     aws-sigv4 (1.1.0)
       aws-eventstream (~> 1.0, >= 1.0.2)
@@ -144,6 +145,18 @@ GEM
     irb (1.0.0)
     json (2.2.0)
     jwt (2.2.1)
+    kaminari (1.1.1)
+      activesupport (>= 4.1.0)
+      kaminari-actionview (= 1.1.1)
+      kaminari-activerecord (= 1.1.1)
+      kaminari-core (= 1.1.1)
+    kaminari-actionview (1.1.1)
+      actionview
+      kaminari-core (= 1.1.1)
+    kaminari-activerecord (1.1.1)
+      activerecord
+      kaminari-core (= 1.1.1)
+    kaminari-core (1.1.1)
     listen (3.1.5)
       rb-fsevent (~> 0.9, >= 0.9.4)
       rb-inotify (~> 0.9, >= 0.9.7)
@@ -272,6 +285,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  api-pagination (~> 4.8.2)
   binance (~> 1.2)
   bitx (~> 0.2.2)
   bootsnap (>= 1.1.0)
@@ -288,6 +302,7 @@ DEPENDENCIES
   faye (~> 1.2)
   influxdb (~> 0.7.0)
   irb (~> 1.0)
+  kaminari (~> 1.1.1)
   listen (>= 3.0.5, < 3.2)
   mysql2 (>= 0.4.4, < 0.6.0)
   peatio (~> 0.6.2)

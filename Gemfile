@@ -25,6 +25,8 @@ gem 'faraday_middleware', '~> 0.13.1'
 gem 'faye', '~> 1.2'
 gem 'peatio', '~> 0.6.2'
 gem 'influxdb', '~> 0.7.0'
+gem 'api-pagination', '~> 4.8.2'
+gem 'kaminari', '~> 1.1.1'
 
 gem 'eventmachine', '~> 1.2'
 gem 'em-synchrony', '~> 1.0'

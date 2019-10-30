@@ -4,7 +4,7 @@ module Arke::ETL::Extract
   class PeatioAMQP < Base
     def initialize(config)
       super
-      @ex_name = config["exchange"] || "peatio.events.ranger"
+      @ex_name = config["exchange"] || "peatio.trade"
       @queue_name = config["queue_name"] || "etl.extract.amqp"
       @events = config["events"] || []
       Arke::Log.warn("Extract::PeatioAMQP initialized without events to be listen") if @events.empty?
@@ -13,29 +13,39 @@ module Arke::ETL::Extract
 
     def process(_type, id, _event, payload)
       data = JSON.parse(payload)
-      Array(data["trades"]).each do |t|
-        trade = ::Arke::PublicTrade.new(t["tid"], id, t["taker_type"].to_sym, t["amount"], t["price"], t["date"] * 1000)
-        emit(trade)
-      end
+      trade = ::PublicTrade.new(
+        id: data["id"],
+        exchange: "peatio",
+        market: data["market_id"],
+        taker_type: data["taker_type"],
+        amount: data["amount"],
+        price: data["price"],
+        total: (data["total"]).to_d,
+        created_at: Time.parse(data["created_at"]).to_i * 1000
+      )
+      emit(trade)
     end
 
     def on_event(delivery_info, _metadata, payload)
       routing_key = delivery_info.routing_key
       type, id, event = routing_key.split(".")
 
-      @events.each do |filter|
-        if (filter["type"].nil? || filter["type"] == type) &&
-          (filter["id"].nil? || filter["id"] == id) &&
-          (filter["event"].nil? || filter["event"] == event)
-          return process(type, id, event, payload)
-        end
-      end
+      return process(type, id, event, payload)
+
+      # @events.each do |filter|
+      #   binding.pry
+      #   if (filter["type"].nil? || filter["type"] == type) &&
+      #     (filter["id"].nil? || filter["id"] == id) &&
+      #     (filter["event"].nil? || filter["event"] == event)
+      #   end
+      # end
     end
 
     def start
-      @client = Peatio::MQ::Events::RangerEvents.new
-      @client.exchange_name = @ex_name
-      exchange = @client.connect!
+      Peatio::MQ::Client.new
+      Peatio::MQ::Client.connect!
+      Peatio::MQ::Client.create_channel!
+      exchange = Peatio::MQ::Client.channel.headers("peatio.trade")
 
       Peatio::MQ::Client
         .channel

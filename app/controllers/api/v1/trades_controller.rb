@@ -1,4 +1,4 @@
-class Api::V1::TradesController < ApplicationController
+class Api::V1::TradesController < Api::V1::BaseController
 
   # GET /trades
   def index

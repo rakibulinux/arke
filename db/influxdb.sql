@@ -1,9 +1,15 @@
 CREATE DATABASE arke_development;
 
+CREATE CONTINUOUS QUERY "trade_to_tickers" ON arke_development
+RESAMPLE EVERY 2s
+BEGIN
+  SELECT MAX(price) AS high, MIN(price) AS low, FIRST(price) AS open, MEAN(price) AS avg_price, LAST(price) as last, SUM(amount) AS volume, (LAST(price) - FIRST(price)) / FIRST(price) * 100 AS price_change_percent INTO tickers FROM trades GROUP BY time(24h), market, exchange
+END;
+
 CREATE CONTINUOUS QUERY "trade_to_cq_1m" ON arke_development
 RESAMPLE EVERY 10s FOR 10m
 BEGIN
-  SELECT FIRST(price) AS open, max(price) AS high, min(price) AS low, last(price) AS close, sum(volume) AS volume INTO candles_1m FROM trade GROUP BY time(1m), market, exchange
+  SELECT FIRST(price) AS open, max(price) AS high, min(price) AS low, last(price) AS close, sum(amount) AS volume INTO candles_1m FROM trades GROUP BY time(1m), market, exchange
 END;
 
 CREATE CONTINUOUS QUERY "cq_5m" ON arke_development
@@ -42,10 +48,28 @@ BEGIN
   SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume INTO "candles_4h" FROM "candles_2h" GROUP BY time(4h), market, exchange
 END;
 
+CREATE CONTINUOUS QUERY "cq_6h" ON arke_development
+RESAMPLE EVERY 10s FOR 40h
+BEGIN
+  SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume INTO "candles_6h" FROM "candles_2h" GROUP BY time(6h), market, exchange
+END;
+
+CREATE CONTINUOUS QUERY "cq_12h" ON arke_development
+RESAMPLE EVERY 10s FOR 40h
+BEGIN
+  SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume INTO "candles_12h" FROM "candles_6h" GROUP BY time(12h), market, exchange
+END;
+
 CREATE CONTINUOUS QUERY "cq_1d" ON arke_development
 RESAMPLE EVERY 10s FOR 10d
 BEGIN
-  SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume INTO "candles_1d" FROM "candles_4h" GROUP BY time(1d), market, exchange
+  SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume INTO "candles_1d" FROM "candles_6h" GROUP BY time(1d), market, exchange
+END;
+
+CREATE CONTINUOUS QUERY "cq_3d" ON arke_development
+RESAMPLE EVERY 10s FOR 10d
+BEGIN
+  SELECT FIRST(open) as open, MAX(high) as high, MIN(low) as low, LAST(close) as close, SUM(volume) as volume INTO "candles_3d" FROM "candles_1d" GROUP BY time(3d), market, exchange
 END;
 
 CREATE CONTINUOUS QUERY "cq_1w" ON arke_development

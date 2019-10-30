@@ -1,4 +1,4 @@
-class Api::V1::BalancesController < ApplicationController
+class Api::V1::BalancesController < Api::V1::BaseController
 
   # GET /balances
   def index
