@@ -3,6 +3,7 @@
 module Arke::ETL::Transform
   class Generic < Base
     def initialize(config)
+      super
       @field = config["field"]
       @apply = config["apply"]
       raise "Transform::Generic field is mandatory" unless @field

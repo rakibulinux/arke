@@ -7,15 +7,17 @@ module Arke::ETL::Transform
     def initialize(config)
       @config = config
       @id = config["id"] || self.class.to_s.split("::").last.downcase
+      @callbacks = []
     end
 
     def mount(&callback)
-      Arke::Log.warn "a callback was already set on #{self.class}" if @callback
-      @callback = callback
+      @callbacks << callback
     end
 
     def emit(*args)
-      @callback.call(*args)
+      @callbacks.each do |cb|
+        cb.call(*args)
+      end
     end
 
     def call(_object)
