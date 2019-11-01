@@ -19,5 +19,16 @@ module Arke::ETL::Extract
     def start
       raise "start method missing in #{self.class}"
     end
+
+    def convert_markets(markets)
+      output = "/"
+      markets.each do |market|
+        output += market.downcase
+        unless market == markets.last
+          output += "|"
+        end
+      end
+      output += "/"
+    end
   end
 end

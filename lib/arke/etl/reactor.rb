@@ -7,6 +7,7 @@ module Arke::ETL
     def initialize(config, dry_run)
       @shutdown = false
       @dry_run = dry_run
+      @config = config
       init_jobs(config)
     end
 
@@ -42,6 +43,7 @@ module Arke::ETL
     def new_klass(element, konstant)
       Arke::Log.debug("")
       const, config = klass(element, konstant)
+      config.merge!(@config["shared_params"]) if @config["shared_params"].present?
       const.new(config)
     end
 
