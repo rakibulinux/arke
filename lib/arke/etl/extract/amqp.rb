@@ -30,7 +30,7 @@ module Arke::ETL::Extract
     def start
       Peatio::MQ::Client.new
       Peatio::MQ::Client.connect!
-      channel = Peatio::MQ::Client.create_channel!
+      channel = Peatio::MQ::Client.connection.create_channel
       exchange = channel.topic(@ex_name)
 
       @queue_name ||= "etl.extract.amqp"

@@ -4,7 +4,7 @@ module Arke::ETL::Load
   class PeatioAMQP < AMQP
     def convert(obj)
       case obj
-      when ::PublicTrade
+      when Arke::PublicTrade
         trade = {
           "tid"        => obj.id,
           "taker_type" => obj.taker_type.to_s,
@@ -13,6 +13,11 @@ module Arke::ETL::Load
           "amount"     => obj.amount.to_s
         }
         return ["public", obj.market, "trades", {"trades" => [trade]}]
+      when Arke::Kline
+        kline = [obj.created_at, obj.open, obj.high, obj.low, obj.close, obj.volume]
+        return ["public", obj.market.downcase, obj.period, kline]
+      when Arke::PublicTicker
+        return ["public", "global", "tickers", obj.tickers]
       end
       raise "Load::AMQP does not support #{obj.class} type"
     end

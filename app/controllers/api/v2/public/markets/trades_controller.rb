@@ -23,6 +23,9 @@ module Api
             result = result.first["values"] if result.present?
 
             response = result.map do |value|
+              value["amount"] = value["amount"].to_s
+              value["price"] = value["price"].to_s
+              value["total"] = value["total"].to_s
               value["created_at"] = value.delete("time")
               value.except("exchange")
             end

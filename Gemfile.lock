@@ -180,8 +180,8 @@ GEM
     nio4r (2.5.2)
     nokogiri (1.10.4)
       mini_portile2 (~> 2.4.0)
-    peatio (0.6.2)
-      activemodel (> 5.2.3, <= 6.0.0)
+    peatio (0.6.3)
+      activemodel (> 5.2, <= 6.0.0)
       amqp
       bunny
       clamp
@@ -305,7 +305,7 @@ DEPENDENCIES
   kaminari (~> 1.1.1)
   listen (>= 3.0.5, < 3.2)
   mysql2 (>= 0.4.4, < 0.6.0)
-  peatio (~> 0.6.2)
+  peatio (~> 0.6.3)
   pry (~> 0.12)
   puma (~> 3.11)
   rails (~> 6.0.0)

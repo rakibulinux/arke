@@ -7,18 +7,17 @@ module Arke::ETL::Extract
       @queue_name = config["queue_name"] || "etl.extract.peatio_amqp"
     end
 
-    def process(_type, _id, _event, payload)
-      data = JSON.parse(payload)
-      trade = ::PublicTrade.new(
-        id:         data["id"],
-        exchange:   "peatio",
-        market:     data["market_id"],
-        taker_type: data["taker_type"],
-        amount:     data["amount"],
-        price:      data["price"],
-        total:      (data["total"]).to_d,
-        created_at: Time.parse(data["created_at"]).to_i * 1000
-      )
+    def process(_type, id, _event, payload)
+      data = JSON.parse(payload)["trades"].first
+      trade = ::Arke::PublicTrade.new
+      trade.id = data["tid"]
+      trade.market = id
+      trade.exchange = "peatio"
+      trade.taker_type = data["taker_type"]
+      trade.amount = data["amount"]
+      trade.price = data["price"]
+      trade.total = trade.total
+      trade.created_at = data["date"] * 1000
       emit(trade)
     end
   end
