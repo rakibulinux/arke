@@ -22,6 +22,7 @@ module Arke::Exchange
       @adapter = opts[:faraday_adapter] || :em_synchrony
       @opts = opts
       @balances = nil
+      @forced_balances = []
       @timer = nil
       @private_trades_cb = []
       @public_trades_cb = []
@@ -36,6 +37,7 @@ module Arke::Exchange
         private: false,
       }
       load_platform_markets(opts["driver"]) if opts[:load_platform_markets]
+      update_forced_balance(opts["balances"]) if opts["balances"]
     end
 
     def ws_connect(ws_id)
@@ -166,9 +168,24 @@ module Arke::Exchange
       raise "fetch_openorders not implemented"
     end
 
+    def update_forced_balance(balances)
+      @forced_balances = balances.map do |key, value|
+        currency = {
+            "currency" => key,
+            "free"     => value,
+            "locked"   => 0,
+            "total"    => value,
+        }
+      end
+    end
+
     def fetch_balances
-      balances = get_balances()
-      @balances = balances
+      if @forced_balances.empty?
+        balances = get_balances()
+        @balances = balances
+      else
+        @balances = @forced_balances
+      end
     end
 
     def balance(currency)

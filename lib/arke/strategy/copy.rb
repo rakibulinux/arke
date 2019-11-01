@@ -82,7 +82,7 @@ module Arke::Strategy
       push_debug("3_ob_adjusted", "\n#{ob_adjusted}")
       push_debug("4_ob_spread", "\n#{ob_spread}")
 
-      ob_adjusted
+      ob_spread
     end
   end
 end

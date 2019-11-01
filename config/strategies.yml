@@ -13,6 +13,9 @@ accounts:
 - id: bitfaker
   driver: bitfaker
   delay: 1
+  balances:
+    btc: 3
+    usd: 10000
 
 - id: binance
   driver: binance
@@ -53,6 +56,8 @@ strategies:
       id: ETHUSDT
       base: ETH
       quote: USDT
+      min_bid_amount: 0.01
+      min_ask_amount: 0.01
 
 - id: microtrades-FTHUSD
   type: microtrades

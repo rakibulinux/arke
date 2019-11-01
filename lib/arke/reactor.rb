@@ -75,8 +75,8 @@ module Arke
           market.start
         end
 
+        update_balances
         Fiber.new do
-          update_balances
           EM::Synchrony.add_periodic_timer(23) { update_balances }
         end.resume
 
