@@ -9,12 +9,32 @@ module Arke::ETL::Load
     def start
       Peatio::MQ::Client.new
       Peatio::MQ::Client.connect!
-      channel = Peatio::MQ::Client.create_channel!
+      channel = Peatio::MQ::Client.connection.create_channel
       @ex = channel.topic(@ex_name)
     end
 
-    def convert(type, id, event, payload)
-      [type, id, event, payload]
+    def convert(*obj)
+      raise "Load::AMQP does not support #{obj.class} type" unless obj.is_a? Array
+
+      data = obj[0]
+      case data
+      when Arke::PublicTrade
+        trade = {
+          "tid"        => data.id,
+          "taker_type" => data.taker_type.to_s,
+          "date"       => (data.created_at / 1000).to_i,
+          "price"      => data.price.to_s,
+          "amount"     => data.amount.to_s
+        }
+        return ["public", data.market.downcase, "trades", {"trades" => [trade]}]
+      when Arke::Kline
+        kline = [data.created_at, data.open, data.high, data.low, data.close, data.volume]
+        return ["public", data.market.downcase, data.period, kline]
+      when Arke::Ticker
+        return ["public", "global", "tickers", data.tickers]
+      when String
+        return obj
+      end
     end
 
     def call(*args)

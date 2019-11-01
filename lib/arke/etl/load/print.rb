@@ -5,7 +5,7 @@ module Arke::ETL::Load
     def initialize(_config); end
 
     def call(*args)
-      puts "print: #{args.inspect}"
+      puts "print: #{args}"
     end
   end
 end

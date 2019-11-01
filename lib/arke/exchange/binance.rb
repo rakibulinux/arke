@@ -12,6 +12,7 @@ module Arke::Exchange
       @min_notional = {}
       @min_quantity = {}
       @base_precision = {}
+      @markets = opts["markets"]
     end
 
     def ws_connect_public
@@ -26,18 +27,25 @@ module Arke::Exchange
       # "m": true, Is the buyer the market maker?
       # in API we expose taker_type
       when "aggTrade"
-        trade = ::PublicTrade.new(
-          id: d["a"],
-          exchange: "binance",
-          market: d["s"],
-          taker_type: d["m"] ? "sell" : "buy",
-          amount: d["q"],
-          price: d["p"],
-          total: (d["p"].to_d * d["q"].to_d),
-          created_at: d["T"]
-        )
+        trade = ::Arke::PublicTrade.new
+        trade.id = d["a"]
+        trade.market = d["s"]
+        trade.exchange = "binance"
+        trade.taker_type = d["m"] ? "sell" : "buy"
+        trade.amount = d["q"]
+        trade.price = d["p"]
+        trade.total = trade.total
+        trade.created_at = d["T"]
       when "trade"
-        trade = ::Arke::PublicTrade.new(d["t"], d["s"], d["m"] ? :sell : :buy, d["q"], d["p"], (d["p"].to_d * d["q"].to_d), d["T"])
+        trade = ::Arke::PublicTrade.new
+        trade.id = d["t"]
+        trade.market = d["s"]
+        trade.exchange = "binance"
+        trade.taker_type = d["m"] ? "sell" : "buy"
+        trade.amount = d["q"]
+        trade.price = d["p"]
+        trade.total = trade.total
+        trade.created_at = d["T"]
       else
         raise "Unsupported event type #{d['e']}"
       end
@@ -85,6 +93,8 @@ module Arke::Exchange
     end
 
     def markets
+      return @markets if @markets.present?
+
       @client.exchange_info["symbols"]
              .filter {|s| s["status"] == "TRADING" }
              .map {|s| s["symbol"] }

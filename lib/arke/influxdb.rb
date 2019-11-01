@@ -2,7 +2,6 @@
 
 require "influxdb"
 require "erb"
-require "rails"
 module Arke
   module InfluxDB
     class << self
@@ -15,7 +14,7 @@ module Arke
         return {} unless yaml.exist?
 
         erb = ::ERB.new(yaml.read)
-        ::YAML.load(erb.result)[::Rails.env].symbolize_keys || {}
+        ::YAML.load(erb.result)[ENV.fetch('RAILS_ENV', 'development')].symbolize_keys || {}
       end
     end
   end

@@ -41,7 +41,7 @@ module Api
             result = result.first["values"] if result.present?
 
             response = result.map do |value|
-              [value["time"], value["open"], value["high"], value["low"], value["close"], value["volume"]]
+              [value["time"], value["open"].to_s, value["high"].to_s, value["low"].to_s, value["close"].to_s, value["volume"]]
             end
 
             json_response(response, 200)

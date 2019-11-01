@@ -16,7 +16,7 @@ describe Arke::ETL::Load::PeatioAMQP do
   end
 
   let(:public_trade) do
-    PublicTrade.new(id: 1386, market: "fthusd", taker_type: "sell", price: "100.0", amount: "0.5", created_at: 1_571_997_959_000)
+    Arke::PublicTrade.new(1386, "fthusd", "peatio", "sell", "0.5", "100.0", "50.0", 1_571_997_959_000)
   end
 
   context "receives public trade object" do
