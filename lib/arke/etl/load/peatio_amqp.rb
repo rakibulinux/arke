@@ -13,6 +13,11 @@ module Arke::ETL::Load
           "amount"     => obj.amount.to_s
         }
         return ["public", obj.market, "trades", {"trades" => [trade]}]
+      when ::Kline
+        kline = [obj.created_at, obj.open, obj.high, obj.low, obj.close, obj.volume]
+        return ["public", obj.market.downcase, obj.period, kline]
+      when ::PublicTicker
+        return ["public", "global", "tickers", obj.tickers]
       end
       raise "Load::AMQP does not support #{obj.class} type"
     end

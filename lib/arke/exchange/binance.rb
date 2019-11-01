@@ -12,6 +12,7 @@ module Arke::Exchange
       @min_notional = {}
       @min_quantity = {}
       @base_precision = {}
+      @markets = opts["markets"]
     end
 
     def ws_connect_public
@@ -85,6 +86,8 @@ module Arke::Exchange
     end
 
     def markets
+      return @markets if @markets.present?
+
       @client.exchange_info["symbols"]
              .filter {|s| s["status"] == "TRADING" }
              .map {|s| s["symbol"] }
