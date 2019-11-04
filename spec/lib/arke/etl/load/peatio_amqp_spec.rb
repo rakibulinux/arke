@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-describe Arke::ETL::Load::AMQP do
-  let(:amqp) { Arke::ETL::Load::AMQP.new({}) }
+describe Arke::ETL::Load::PeatioAMQP do
+  let(:amqp) { Arke::ETL::Load::PeatioAMQP.new({}) }
   let(:public_trade_event) do
     [
       "public",

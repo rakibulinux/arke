@@ -47,6 +47,7 @@ module Arke::ETL
 
     def init_jobs(config)
       @extractors = []
+      @loaders = []
       jobs = config["jobs"]
       assert_array(config, "jobs")
 
@@ -76,20 +77,26 @@ module Arke::ETL
           assert_string_or_hash(p, "load")
 
           load_instance = new_klass(p["load"], Arke::ETL::Load)
+          @loaders << load_instance
           upstream.mount(&load_instance.method(:call))
         end
+      end
+    end
+
+    def start(components)
+      components.each do |component|
+        next unless component.respond_to?(:start)
+
+        Fiber.new { component.start }.resume
       end
     end
 
     def run
       EM.synchrony do
         trap("INT") { stop }
-
-        @extractors.each do |extract|
-          Fiber.new do
-            extract.start
-          end.resume
-        end
+        start @loaders
+        start @extractors
+        Arke::Log.info "ETL started"
       end
     end
 

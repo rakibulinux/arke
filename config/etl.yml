@@ -47,7 +47,7 @@ jobs:
   #       - Debug:
   #           id: post_process
   #       load:
-  #         AMQP:
+  #         PeatioAMQP:
   #           exchange: peatio.events.ranger
 
 
@@ -59,10 +59,20 @@ jobs:
   #         - type: public
   #           event: trades
   #   process:
-  #     - load: Print
-  # # - load:
-  # #     Influx:
-  # #       measurment: trades
+  #     - load:
+  #         Influx:
+  #           measurment: trades
+
+
+  # # Forward peatio events except tickers and klines
+  # - extract:
+  #     AMQP:
+  #       exchange: peatio.events.ranger
+  #       events:
+  #         - {type: public, event: update}
+  #         - {type: public, event: trades}
+  #         - {type: private}
+  #   process:
   #     - load:
   #         AMQP:
   #           exchange: arke.events.ranger

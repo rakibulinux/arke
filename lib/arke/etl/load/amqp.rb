@@ -7,34 +7,22 @@ module Arke::ETL::Load
     end
 
     def start
-      @client = Peatio::MQ::Events::RangerEvents.new
-      @client.exchange_name = @ex_name
-      exchange = @client.connect!
-
-      Peatio::MQ::Client
-        .channel
-        .queue(@queue_name, durable: false, auto_delete: true)
-        .bind(exchange, routing_key: "#").subscribe(&method(:on_event))
+      Peatio::MQ::Client.new
+      Peatio::MQ::Client.connect!
+      channel = Peatio::MQ::Client.create_channel!
+      @ex = channel.topic(@ex_name)
     end
 
-    def convert(obj)
-      case obj
-      when ::PublicTrade
-        trade = {
-          "tid"        => obj.id,
-          "taker_type" => obj.taker_type.to_s,
-          "date"       => (obj.created_at / 1000).to_i,
-          "price"      => obj.price.to_s,
-          "amount"     => obj.amount.to_s
-        }
-        return ["public", obj.market.downcase, "trades", {"trades" => [trade]}]
-      end
-      raise "Load::AMQP does not support #{obj.class} type"
+    def convert(type, id, event, payload)
+      [type, id, event, payload]
     end
 
-    def call(object)
-      type, id, event, data = convert(object)
-      Peatio::MQ::Events.publish(type, id, event, data)
+    def call(*args)
+      type, id, event, data = convert(*args)
+      routing_key = [type, id, event].join(".")
+      serialized_data = JSON.dump(data)
+      @ex.publish(serialized_data, routing_key: routing_key)
+      Arke::Log.debug("Load::AMQP publish #{routing_key}: #{serialized_data}")
     end
   end
 end
