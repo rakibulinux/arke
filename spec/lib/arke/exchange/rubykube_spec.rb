@@ -160,4 +160,14 @@ describe Arke::Exchange::Rubykube do
       expect(market.open_orders[:sell].length).to eq(1)
     end
   end
+
+  context "rubykube#get_kline" do
+    it "returns current k-line" do
+      expect(rubykube.get_kline(market.id)).to eq(
+        [
+          [1573117560, 9274.82, 9274.82, 9274.82, 9274.82, 0]
+        ]
+      )
+    end
+  end
 end

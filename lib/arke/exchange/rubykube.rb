@@ -137,6 +137,10 @@ module Arke::Exchange
       infos
     end
 
+    def get_kline(market, period = 5, limit = 1)
+      @connection.get("#{@peatio_route}/public/markets/#{market}/k-line", period: period.to_i, limit: limit).body
+    end
+
     def generate_headers
       nonce = Time.now.to_i.to_s
       {

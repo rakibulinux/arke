@@ -168,5 +168,9 @@ module Arke::Exchange
              .find {|s| s["symbol"] == market }["filters"]
              .find {|f| f["filterType"] == "MIN_NOTIONAL" }["minNotional"].to_f
     end
+
+    def get_kline(market, period = "5m", limit = 1)
+      @client.klines(symbol: market, interval: "#{period}", limit: limit)
+    end
   end
 end

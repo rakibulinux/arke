@@ -7,8 +7,14 @@ module Arke::Exchange
     def initialize(opts)
       super
       opts["host"] ||= "api.bitfinex.com"
+      opts["pub_host"] ||= "api-pub.bitfinex.com"
       @ws_url = "wss://%s/ws/2" % opts["host"]
       @connection = Faraday.new(url: "https://#{opts['host']}") do |builder|
+        builder.response :json
+        builder.response :logger if opts["debug"]
+        builder.adapter(@adapter)
+      end
+      @pub_connection = Faraday.new(url: "https://#{opts['pub_host']}") do |builder|
         builder.response :json
         builder.response :logger if opts["debug"]
         builder.adapter(@adapter)
@@ -250,6 +256,15 @@ module Arke::Exchange
 
       @ws.on(:close) do |e|
         on_close(e)
+      end
+    end
+
+    # Bitfinex doesn't have parameter 'limit' in API
+    def get_kline(market, period = "5m", limit = 1)
+      if limit == 1
+        @pub_connection.get("v2/candles/trade:#{period}:t#{market}/last").body
+      else
+        @pub_connection.get("v2/candles/trade:#{period}:t#{market}/hist").body
       end
     end
 

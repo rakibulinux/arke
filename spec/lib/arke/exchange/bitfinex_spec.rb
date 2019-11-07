@@ -157,4 +157,24 @@ describe Arke::Exchange::Bitfinex do
       )
     end
   end
+
+  context "get_kline" do
+    it "returns last k-line" do
+      expect(bitfinex.get_kline(market.id)).to eq(
+        [1573122840000,185.82,185.82,185.82,185.82,4.24897052]
+      )
+    end
+
+    it "returns historical k-line" do
+      expect(bitfinex.get_kline(market.id, "5m", 123)).to eq(
+        [
+          [1573123020000,186,186,186,186,37.68113751],
+          [1573122960000,186,186,186,186,21.09442441],
+          [1573122900000,185.83,186,186,185.83,58.82140792],
+          [1573122840000,185.82,185.83,185.83,185.82,4.74146302],
+          [1573122780000,185.82,185.82,185.82,185.82,0.07885584]
+        ]
+      )
+    end
+  end
 end

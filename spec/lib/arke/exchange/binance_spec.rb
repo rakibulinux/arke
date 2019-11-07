@@ -180,6 +180,16 @@ describe Arke::Exchange::Binance do
     end
   end
 
+  context "get_kline" do
+    it "returns current k-line" do
+      expect(binance.get_kline(market.id)).to eq(
+        [
+          [1573119600000, "187.58000000", "187.59000000", "187.17000000", "187.28000000", "359.31806000", 1573119899999, "67334.05163530", 237, "191.09127000", "35809.97202090", "0"]
+        ]
+      )
+    end
+  end
+
   context "receive public trades events on websocket" do
     #
     # The Trade Streams push raw trade information; each trade has a unique buyer and seller.

@@ -21,6 +21,17 @@ shared_context "mocked binance" do
         }
       )
 
+    stub_request(:get, "https://api.binance.com/api/v1/klines?limit=1&symbol=ETHUSDT&interval=5m")
+      .to_return(
+        status:  200,
+        body: [
+          [1573119600000, "187.58000000", "187.59000000", "187.17000000", "187.28000000", "359.31806000", 1573119899999, "67334.05163530", 237, "191.09127000", "35809.97202090", "0"]
+        ].to_json,
+        headers: {
+          "content-type" => "application/json;charset=utf-8",
+        }
+      )
+
     stub_request(:post, %r{https://api.binance.com/api/v3/order})
       .with(headers: authorized_headers)
       .to_return(status: 200, body: "", headers: {})

@@ -8,6 +8,24 @@ shared_context "mocked bitfinex" do
     stub_request(:post, "https://api.bitfinex.com/v1/balances")
       .to_return(status: 401, body: {"message"=>"Could not find a key matching the given X-BFX-APIKEY."}.to_json, headers: {"content-type" => "application/json;charset=utf-8"})
 
+    stub_request(:get, "https://api-pub.bitfinex.com/v2/candles/trade:5m:tETHUSD/hist")
+      .to_return(status: 200,
+        body: [
+          [1573123020000,186,186,186,186,37.68113751],
+          [1573122960000,186,186,186,186,21.09442441],
+          [1573122900000,185.83,186,186,185.83,58.82140792],
+          [1573122840000,185.82,185.83,185.83,185.82,4.74146302],
+          [1573122780000,185.82,185.82,185.82,185.82,0.07885584]
+        ].to_json,
+        headers: {"content-type" => "application/json;charset=utf-8"}
+      )
+
+    stub_request(:get, "https://api-pub.bitfinex.com/v2/candles/trade:5m:tETHUSD/last")
+      .to_return(status: 200,
+        body: [1573122840000,185.82,185.82,185.82,185.82,4.24897052].to_json,
+        headers: {"content-type" => "application/json;charset=utf-8"}
+      )
+
     stub_request(:post, "https://api.bitfinex.com/v1/order/new")
       .with(headers: authorized_headers)
       .to_return(status: 200,

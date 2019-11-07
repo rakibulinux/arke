@@ -17,6 +17,16 @@ shared_context "mocked rubykube" do
     stub_request(:get, %r{peatio/account/balances})
       .to_return(status: 403, body: "", headers: {})
 
+    stub_request(:get, %r{peatio/public/markets/ETHUSD/k-line})
+      .with(query: { "limit" => "1", "period" => "5" })
+      .to_return(
+        status:  200,
+        body:    [
+          [1573117560, 9274.82, 9274.82, 9274.82, 9274.82, 0],
+        ].to_json,
+        headers: {}
+      )
+
     # authorized requests
 
     stub_request(:get, %r{peatio/public/timestamp})
