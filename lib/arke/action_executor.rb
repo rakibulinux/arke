@@ -10,7 +10,7 @@ module Arke
     end
 
     def start
-      @timer = EM::Synchrony.add_periodic_timer(account.delay) do
+      @timer ||= EM::Synchrony.add_periodic_timer(account.delay) do
         unless @queue.empty?
           @queue.pop do |action|
             schedule(action)
