@@ -76,9 +76,13 @@ module Arke::Strategy
       apply_precision(price, target.quote_precision.to_f)
     end
 
+    def get_side()
+      @sides == "both" ? %i[buy sell].sample : @sides
+    end
+
     def call
       Fiber.new do
-        side = @sides == "both" ? %i[buy sell].sample : @sides
+        side = get_side()
         order = Arke::Order.new(target.id, get_price(side), get_amount(side), side)
         Arke::Log.warn "ID:#{id} Creating order #{order}"
         order = target.account.create_order(order)
