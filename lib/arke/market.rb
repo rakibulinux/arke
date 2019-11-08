@@ -58,10 +58,10 @@ class Arke::Market
 
   def add_order(order)
     if order.market.upcase == id.upcase
-      Arke::Log.debug "Order created market:#{id} order:#{order}"
+      Arke::Log.debug { "Order created market:#{id} order:#{order}" }
       @open_orders.add_order(order)
     else
-      Arke::Log.debug "Order skipped market:#{id} order:#{order}"
+      Arke::Log.debug { "Order skipped market:#{id} order:#{order}" }
     end
   end
 

@@ -14,28 +14,28 @@ module Arke
       end
 
       # Logs +DEBUG+ message
-      def debug(message)
-        logger.debug message
+      def debug(message=nil, &block)
+        logger.debug(message, &block)
       end
 
       # Logs +INFO+ message
-      def info(message)
-        logger.info message.to_s.blue
+      def info(message=nil, &block)
+        logger.info(message&.blue, &block)
       end
 
       # Logs +WARN+ message
-      def warn(message)
-        logger.warn message.to_s.yellow
+      def warn(message=nil, &block)
+        logger.warn(message&.yellow, &block)
       end
 
       # Logs +ERROR+ message
-      def error(message)
-        logger.error message.to_s.red
+      def error(message=nil, &block)
+        logger.error(message&.red, &block)
       end
 
       # Logs +FATAL+ message
-      def fatal(message)
-        logger.fatal message.to_s.red
+      def fatal(message=nil, &block)
+        logger.fatal(message&.red, &block)
       end
 
       def level=(severity)

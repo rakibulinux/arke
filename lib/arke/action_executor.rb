@@ -1,12 +1,13 @@
 module Arke
   class ActionExecutor
     include Arke::Helpers::Precision
-    attr_reader :id, :account
+    attr_reader :id, :account, :logger
 
     def initialize(account)
       @account = account
       @id = account.id
       @queue = EM::Queue.new
+      @logger = Arke::Log
     end
 
     def start
@@ -28,7 +29,7 @@ module Arke
 
     def stop
       @queue.close()
-      Arke::Log.debug "ACCOUNT:#{id} Closed queue for #{account}"
+      logger.debug { "ACCOUNT:#{id} Closed queue for #{account}" }
       @timer.cancel()
     end
 
@@ -43,7 +44,7 @@ module Arke
       when :order_create
         execute do
           order = action.params[:order]
-          Arke::Log.info "ACCOUNT:#{id} Creating order: #{order}"
+          logger.info { "ACCOUNT:#{id} Creating order: #{order}" }
           order = action.params[:order]
           price = apply_precision(order.price, action.destination.quote_precision)
           amount = apply_precision(order.amount, action.destination.base_precision.to_f,
@@ -52,16 +53,16 @@ module Arke
             order = Arke::Order.new(order.market, price, amount, order.side)
             action.destination.account.create_order(order)
           rescue StandardError => e
-            Log.error "ACCOUNT:#{id} #{e}\n#{e.backtrace.join("\n")}"
+            logger.error { "ACCOUNT:#{id} #{e}\n#{e.backtrace.join("\n")}" }
           end
         end
       when :order_stop
         execute do
           begin
-            Arke::Log.info "ACCOUNT:#{id} Canceling order: #{action.params}"
+            logger.info { "ACCOUNT:#{id} Canceling order: #{action.params}" }
             action.destination.account.stop_order(action.params[:order])
           rescue StandardError
-            Log.error "ACCOUNT:#{id} #{$!}"
+            logger.error { "ACCOUNT:#{id} #{$!}" }
           end
         end
       when :fetch_openorders
@@ -70,7 +71,7 @@ module Arke
       when :noop
         Arke::Log.info "ACCOUNT:#{id} empty action"
       else
-        Arke::Log.error "ACCOUNT:#{id} Unknown Action type: #{action.type}"
+        logger.error { "ACCOUNT:#{id} Unknown Action type: #{action.type}" }
       end
     end
   end
