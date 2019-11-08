@@ -22,7 +22,7 @@ module Arke::ETL::Load
       routing_key = [type, id, event].join(".")
       serialized_data = JSON.dump(data)
       @ex.publish(serialized_data, routing_key: routing_key)
-      Arke::Log.debug("Load::AMQP publish #{routing_key}: #{serialized_data}")
+      Arke::Log.debug { "Load::AMQP publish #{routing_key}: #{serialized_data}" }
     end
   end
 end

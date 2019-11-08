@@ -5,18 +5,20 @@ module Arke
   class Reactor
     class StrategyNotFound < StandardError; end
     include Arke::Helpers::Flags
+    attr_reader :logger
 
     # * @shutdown is a flag which controls strategy execution
     def initialize(strategies_configs, accounts_configs, dry_run)
       @shutdown = false
       @dry_run = dry_run
+      @logger = Arke::Log
       init_accounts(accounts_configs)
       init_strategies(strategies_configs)
     end
 
     def report_fatal(e, id)
-      Arke::Log.fatal "#{e}: #{e.backtrace.join("\n")}"
-      Arke::Log.fatal "ID:#{id} Strategy stopped"
+      logger.fatal "#{e}: #{e.backtrace.join("\n")}"
+      logger.fatal "ID:#{id} Strategy stopped"
     end
 
     def init_accounts(accounts_configs)
@@ -83,13 +85,13 @@ module Arke
         @strategies.each do |strategy|
           Fiber.new do
             unless @dry_run
-              Arke::Log.info("ID:#{strategy.id} Purging open orders on #{strategy.target.account.driver}")
+              logger.info { "ID:#{strategy.id} Purging open orders on #{strategy.target.account.driver}" }
               strategy.target.account.cancel_all_orders(strategy.target.id)
               strategy.target.account.executor.start
             end
 
             if strategy.delay_the_first_execute
-              Arke::Log.warn("ID:#{strategy.id} Delaying the first execution")
+              logger.warn { "ID:#{strategy.id} Delaying the first execution" }
             else
               tick(strategy)
             end
@@ -112,26 +114,26 @@ module Arke
         tick(strategy)
         add_periodic_random_timer(strategy)
       end
-      Log.info "ID:#{strategy.id} Scheduled next run in #{delay}s"
+      logger.info { "ID:#{strategy.id} Scheduled next run in #{delay}s" }
     end
 
     def tick(strategy)
       unless strategy.target.account.ws
-        Log.warn "ID:#{strategy.id} Skipping strategy execution since the websocket is not connected"
+        logger.warn { "ID:#{strategy.id} Skipping strategy execution since the websocket is not connected" }
         return
       end
 
       linked_strategy = find_strategy(strategy.linked_strategy_id)
       if linked_strategy && linked_strategy.target.account.ws.nil?
-        Log.warn "ID:#{strategy.id} Skipping strategy execution since linked strategy websocket is not connected"
+        logger.warn { "ID:#{strategy.id} Skipping strategy execution since linked strategy websocket is not connected" }
         return
       end
 
       update_orderbooks(strategy)
       execute_strategy(strategy)
     rescue StandardError => e
-      Log.error "ID:#{strategy.id} #{e}"
-      Log.error "#{e}: #{e.backtrace.join("\n")}"
+      logger.error { "ID:#{strategy.id} #{e}" }
+      logger.error { "#{e}: #{e.backtrace.join("\n")}" }
     end
 
     def update_balances
@@ -142,10 +144,10 @@ module Arke
         end
 
         begin
-          Log.info "ACCOUNT:#{ex.id} Fetching balances on #{ex.driver}"
+          logger.info { "ACCOUNT:#{ex.id} Fetching balances on #{ex.driver}" }
           ex.fetch_balances
         rescue StandardError => e
-          Log.error("ACCOUNT:#{ex.id} Fetching balances on #{ex.driver} failed: #{e}\n#{e.backtrace.join("\n")}")
+          logger.error { "ACCOUNT:#{ex.id} Fetching balances on #{ex.driver} failed: #{e}\n#{e.backtrace.join("\n")}" }
         end
       end
     end
@@ -153,10 +155,10 @@ module Arke
     def update_orderbooks(strategy)
       strategy.sources.each do |market|
         if market.flag?(FETCH_PUBLIC_ORDERBOOK)
-          Arke::Log.debug "ID:#{strategy.id} Update #{market.account.driver} #{market.id} orderbook"
+          logger.debug { "ID:#{strategy.id} Update #{market.account.driver} #{market.id} orderbook" }
           market.update_orderbook
         else
-          Arke::Log.debug "ID:#{strategy.id} DO NOT UPDATE #{market.account.driver} #{market.id} orderbook"
+          logger.debug { "ID:#{strategy.id} DO NOT UPDATE #{market.account.driver} #{market.id} orderbook" }
         end
       end
     end
@@ -166,13 +168,13 @@ module Arke
 
       if strategy.debug
         strategy.debug_infos.each do |label, data|
-          ::Arke::Log.debug "#{label}: #{data}".yellow
+          logger.debug { "#{label}: #{data}".yellow }
         end
       end
       return unless desired_orderbook
 
-      Log.debug "ID:#{strategy.id} Current Orderbook\n#{strategy.target.open_orders}"
-      Log.debug "ID:#{strategy.id} Desired Orderbook\n#{desired_orderbook}"
+      logger.debug { "ID:#{strategy.id} Current Orderbook\n#{strategy.target.open_orders}" }
+      logger.debug { "ID:#{strategy.id} Desired Orderbook\n#{desired_orderbook}" }
       return if @dry_run
 
       actions = ActionScheduler.new(strategy.target.open_orders, desired_orderbook, strategy.target).schedule

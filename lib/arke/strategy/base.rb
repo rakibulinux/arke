@@ -27,7 +27,7 @@ module Arke::Strategy
       @sources = sources
       @target = target
       @reactor = reactor
-      Arke::Log.info "ID:#{id} ----====[ #{self.class.to_s.split('::').last} Strategy ]====----"
+      Arke::Log.info { "ID:#{id} ----====[ #{self.class.to_s.split('::').last} Strategy ]====----" }
     end
 
     def delay_the_first_execute
