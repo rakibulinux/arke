@@ -109,6 +109,37 @@ module Arke::Orderbook
       )
     end
 
+    def group_by_level(side, price_points)
+      result = []
+      level_index = 0
+
+      @book[side].each do |order_price, data|
+        #byebug
+        while level_index < price_points.size && better(side, price_points[level_index], order_price)
+          level_index += 1
+          price_point = price_points[level_index]
+          result[level_index] = {
+            price:  price_point,
+            orders: []
+          }
+        end
+        break if level_index >= price_points.size
+
+        price_point = price_points[level_index]
+        result[level_index] ||= {
+          price:  price_point,
+          orders: []
+        }
+        case self
+        when OpenOrders
+          result[level_index][:orders] += data.values
+        else
+          result[level_index][:orders] << data
+        end
+      end
+      result
+    end
+
     def indent(line, indentation)
       " " * indentation + line
     end

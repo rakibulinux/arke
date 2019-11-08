@@ -72,4 +72,25 @@ describe Arke::Orderbook::OpenOrders do
       expect(diff[:delete][delete_order.side][0]).to eq(delete_order.id)
     end
   end
+
+  context "group_by_level" do
+    let(:price_points_sell) { [6, 8] }
+
+    let(:order_sell_0)     { Arke::Order.new("ethusd", 5, 1, :sell, "limit", 0) }
+    let(:order_sell_1)     { Arke::Order.new("ethusd", 8, 2, :sell, "limit", 1) }
+    let(:order_sell_2)     { Arke::Order.new("ethusd", 2, 3, :sell, "limit", 2) }
+
+    it "returns list of orders for every level" do
+      open_orders.add_order(order_sell_0)
+      open_orders.add_order(order_sell_1)
+      open_orders.add_order(order_sell_2)
+
+      expect(open_orders.group_by_level(:sell, price_points_sell)).to eq(
+        [
+          {price: 6, orders: [order_sell_2, order_sell_0]},
+          {price: 8, orders: [order_sell_1]},
+        ]
+      )
+    end
+  end
 end

@@ -177,8 +177,13 @@ module Arke
       logger.debug { "ID:#{strategy.id} Desired Orderbook\n#{desired_orderbook}" }
       return if @dry_run
 
-      actions = ActionScheduler.new(strategy.target.open_orders, desired_orderbook, strategy.target).schedule
-      strategy.target.account.executor.push(actions)
+      scheduler = ActionScheduler.new(
+        strategy.target.open_orders,
+        desired_orderbook,
+        strategy.target,
+        strategy_id: strategy.id
+      )
+      strategy.target.account.executor.push(scheduler.schedule)
     end
 
     # Stops workers and strategy execution

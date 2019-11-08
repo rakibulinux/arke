@@ -80,4 +80,26 @@ describe Arke::Orderbook::Base do
     end
   end
 
+  context "group_by_level" do
+    let(:price_points_sell) { [6, 8] }
+    let(:order_sell_0)     { Arke::Order.new("ethusd", 5, 1, :sell) }
+    let(:order_sell_1)     { Arke::Order.new("ethusd", 8, 2, :sell) }
+    let(:order_sell_2)     { Arke::Order.new("ethusd", 2, 3, :sell) }
+
+    before(:each) do
+      orderbook.update(order_sell_0)
+      orderbook.update(order_sell_1)
+      orderbook.update(order_sell_2)
+    end
+
+    it "returns list of orders amount for every level" do
+      expect(orderbook.group_by_level(:sell, price_points_sell)).to eq(
+        [
+          {price: 6, orders: [3, 1]},
+          {price: 8, orders: [2]},
+        ]
+      )
+    end
+  end
+
 end

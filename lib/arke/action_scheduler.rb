@@ -6,7 +6,8 @@ module Arke
     include Helpers::Precision
     attr_accessor :actions
 
-    def initialize(current_ob, desired_ob, target)
+    def initialize(current_ob, desired_ob, target, opts={})
+      @opts = opts
       @current_ob = current_ob
       @desired_ob = desired_ob
       @target = target
