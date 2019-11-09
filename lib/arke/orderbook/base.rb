@@ -2,6 +2,8 @@
 
 module Arke::Orderbook
   class Base
+    include ::Arke::Helpers::Orderbook
+
     attr_reader :book, :market
     attr_reader :volume_bids_quote, :volume_asks_quote
 
@@ -67,14 +69,6 @@ module Arke::Orderbook
       @volume_asks_base ||= @book[:sell].inject(0.0) {|sum, n| sum + n.last }
     end
 
-    def better_or_equal(side, a, b)
-      side == :buy ? a >= b : a <= b
-    end
-
-    def better(side, a, b)
-      side == :buy ? a > b : a < b
-    end
-
     def [](side)
       @book[side]
     end
@@ -112,24 +106,24 @@ module Arke::Orderbook
     def group_by_level(side, price_points)
       result = []
       level_index = 0
+      init_level = proc do |price_point|
+        {
+          price:  price_point,
+          orders: []
+        }
+      end
 
       @book[side].each do |order_price, data|
-        #byebug
         while level_index < price_points.size && better(side, price_points[level_index], order_price)
           level_index += 1
           price_point = price_points[level_index]
-          result[level_index] = {
-            price:  price_point,
-            orders: []
-          }
+          result[level_index] = init_level.call(price_point)
         end
         break if level_index >= price_points.size
 
         price_point = price_points[level_index]
-        result[level_index] ||= {
-          price:  price_point,
-          orders: []
-        }
+        result[level_index] ||= init_level.call(price_point)
+
         case self
         when OpenOrders
           result[level_index][:orders] += data.values

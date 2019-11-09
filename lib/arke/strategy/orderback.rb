@@ -175,7 +175,7 @@ module Arke::Strategy
       push_debug("3_ob_adjusted", "\n#{ob_adjusted}")
       push_debug("4_ob_spread", "\n#{ob_spread}")
 
-      ob_spread
+      [ob_spread, {asks: price_points_asks, bids: price_points_bids}]
     end
   end
 end

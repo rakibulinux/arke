@@ -164,7 +164,7 @@ module Arke
     end
 
     def execute_strategy(strategy)
-      desired_orderbook = strategy.call
+      desired_orderbook, price_levels = strategy.call()
 
       if strategy.debug
         strategy.debug_infos.each do |label, data|
@@ -177,11 +177,12 @@ module Arke
       logger.debug { "ID:#{strategy.id} Desired Orderbook\n#{desired_orderbook}" }
       return if @dry_run
 
-      scheduler = ActionScheduler.new(
+      scheduler = SmartScheduler.new(
         strategy.target.open_orders,
         desired_orderbook,
         strategy.target,
-        strategy_id: strategy.id
+        price_levels: price_levels,
+        strategy_id:  strategy.id
       )
       strategy.target.account.executor.push(scheduler.schedule)
     end
