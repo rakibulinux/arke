@@ -12,6 +12,8 @@ require "em-synchrony/em-http"
 require "faraday"
 require "faraday_middleware"
 require "faye/websocket"
+require "bigdecimal"
+require "bigdecimal/util"
 
 require "binance"
 require "bitx"

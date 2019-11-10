@@ -55,13 +55,13 @@ module Arke::Strategy
 
       delta = rand(0..@random_delta) - (@random_delta / 2)
       top_ask = top_bid = @price + delta
-      price_points_asks = @side_asks ? split_constant(:asks, top_ask, @levels_count, split_opts) : []
-      price_points_bids = @side_bids ? split_constant(:bids, top_bid, @levels_count, split_opts) : []
-      volume_asks_base = 0.0
-      volume_bids_base = 0.0
+      price_points_asks = @side_asks ? split_constant_pp(:asks, top_ask, @levels_count, split_opts) : []
+      price_points_bids = @side_bids ? split_constant_pp(:bids, top_bid, @levels_count, split_opts) : []
+      volume_asks_base = 0.to_d
+      volume_bids_base = 0.to_d
 
-      max_amount_ask = 2 * @limit_asks_base / @levels_count - 2 * target.min_ask_amount
-      max_amount_bid = 2 * @limit_bids_base / @levels_count - 2 * target.min_bid_amount
+      max_amount_ask = 2.to_d * @limit_asks_base / @levels_count - 2 * target.min_ask_amount
+      max_amount_bid = 2.to_d * @limit_bids_base / @levels_count - 2 * target.min_bid_amount
 
       max_amount_ask = target.min_ask_amount if max_amount_ask.negative?
       max_amount_bid = target.min_bid_amount if max_amount_bid.negative?
@@ -69,16 +69,16 @@ module Arke::Strategy
       ask_amounts = split_linear(nil, max_amount_ask, @levels_count, last_value: target.min_ask_amount)
       bid_amounts = split_linear(nil, max_amount_bid, @levels_count, last_value: target.min_bid_amount)
 
-      ob_asks = price_points_asks.map do |price|
+      ob_asks = price_points_asks.map do |pp|
         amount = ask_amounts.shift
         volume_asks_base += amount
-        [price, amount]
+        [pp.price_point, amount]
       end
 
-      ob_bids = price_points_bids.map do |price|
+      ob_bids = price_points_bids.map do |pp|
         amount = bid_amounts.shift
         volume_bids_base += amount
-        [price, amount]
+        [pp.price_point, amount]
       end
 
       ob = Arke::Orderbook::Orderbook.new(
@@ -113,7 +113,7 @@ module Arke::Strategy
       push_debug("2_ob_spread", ob_spread)
       push_debug("3_ob_adjusted", ob_adjusted)
 
-      ob_adjusted
+      [ob_adjusted, {asks: price_points_asks, bids: price_points_bids}]
     end
   end
 end

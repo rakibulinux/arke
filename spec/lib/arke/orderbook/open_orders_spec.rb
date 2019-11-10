@@ -74,7 +74,7 @@ describe Arke::Orderbook::OpenOrders do
   end
 
   context "group_by_level" do
-    let(:price_points_sell) { [6, 8] }
+    let(:price_points_sell) { [6, 8].map {|price| ::Arke::PricePoint.new(price) } }
 
     let(:order_sell_0)     { Arke::Order.new("ethusd", 5, 1, :sell, "limit", 0) }
     let(:order_sell_1)     { Arke::Order.new("ethusd", 8, 2, :sell, "limit", 1) }

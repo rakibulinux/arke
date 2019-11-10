@@ -48,8 +48,8 @@ module Arke::Strategy
       top_bid = source.orderbook[:buy].first
       raise "Source order book is empty" if top_ask.nil? || top_bid.nil?
 
-      price_points_asks = @side_asks ? split_constant(:asks, top_ask.first, @levels_count, split_opts) : nil
-      price_points_bids = @side_bids ? split_constant(:bids, top_bid.first, @levels_count, split_opts) : nil
+      price_points_asks = @side_asks ? split_constant_pp(:asks, top_ask.first, @levels_count, split_opts) : nil
+      price_points_bids = @side_bids ? split_constant_pp(:bids, top_bid.first, @levels_count, split_opts) : nil
 
       ob_agg = source.orderbook.aggregate(price_points_bids, price_points_asks, target.min_ask_amount, target.min_bid_amount)
       ob = ob_agg.to_ob

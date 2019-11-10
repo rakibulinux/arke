@@ -82,13 +82,13 @@ module Arke::Orderbook
       volume_asks_quote = 0.0
 
       self[:buy].each do |k, v|
-        price = k * bids_spread
-        bids[price] = v
+        price = (BigDecimal(k) * bids_spread).round(16)
+        bids[price] = v.round(16)
         volume_bids_quote += price * v
       end
       self[:sell].each do |k, v|
-        price = k * asks_spread
-        asks[price] = v
+        price = (BigDecimal(k) * asks_spread).round(16)
+        asks[price] = v.round(16)
         volume_asks_quote += price * v
       end
 

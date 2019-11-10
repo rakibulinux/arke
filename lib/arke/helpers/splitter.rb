@@ -3,7 +3,7 @@
 module Arke::Helpers
   module Splitter
     def combine(side, a, b)
-      side == :asks ? a + b : a - b
+      (side == :asks ? a + b : a - b).to_d
     end
 
     def split_constant(side, best_price, count, opts={})
@@ -12,11 +12,12 @@ module Arke::Helpers
 
       result = []
       count.times do
-        price = combine(side, result.last || best_price, step_size)
-        result << price if price.positive?
+        value = combine(side, result.last || best_price, step_size)
+        result << value if value.positive?
       end
       result
     end
+
 
     def split_linear(side, best_value, count, opts={})
       raise "missing last_value option" unless opts[:last_value]
@@ -26,8 +27,8 @@ module Arke::Helpers
 
       result = []
       count.times do |i|
-        price = combine(side, best_value, (i + 1) * step)
-        result << price if price.positive?
+        value = combine(side, best_value, (i + 1) * step)
+        result << value if value.positive?
       end
       result
     end
@@ -43,6 +44,10 @@ module Arke::Helpers
         result << combine(side, best_price, n - n * (Math.log(n - i) / Math.log(n)))
       end
       result
+    end
+
+    def split_constant_pp(side, best_price, count, opts={})
+      split_constant(side, best_price, count, opts).map {|value| ::Arke::PricePoint.new(value) }
     end
   end
 end
