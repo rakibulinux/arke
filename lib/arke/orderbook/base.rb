@@ -114,14 +114,14 @@ module Arke::Orderbook
       end
 
       @book[side].each do |order_price, data|
-        while level_index < price_points.size && better(side, price_points[level_index], order_price)
+        while level_index < price_points.size && better(side, price_points[level_index].price_point, order_price)
           level_index += 1
-          price_point = price_points[level_index]
+          price_point = price_points[level_index].price_point
           result[level_index] = init_level.call(price_point)
         end
         break if level_index >= price_points.size
 
-        price_point = price_points[level_index]
+        price_point = price_points[level_index].price_point
         result[level_index] ||= init_level.call(price_point)
 
         case self

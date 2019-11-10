@@ -36,17 +36,16 @@ module Arke::Scheduler
       actions = []
       current = @current_ob.group_by_level(side, price_levels)
       desired = @desired_ob.group_by_level(side, price_levels)
-      # byebug
-      price_levels.each_with_index do |price, i|
+
+      price_levels.each_with_index do |price_point, i|
         current_amount = current_amount(side, current, i, desired_best_price)
         desired_amount = desired[i][:orders].sum
         diff_amount = desired_amount - current_amount
-        priority = 1e3 * (1 + 1 / (i + 1)) # Priority to first levels
-
+        priority = 1e3 * (1 + 1 / (i.to_d + 1)) # Priority to first levels
         if diff_amount.negative?
           current[i][:orders].each do |order|
-            diff_amount += order.amount
-            actions.push(::Arke::Action.new(:order_stop, @target, id: order.id, order: order, priority: priority))
+            diff_amount += order.amount.to_d
+            actions.push(::Arke::Action.new(:order_stop, @target, order: order, priority: priority))
             next if diff_amount >= 0
           end
           next
@@ -57,11 +56,10 @@ module Arke::Scheduler
         while diff_amount.positive?
           amount = [diff_amount, @max_amount_per_order].min
           diff_amount -= amount
-          order = ::Arke::Order.new(@market, price, amount, side)
+          order = ::Arke::Order.new(@market, price_point.weighted_price, amount, side)
           actions.push(::Arke::Action.new(:order_create, @target, order: order, priority: priority))
           next if diff_amount <= 0
         end
-        next
       end
       actions
     end
@@ -70,7 +68,6 @@ module Arke::Scheduler
       list = []
       desired_best_sell = @desired_ob.best_price(:sell)
       desired_best_buy = @desired_ob.best_price(:buy)
-      current_best_sell = @current_ob.best_price(:sell)
 
       if !desired_best_buy.nil? && !desired_best_sell.nil? && desired_best_sell <= desired_best_buy
         raise InvalidOrderBook.new("Ask price < Bid price")

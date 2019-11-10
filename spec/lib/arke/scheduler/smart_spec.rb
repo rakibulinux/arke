@@ -318,12 +318,16 @@ describe Arke::Scheduler::Smart do
     end
 
     it "creates orders when levels need liquidity" do
-      expect(action_scheduler.adjust_levels(:sell, [20, 21], 20)).to eq(
+      price_points = [
+        ::Arke::PricePoint.new(20, 19.5),
+        ::Arke::PricePoint.new(24, 22.5),
+      ]
+      expect(action_scheduler.adjust_levels(:sell, price_points, 20)).to eq(
         [
-          Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 20, 0.1, :sell, priority: 2000)),
-          Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22, 0.5, :sell, priority: 1500)),
-          Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22, 0.5, :sell, priority: 1500)),
-          Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22, 0.1, :sell, priority: 1500)),
+          ::Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 19.5, 0.1, :sell), priority: 2000.to_d),
+          ::Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22.5, 0.5, :sell), priority: 1500.to_d),
+          ::Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22.5, 0.5, :sell), priority: 1500.to_d),
+          ::Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22.5, 0.2, :sell), priority: 1500.to_d),
         ]
       )
     end

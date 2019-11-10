@@ -1,5 +1,3 @@
-require "arke/order"
-
 module Arke::Orderbook
   class OpenOrders < Base
     def price_level(side, price)
