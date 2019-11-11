@@ -17,7 +17,7 @@ module Arke::Scheduler
 
       actions = []
       @current_ob[side].each do |price, orders|
-        orders.each do |id, order|
+        orders.each do |_id, order|
           if better(side, price, desired_best_price)
             priority = 1e9 + (price - desired_best_price).abs
             actions.push(::Arke::Action.new(:order_stop, @target, order: order, priority: priority))
@@ -32,7 +32,7 @@ module Arke::Scheduler
 
       actions = []
       @current_ob[side].each do |price, orders|
-        orders.each do |id, order|
+        orders.each do |_id, order|
           if better(side, last_level_price, price)
             priority = 1.to_d + (price - last_level_price).abs
             actions.push(::Arke::Action.new(:order_stop, @target, order: order, priority: priority))
@@ -65,24 +65,24 @@ module Arke::Scheduler
         current_amount = current_amount(side, current, i, desired_best_price)
         desired_amount = desired[i] ? desired[i][:orders].sum : 0
         diff_amount = desired_amount - current_amount
-        priority = 1e3 * (1 + 1 / (i.to_d + 1)) # Priority to first levels
+        level_priority = 1e3 * (1 + 1 / (i.to_d + 1)) # Priority to first levels
+
         if diff_amount.negative?
-          current[i][:orders].each do |order|
+          current[i][:orders].sort_by(&:amount).each do |order|
             diff_amount += order.amount.to_d
+            priority = level_priority + 100.to_d / order.amount.to_d
             actions.push(::Arke::Action.new(:order_stop, @target, order: order, priority: priority))
             break if diff_amount >= 0
           end
           next
         end
 
-        next unless diff_amount.positive?
-
         while diff_amount.positive?
           amount = @max_amount_per_order ? [diff_amount, @max_amount_per_order].min : diff_amount
           price = price_point.weighted_price || desired[i][:price]
           diff_amount -= amount
           order = ::Arke::Order.new(@market, price, amount, side)
-          actions.push(::Arke::Action.new(:order_create, @target, order: order, priority: priority))
+          actions.push(::Arke::Action.new(:order_create, @target, order: order, priority: level_priority))
           break if diff_amount <= 0
         end
       end
