@@ -12,12 +12,14 @@ module Arke::Scheduler
     end
 
     def cancel_risky_orders(side, desired_best_price)
+      return [] if desired_best_price.nil?
+
       actions = []
       @current_ob[side].each do |price, orders|
         orders.each do |id, order|
           if better(side, price, desired_best_price)
             priority = 1e9 + (price - desired_best_price).abs
-            actions.push(::Arke::Action.new(:order_stop, @target, id: id, order: order, priority: priority))
+            actions.push(::Arke::Action.new(:order_stop, @target, order: order, priority: priority))
           end
         end
       end
@@ -28,7 +30,7 @@ module Arke::Scheduler
       return 0.0 unless grouped_orders[level_index]
 
       grouped_orders[level_index][:orders].reject {|order|
-        better(side, order.price, desired_best_price)
+        !desired_best_price.nil? && better(side, order.price, desired_best_price)
       }.sum(&:amount)
     end
 
@@ -37,16 +39,21 @@ module Arke::Scheduler
       current = @current_ob.group_by_level(side, price_levels)
       desired = @desired_ob.group_by_level(side, price_levels)
 
+      logger.debug { "current: #{current.inspect}" }
+      logger.debug { "desired: #{desired.inspect}" }
+
       price_levels.each_with_index do |price_point, i|
+        raise "PricePoint expected, got #{price_point.class}" unless price_point.is_a?(::Arke::PricePoint)
+
         current_amount = current_amount(side, current, i, desired_best_price)
-        desired_amount = desired[i][:orders].sum
+        desired_amount = desired[i] ? desired[i][:orders].sum : 0
         diff_amount = desired_amount - current_amount
         priority = 1e3 * (1 + 1 / (i.to_d + 1)) # Priority to first levels
         if diff_amount.negative?
           current[i][:orders].each do |order|
             diff_amount += order.amount.to_d
             actions.push(::Arke::Action.new(:order_stop, @target, order: order, priority: priority))
-            next if diff_amount >= 0
+            break if diff_amount >= 0
           end
           next
         end
@@ -54,18 +61,18 @@ module Arke::Scheduler
         next unless diff_amount.positive?
 
         while diff_amount.positive?
-          amount = [diff_amount, @max_amount_per_order].min
+          amount = @max_amount_per_order ? [diff_amount, @max_amount_per_order].min : diff_amount
+          price = price_point.weighted_price || desired[i][:price]
           diff_amount -= amount
-          order = ::Arke::Order.new(@market, price_point.weighted_price, amount, side)
+          order = ::Arke::Order.new(@market, price, amount, side)
           actions.push(::Arke::Action.new(:order_create, @target, order: order, priority: priority))
-          next if diff_amount <= 0
+          break if diff_amount <= 0
         end
       end
       actions
     end
 
     def schedule
-      list = []
       desired_best_sell = @desired_ob.best_price(:sell)
       desired_best_buy = @desired_ob.best_price(:buy)
 
@@ -73,11 +80,11 @@ module Arke::Scheduler
         raise InvalidOrderBook.new("Ask price < Bid price")
       end
 
+      list = []
       list += cancel_risky_orders(:sell, desired_best_sell)
       list += cancel_risky_orders(:buy, desired_best_buy)
       list += adjust_levels(:sell, @price_levels[:asks], desired_best_sell)
       list += adjust_levels(:buy,  @price_levels[:bids], desired_best_buy)
-
       list
     end
   end

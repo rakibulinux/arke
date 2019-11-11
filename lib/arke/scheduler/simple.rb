@@ -6,8 +6,10 @@ module Arke::Scheduler
   class Simple
     include ::Arke::Helpers::Precision
     attr_accessor :actions
+    attr_reader :logger
 
     def initialize(current_ob, desired_ob, target, opts={})
+      @logger = Arke::Log
       @opts = opts
       @current_ob = current_ob
       @desired_ob = desired_ob

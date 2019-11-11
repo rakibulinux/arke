@@ -104,6 +104,8 @@ module Arke::Orderbook
     end
 
     def group_by_level(side, price_points)
+      return [] if price_points.empty?
+
       result = []
       level_index = 0
       init_level = proc do |price_point|
@@ -113,10 +115,13 @@ module Arke::Orderbook
         }
       end
 
+      result[0] = init_level.call(price_points.first.price_point)
+
       @book[side].each do |order_price, data|
         while level_index < price_points.size && better(side, price_points[level_index].price_point, order_price)
           level_index += 1
-          price_point = price_points[level_index].price_point
+          break unless price_point = price_points[level_index]&.price_point
+
           result[level_index] = init_level.call(price_point)
         end
         break if level_index >= price_points.size
