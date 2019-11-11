@@ -151,8 +151,8 @@ describe Arke::Scheduler::Smart do
     context "overlapping orderbooks" do
       let(:price_levels) do
         {
-          asks: [::Arke::PricePoint.new(2.5, 2.2)],
-          bids: [::Arke::PricePoint.new(2.0, 2.1)],
+          asks: [::Arke::PricePoint.new(2.5, 2.2), ::Arke::PricePoint.new(3.5, 3.15)],
+          bids: [::Arke::PricePoint.new(2.0, 2.1), ::Arke::PricePoint.new(1.0, 1.25)],
         }
       end
       it "stops overlapping orders first (sell overlap buy on market price DUMP)" do
@@ -164,13 +164,13 @@ describe Arke::Scheduler::Smart do
 
         desired_orderbook.update(Arke::Order.new(market, 2.2, 1, :sell))
         desired_orderbook.update(Arke::Order.new(market, 2.1, 1, :buy))
-        actions = action_scheduler.schedule
 
-        expect(actions).to eq(
+        expect(action_scheduler.schedule).to eq(
           [
             Arke::Action.new(:order_stop, target, order: order_sell, priority: 1_000_000_000.2.to_d),
             Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.1, 1, :buy), priority: 2000.to_d),
             Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 1, :sell), priority: 2000.to_d),
+            Arke::Action.new(:order_stop, target, order: order_buy, priority: 1500.to_d),
           ]
         )
       end
@@ -190,14 +190,14 @@ describe Arke::Scheduler::Smart do
         desired_orderbook.update(Arke::Order.new(market, 2.1, 1,  :sell))
         desired_orderbook.update(Arke::Order.new(market, 2.0, 1,  :buy))
         desired_orderbook.update(Arke::Order.new(market, 1.9, 1,  :buy))
-        actions = action_scheduler.schedule
 
-        expect(actions).to eq(
+        expect(action_scheduler.schedule).to eq(
           [
             Arke::Action.new(:order_stop, target, order: order_sell_13, priority: 1_000_000_000.2.to_d),
             Arke::Action.new(:order_stop, target, order: order_sell_14, priority: 1_000_000_000.1.to_d),
             Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.1, 1, :buy), priority: 2000.to_d),
             Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 2, :sell), priority: 2000.to_d),
+            Arke::Action.new(:order_stop, target, order: order_buy_10, priority: 1500.to_d)
           ]
         )
       end
@@ -211,13 +211,13 @@ describe Arke::Scheduler::Smart do
 
         desired_orderbook.update(Arke::Order.new(market, 2.1, 1, :sell))
         desired_orderbook.update(Arke::Order.new(market, 2.0, 1, :buy))
-        actions = action_scheduler.schedule
 
-        expect(actions).to eq(
+        expect(action_scheduler.schedule).to eq(
           [
             Arke::Action.new(:order_stop, target, order: order_sell, priority: 1_000_000_000.1.to_d),
             Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.1, 1, :buy), priority: 2000.to_d),
             Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 1, :sell), priority: 2000.to_d),
+            Arke::Action.new(:order_stop, target, order: order_buy, priority: 1500.to_d),
           ]
         )
       end
@@ -231,9 +231,8 @@ describe Arke::Scheduler::Smart do
 
         desired_orderbook.update(Arke::Order.new(market, 1.0, 1, :sell))
         desired_orderbook.update(Arke::Order.new(market, 0.9, 1, :buy))
-        actions = action_scheduler.schedule
 
-        expect(actions).to eq(
+        expect(action_scheduler.schedule).to eq(
           [
             Arke::Action.new(:order_stop, target, order: order_buy, priority: 1_000_000_000.1.to_d),
           ]
