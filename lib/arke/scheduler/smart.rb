@@ -85,7 +85,7 @@ module Arke::Scheduler
       list += cancel_risky_orders(:buy, desired_best_buy)
       list += adjust_levels(:sell, @price_levels[:asks], desired_best_sell)
       list += adjust_levels(:buy,  @price_levels[:bids], desired_best_buy)
-      list
+      list.sort_by(&:priority).reverse
     end
   end
 end

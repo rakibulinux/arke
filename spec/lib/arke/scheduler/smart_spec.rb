@@ -60,12 +60,13 @@ describe Arke::Scheduler::Smart do
       current_openorders.add_order(order_sell)
       current_openorders.add_order(order_sell2)
       current_openorders.add_order(order_buy2)
-      expect(action_scheduler.schedule).to \
-        eq([
-             Arke::Action.new(:order_stop, target, id: 10, order: order_sell, priority: 2000.to_d),
-             Arke::Action.new(:order_stop, target, id: 11, order: order_sell2, priority: 1500.to_d),
-             Arke::Action.new(:order_stop, target, id: 12, order: order_buy2, priority: 2000.to_d),
-           ])
+      expect(action_scheduler.schedule).to eq(
+        [
+          Arke::Action.new(:order_stop, target, id: 12, order: order_buy2, priority: 2000.to_d),
+          Arke::Action.new(:order_stop, target, id: 10, order: order_sell, priority: 2000.to_d),
+          Arke::Action.new(:order_stop, target, id: 11, order: order_sell2, priority: 1500.to_d),
+        ]
+      )
     end
   end
 
@@ -73,11 +74,12 @@ describe Arke::Scheduler::Smart do
     it "generates order creation" do
       desired_orderbook.update(order_buy)
       desired_orderbook.update(order_sell)
-      expect(action_scheduler.schedule).to \
-        eq([
-             Arke::Action.new(:order_create, target, order: order_sell, priority: 2000.to_d),
-             Arke::Action.new(:order_create, target, order: order_buy, priority: 2000.to_d),
-           ])
+      expect(action_scheduler.schedule).to eq(
+        [
+          Arke::Action.new(:order_create, target, order: order_buy, priority: 2000.to_d),
+          Arke::Action.new(:order_create, target, order: order_sell, priority: 2000.to_d),
+        ]
+      )
     end
   end
 
@@ -93,8 +95,8 @@ describe Arke::Scheduler::Smart do
 
       expect(action_scheduler.schedule).to eq(
         [
-          Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 1.4, 1, :sell, "limit"), priority: 1500.to_d),
           Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 1, 3, :buy, "limit"), priority: 2000.to_d),
+          Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 1.4, 1, :sell, "limit"), priority: 1500.to_d),
         ]
       )
     end
@@ -104,8 +106,8 @@ describe Arke::Scheduler::Smart do
       current_openorders.add_order(order_buy2)
       expect(action_scheduler.schedule).to eq(
         [
-          Arke::Action.new(:order_stop, target, id: 11, order: order_sell2, priority: 1500.to_d),
           Arke::Action.new(:order_stop, target, id: 12, order: order_buy2, priority: 2000.to_d),
+          Arke::Action.new(:order_stop, target, id: 11, order: order_sell2, priority: 1500.to_d),
         ]
       )
     end
@@ -167,8 +169,8 @@ describe Arke::Scheduler::Smart do
         expect(actions).to eq(
           [
             Arke::Action.new(:order_stop, target, order: order_sell, priority: 1_000_000_000.2.to_d),
-            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 1, :sell), priority: 2000.to_d),
             Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.1, 1, :buy), priority: 2000.to_d),
+            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 1, :sell), priority: 2000.to_d),
           ]
         )
       end
@@ -194,8 +196,8 @@ describe Arke::Scheduler::Smart do
           [
             Arke::Action.new(:order_stop, target, order: order_sell_13, priority: 1_000_000_000.2.to_d),
             Arke::Action.new(:order_stop, target, order: order_sell_14, priority: 1_000_000_000.1.to_d),
-            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 2, :sell), priority: 2000.to_d),
             Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.1, 1, :buy), priority: 2000.to_d),
+            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 2, :sell), priority: 2000.to_d),
           ]
         )
       end
@@ -214,8 +216,8 @@ describe Arke::Scheduler::Smart do
         expect(actions).to eq(
           [
             Arke::Action.new(:order_stop, target, order: order_sell, priority: 1_000_000_000.1.to_d),
-            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 1, :sell), priority: 2000.to_d),
             Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.1, 1, :buy), priority: 2000.to_d),
+            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 1, :sell), priority: 2000.to_d),
           ]
         )
       end
