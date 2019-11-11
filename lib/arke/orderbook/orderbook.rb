@@ -12,6 +12,7 @@ module Arke::Orderbook
     end
 
     def group_by_price_points(side, price_points, minimum_volume)
+      price_points = price_points.clone
       tree = ::RBTree.new
       volume_base = 0.0.to_d
       volume_quote = 0.0.to_d

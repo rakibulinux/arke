@@ -6,6 +6,7 @@ module Arke::Scheduler
 
     def initialize(current_ob, desired_ob, target, opts={})
       super
+
       @price_levels = opts[:price_levels]
       @max_amount_per_order = opts[:max_amount_per_order]
       raise "price_levels are missing" unless @price_levels
@@ -26,6 +27,21 @@ module Arke::Scheduler
       actions
     end
 
+    def cancel_out_of_boundaries_orders(side, last_level_price)
+      return [] if last_level_price.nil?
+
+      actions = []
+      @current_ob[side].each do |price, orders|
+        orders.each do |id, order|
+          if better(side, last_level_price, price)
+            priority = 1.to_d + (price - last_level_price).abs
+            actions.push(::Arke::Action.new(:order_stop, @target, order: order, priority: priority))
+          end
+        end
+      end
+      actions
+    end
+
     def current_amount(side, grouped_orders, level_index, desired_best_price)
       return 0.0 unless grouped_orders[level_index]
 
@@ -39,6 +55,7 @@ module Arke::Scheduler
       current = @current_ob.group_by_level(side, price_levels)
       desired = @desired_ob.group_by_level(side, price_levels)
 
+      logger.debug { "price_levels: #{price_levels.inspect}" }
       logger.debug { "current: #{current.inspect}" }
       logger.debug { "desired: #{desired.inspect}" }
 
@@ -85,6 +102,8 @@ module Arke::Scheduler
       list += cancel_risky_orders(:buy, desired_best_buy)
       list += adjust_levels(:sell, @price_levels[:asks], desired_best_sell)
       list += adjust_levels(:buy,  @price_levels[:bids], desired_best_buy)
+      list += cancel_out_of_boundaries_orders(:buy,  @price_levels[:bids].last&.price_point)
+      list += cancel_out_of_boundaries_orders(:sell, @price_levels[:asks].last&.price_point)
       list.sort_by(&:priority).reverse
     end
   end

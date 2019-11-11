@@ -50,7 +50,6 @@ module Arke::Strategy
 
       price_points_asks = @side_asks ? split_constant_pp(:asks, top_ask.first, @levels_count, split_opts) : nil
       price_points_bids = @side_bids ? split_constant_pp(:bids, top_bid.first, @levels_count, split_opts) : nil
-
       ob_agg = source.orderbook.aggregate(price_points_bids, price_points_asks, target.min_ask_amount, target.min_bid_amount)
       ob = ob_agg.to_ob
 
@@ -75,8 +74,12 @@ module Arke::Strategy
       )
       ob_spread = ob_adjusted.spread(@spread_bids, @spread_asks)
 
-      push_debug("0_asks_price_points", price_points_asks)
-      push_debug("0_bids_price_points", price_points_bids)
+      push_debug("0_levels_count", @levels_count)
+      push_debug("0_levels_size", @levels_size)
+      push_debug("0_top_ask", top_ask&.first)
+      push_debug("0_top_bid", top_bid&.first)
+      push_debug("0_asks_price_points", price_points_asks.inspect)
+      push_debug("0_bids_price_points", price_points_bids.inspect)
       push_debug("1_ob_agg", "\n#{ob_agg}")
       push_debug("2_ob", "\n#{ob}")
       push_debug("3_ob_adjusted", "\n#{ob_adjusted}")

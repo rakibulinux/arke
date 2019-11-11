@@ -26,7 +26,7 @@ module Arke
       @markets = []
       accounts_configs.each do |config|
         account = @accounts[config["id"]] = Arke::Exchange.create(config)
-        executor = ActionExecutor.new(account)
+        executor = ActionExecutor.new(account, purge_on_push: true)
         account.executor = executor
       end
     end
@@ -86,7 +86,6 @@ module Arke
           Fiber.new do
             unless @dry_run
               logger.info { "ID:#{strategy.id} Purging open orders on #{strategy.target.account.driver}" }
-              strategy.target.account.cancel_all_orders(strategy.target.id)
               strategy.target.account.executor.start
             end
 
@@ -177,7 +176,7 @@ module Arke
       logger.debug { "ID:#{strategy.id} Desired Orderbook\n#{desired_orderbook}" }
       return if @dry_run
 
-      scheduler = SmartScheduler.new(
+      scheduler = ::Arke::Scheduler::Smart.new(
         strategy.target.open_orders,
         desired_orderbook,
         strategy.target,
@@ -192,16 +191,7 @@ module Arke
     # * broadcasts +:shutdown+ action to workers
     def stop
       puts "Shutdown trading"
-      if @strategies.empty?
-        EM.stop
-      else
-        Fiber.new do
-          @strategies.each do |strategy|
-            strategy.target.account.cancel_all_orders(strategy.target.id)
-            EM.stop
-          end
-        end.resume
-      end
+      EM.stop
       @shutdown = true
     end
   end

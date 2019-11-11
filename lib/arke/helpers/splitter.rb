@@ -7,7 +7,7 @@ module Arke::Helpers
     end
 
     def split_constant(side, best_price, count, opts={})
-      step_size = opts[:step_size].to_f
+      step_size = opts[:step_size].to_d
       raise "missing step_size option" if step_size.zero?
 
       result = []

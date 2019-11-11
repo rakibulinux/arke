@@ -13,5 +13,10 @@ module Arke
     def weighted_price=(price)
       @weighted_price = price.to_d
     end
+
+    def ==(pp)
+      price_point == pp.price_point && \
+      weighted_price == pp.weighted_price
+    end
   end
 end

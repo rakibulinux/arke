@@ -250,6 +250,49 @@ describe Arke::Scheduler::Smart do
     end
   end
 
+  context "cancel_out_of_boundaries_orders" do
+    let(:order_sell_14) { Arke::Order.new(market, 2.0, 1, :sell, "limit", 14) }
+    let(:order_sell_13) { Arke::Order.new(market, 1.9, 1, :sell, "limit", 13) }
+    let(:order_buy_10)  { Arke::Order.new(market, 1.4, 3, :buy,  "limit", 10) }
+    let(:order_buy_11)  { Arke::Order.new(market, 1.0, 1, :buy,  "limit", 11) }
+    let(:order_buy_12)  { Arke::Order.new(market, 0.9, 1, :buy,  "limit", 12) }
+
+    before(:each) do
+      current_openorders.add_order(order_buy_10)
+      current_openorders.add_order(order_buy_11)
+      current_openorders.add_order(order_buy_12)
+      current_openorders.add_order(order_sell_13)
+      current_openorders.add_order(order_sell_14)
+    end
+
+    let(:price_levels) do
+      {
+        asks: [::Arke::PricePoint.new(1.95, 1.9)],
+        bids: [::Arke::PricePoint.new(1.10, 1.4)],
+      }
+    end
+
+    it "cancels orders over the bounds with very high priority" do
+      expect(action_scheduler.cancel_out_of_boundaries_orders(:sell, price_levels[:asks].last&.price_point)).to eq(
+        [
+          Arke::Action.new(:order_stop, target, order: order_sell_14, priority: 1.05),
+        ]
+      )
+
+      expect(action_scheduler.cancel_out_of_boundaries_orders(:buy, price_levels[:bids].last&.price_point)).to eq(
+        [
+          Arke::Action.new(:order_stop, target, order: order_buy_11, priority: 1.1),
+          Arke::Action.new(:order_stop, target, order: order_buy_12, priority: 1.2),
+        ]
+      )
+    end
+
+    it "does nothing when all orders are in bounds" do
+      expect(action_scheduler.cancel_risky_orders(:sell, 1.8)).to eq([])
+      expect(action_scheduler.cancel_risky_orders(:buy, 1.5)).to eq([])
+    end
+  end
+
   context "cancel_risky_orders" do
     let(:order_sell_14) { Arke::Order.new(market, 2.0, 1, :sell, "limit", 14) }
     let(:order_sell_13) { Arke::Order.new(market, 1.9, 1, :sell, "limit", 13) }
