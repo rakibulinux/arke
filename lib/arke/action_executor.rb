@@ -64,6 +64,11 @@ module Arke
             Log.error "ACCOUNT:#{id} #{$!}"
           end
         end
+      when :fetch_openorders
+        Arke::Log.info "ACCOUNT:#{id} Fetching open orders"
+        action.destination.fetch_openorders
+      when :noop
+        Arke::Log.info "ACCOUNT:#{id} empty action"
       else
         Arke::Log.error "ACCOUNT:#{id} Unknown Action type: #{action.type}"
       end

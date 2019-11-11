@@ -5,6 +5,8 @@ module Arke
   class Reactor
     class StrategyNotFound < StandardError; end
     include Arke::Helpers::Flags
+    GRACE_TIME = 3.0
+    FETCH_OPEN_ORDERS_PERIOD = 600
 
     # * @shutdown is a flag which controls strategy execution
     def initialize(strategies_configs, accounts_configs, dry_run)
@@ -82,6 +84,8 @@ module Arke
 
         @strategies.each do |strategy|
           Fiber.new do
+            EM::Synchrony.add_periodic_timer(FETCH_OPEN_ORDERS_PERIOD) { fetch_openorders(strategy) }
+
             unless @dry_run
               Arke::Log.info("ID:#{strategy.id} Purging open orders on #{strategy.target.account.driver}")
               strategy.target.account.cancel_all_orders(strategy.target.id)
@@ -176,6 +180,15 @@ module Arke
       return if @dry_run
 
       actions = ActionScheduler.new(strategy.target.open_orders, desired_orderbook, strategy.target).schedule
+      strategy.target.account.executor.push(actions)
+    end
+
+    def fetch_openorders(strategy)
+      actions = []
+      (GRACE_TIME/strategy.target.account.delay).ceil.times do
+        actions << Action.new(:noop, strategy.target)
+      end
+      actions << Action.new(:fetch_openorders, strategy.target)
       strategy.target.account.executor.push(actions)
     end
 
