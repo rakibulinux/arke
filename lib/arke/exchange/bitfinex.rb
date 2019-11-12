@@ -13,6 +13,74 @@ module Arke::Exchange
         builder.response :logger if opts["debug"]
         builder.adapter(@adapter)
       end
+      @markets = opts["markets"]
+    end
+
+    def ws_connect_public
+      @ws_url = "wss://api.bitfinex.com/ws/1"
+      ws_connect(:public)
+    end
+
+    def ws_connect(ws_id)
+      Arke::Log.info "ACCOUNT:#{id} Websocket connecting to #{@ws_url}"
+      raise "websocket url missing for account #{id}" unless @ws_url
+
+      headers = if ws_id == :private && respond_to?(:generate_headers)
+                  generate_headers()
+                else
+                  {}
+                end
+
+      @ws = Faye::WebSocket::Client.new(@ws_url, [], headers: headers)
+
+      @ws.on(:open) do |_e|
+        @ws_status[ws_id] = true
+        # @ws_queues[ws_id].pop do |msg|
+        #   ws_write_message(ws_id, msg)
+        # end
+        converted_markets.each do |m|
+          on_open_trades(m, @ws)
+        end
+        Arke::Log.info "ACCOUNT:#{id} Websocket connected"
+      end
+
+      @ws.on(:message) do |msg|
+        ws_read_message(ws_id, msg)
+      end
+
+      @ws.on(:close) do |e|
+        @ws = nil
+        @ws_status[ws_id] = false
+        Arke::Log.error "ACCOUNT:#{id} Websocket disconnected: #{e.code} Reason: #{e.reason}"
+        Fiber.new do
+          EM::Synchrony.sleep(WEBSOCKET_CONNECTION_RETRY_DELAY)
+          ws_connect(ws_id)
+        end.resume
+      end
+    end
+
+    def ws_read_public_message(msg)
+      return unless msg.is_a?(Array)
+      if msg[1] == 'tu'
+        market = msg[2].split('-').last
+        converted_market = market.end_with?('USD') ? market + 'T' : market
+        amount = msg[6].to_d
+        trade = ::PublicTrade.new(
+          id: msg[3],
+          exchange: "bitfinex",
+          market: converted_market,
+          taker_type: amount.positive? ? "buy" : "sell",
+          amount: amount.abs,
+          price: msg[5],
+          total: (msg[5].to_d * amount).abs,
+          created_at: msg[4].to_i * 1000
+        )
+        notify_public_trade(trade)
+      end
+    end
+
+    def converted_markets
+      markets.map { |m| m.end_with?('USDT') ? m.delete_suffix!('T') : m }
     end
 
     def info(msg)
@@ -121,6 +189,8 @@ module Arke::Exchange
     end
 
     def markets
+      return @markets if @markets.present?
+
       @connection.get("/v1/symbols").body
     end
 
@@ -147,7 +217,7 @@ module Arke::Exchange
       sub = {
         event:   "subscribe",
         channel: "trades",
-        symbol:  market.upcase,
+        symbol:  "t" + market.upcase,
       }
 
       Arke::Log.info "Open event" + sub.to_s
