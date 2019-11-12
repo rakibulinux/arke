@@ -80,7 +80,7 @@ module Arke::Exchange
     end
 
     def converted_markets
-      markets.map { |m| m.end_with?('USDT') ? m.delete_suffix!('T') : m }
+      markets.map { |m| m.end_with?('USDT') ? m.delete_suffix('T') : m }
     end
 
     def info(msg)
