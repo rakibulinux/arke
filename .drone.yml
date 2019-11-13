@@ -16,15 +16,17 @@ steps:
       - rspec spec
 
   - name: Bump and tag
-    image: rubykube/robox:1.0.1
+    image: quay.io/openware/sdk-tools:0.0.3
     environment:
       BOT_NAME: Kite
       BOT_EMAIL: kite-bot@heliostech.fr
       BOT_USERNAME: kite-bot
+      BRANCH_NAME: ${DRONE_BRANCH}
+      REPO_NAME: ${DRONE_REPO}
       GITHUB_API_KEY:
         from_secret: kite_bot_key
     commands:
-      - push.sh
+      - BUNDLE_GEMFILE=/sdk/Gemfile bundle exec rake --rakefile=/sdk/Rakefile release:push
     when:
       branch:
         - master
@@ -77,6 +79,23 @@ steps:
       branch:
         - master
 
+  - name: "Notify staging"
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: arke_slack_webhook
+      channel:
+        from_secret: arke_slack_channel
+      template: >
+        {{#success build.status}}
+          [SUCCESS] {{ build.event }} to branch {{ build.branch }} by {{ build.author }} staging has succeeded!
+        {{else}}
+          [FAILURE] {{ build.event }} to branch {{ build.branch }} by {{ build.author }} staging has failed!
+        {{/success}}
+        Check the build info here: {{ build.link }}
+    when:
+      status: [success, failure]
+
 services:
 - name: database
   image: mariadb
@@ -98,3 +117,6 @@ services:
 trigger:
   event:
     - push
+
+image_pull_secrets:
+  - dockerconfigjson
