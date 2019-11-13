@@ -308,24 +308,101 @@ describe Arke::Scheduler::Smart do
       }
     end
 
-    it "cancels orders over the bounds with very high priority" do
-      expect(action_scheduler.cancel_out_of_boundaries_orders(:sell, price_levels[:asks].last&.price_point)).to eq(
-        [
-          Arke::Action.new(:order_stop, target, order: order_sell_14, priority: 1.05),
-        ]
-      )
-
-      expect(action_scheduler.cancel_out_of_boundaries_orders(:buy, price_levels[:bids].last&.price_point)).to eq(
-        [
-          Arke::Action.new(:order_stop, target, order: order_buy_11, priority: 1.1),
-          Arke::Action.new(:order_stop, target, order: order_buy_12, priority: 1.2),
-        ]
-      )
+    context "low liquidity flag is not raised" do
+      it "cancels orders over the bounds with very low priority" do
+        expect(action_scheduler.cancel_out_of_boundaries_orders(:sell, price_levels[:asks].last&.price_point)).to eq(
+          [
+            Arke::Action.new(:order_stop, target, order: order_sell_14, priority: 1.05),
+          ]
+        )
+        expect(action_scheduler.cancel_out_of_boundaries_orders(:buy, price_levels[:bids].last&.price_point)).to eq(
+          [
+            Arke::Action.new(:order_stop, target, order: order_buy_11, priority: 1.1),
+            Arke::Action.new(:order_stop, target, order: order_buy_12, priority: 1.2),
+          ]
+        )
+      end
     end
 
-    it "does nothing when all orders are in bounds" do
-      expect(action_scheduler.cancel_risky_orders(:sell, 1.8)).to eq([])
-      expect(action_scheduler.cancel_risky_orders(:buy, 1.5)).to eq([])
+    context "low liquidity flag is raised" do
+      it "cancels orders over the bounds with high priority" do
+        expect(action_scheduler.cancel_out_of_boundaries_orders(:sell, price_levels[:asks].last&.price_point, true)).to eq(
+          [
+            Arke::Action.new(:order_stop, target, order: order_sell_14, priority: 1_000_000.05.to_d),
+          ]
+        )
+        expect(action_scheduler.cancel_out_of_boundaries_orders(:buy, price_levels[:bids].last&.price_point, true)).to eq(
+          [
+            Arke::Action.new(:order_stop, target, order: order_buy_11, priority: 1_000_000.1.to_d),
+            Arke::Action.new(:order_stop, target, order: order_buy_12, priority: 1_000_000.2.to_d),
+          ]
+        )
+      end
+    end
+  end
+
+  it "does nothing when all orders are in bounds" do
+    expect(action_scheduler.cancel_risky_orders(:sell, 1.8)).to eq([])
+    expect(action_scheduler.cancel_risky_orders(:buy, 1.5)).to eq([])
+  end
+
+  context "liquidity_flag_sell" do
+    let(:opts) do
+      {
+        price_levels:    price_levels,
+        limit_asks_base: 10
+      }
+    end
+
+    it "raises the flag when current sell side liquidity go over the limits" do
+      expect(action_scheduler.liquidity_flag_sell).to be(false)
+      current_openorders.add_order(Arke::Order.new(market, 1.9, 1, :sell, "limit", 13))
+      current_openorders.add_order(Arke::Order.new(market, 2.0, 1, :sell, "limit", 14))
+      expect(action_scheduler.liquidity_flag_sell).to be(false)
+      current_openorders.add_order(Arke::Order.new(market, 2.0, 9, :sell, "limit", 15))
+      expect(action_scheduler.liquidity_flag_sell).to be(false)
+      current_openorders.add_order(Arke::Order.new(market, 1.9, 3, :sell, "limit", 16))
+      expect(action_scheduler.liquidity_flag_sell).to be(true)
+    end
+  end
+
+  context "liquidity_flag_buy with limit_bids_base option" do
+    let(:opts) do
+      {
+        price_levels:    price_levels,
+        limit_bids_base: 10
+      }
+    end
+
+    it "raises the flag when current buy side liquidity go over the limits" do
+      expect(action_scheduler.liquidity_flag_buy).to be(false)
+      current_openorders.add_order(Arke::Order.new(market, 1.9, 1, :buy, "limit", 13))
+      current_openorders.add_order(Arke::Order.new(market, 2.0, 1, :buy, "limit", 14))
+      expect(action_scheduler.liquidity_flag_buy).to be(false)
+      current_openorders.add_order(Arke::Order.new(market, 2.0, 9, :buy, "limit", 15))
+      expect(action_scheduler.liquidity_flag_buy).to be(false)
+      current_openorders.add_order(Arke::Order.new(market, 1.9, 3, :buy, "limit", 16))
+      expect(action_scheduler.liquidity_flag_buy).to be(true)
+    end
+  end
+
+  context "liquidity_flag_buy with limit_bids_quote option" do
+    let(:opts) do
+      {
+        price_levels:     price_levels,
+        limit_bids_quote: 100
+      }
+    end
+
+    it "raises the flag when current buy side liquidity go over the limits" do
+      expect(action_scheduler.liquidity_flag_buy).to be(false)
+      current_openorders.add_order(Arke::Order.new(market, 10, 1, :buy, "limit", 13))
+      current_openorders.add_order(Arke::Order.new(market, 10, 1, :buy, "limit", 14))
+      expect(action_scheduler.liquidity_flag_buy).to be(false)
+      current_openorders.add_order(Arke::Order.new(market, 10, 9, :buy, "limit", 15))
+      expect(action_scheduler.liquidity_flag_buy).to be(false)
+      current_openorders.add_order(Arke::Order.new(market, 10, 2, :buy, "limit", 16))
+      expect(action_scheduler.liquidity_flag_buy).to be(true)
     end
   end
 

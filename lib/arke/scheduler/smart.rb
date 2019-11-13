@@ -4,11 +4,20 @@ module Arke::Scheduler
   class Smart < Simple
     include ::Arke::Helpers::Orderbook
 
+    LOW_LIQUIDITY_RATIO = 1.20
+
+    attr_reader :limit_asks_base
+    attr_reader :limit_bids_base
+    attr_reader :limit_bids_quote
+
     def initialize(current_ob, desired_ob, target, opts={})
       super
 
       @price_levels = opts[:price_levels]
       @max_amount_per_order = opts[:max_amount_per_order]
+      @limit_asks_base = opts[:limit_asks_base]&.to_d
+      @limit_bids_base = opts[:limit_bids_base]&.to_d
+      @limit_bids_quote = opts[:limit_bids_quote]&.to_d
       raise "price_levels are missing" unless @price_levels
     end
 
@@ -27,14 +36,15 @@ module Arke::Scheduler
       actions
     end
 
-    def cancel_out_of_boundaries_orders(side, last_level_price)
+    def cancel_out_of_boundaries_orders(side, last_level_price, low_liquidity=false)
       return [] if last_level_price.nil?
 
+      logger.info { "Low liquidity flag raised" } if low_liquidity
       actions = []
       @current_ob[side].each do |price, orders|
         orders.each do |_id, order|
           if better(side, last_level_price, price)
-            priority = 1.to_d + (price - last_level_price).abs
+            priority = (low_liquidity ? 1e6 : 1).to_d + (price - last_level_price).abs
             actions.push(::Arke::Action.new(:order_stop, @target, order: order, priority: priority))
           end
         end
@@ -89,6 +99,27 @@ module Arke::Scheduler
       actions
     end
 
+    def liquidity_flag_buy
+      if limit_bids_quote
+        liquidity_buy = @current_ob.total_side_amount_in_base(:buy)
+        return true if liquidity_buy > limit_bids_quote * LOW_LIQUIDITY_RATIO
+      end
+
+      if limit_bids_base
+        liquidity_buy = @current_ob.total_side_amount(:buy)
+        return true if liquidity_buy > limit_bids_base * LOW_LIQUIDITY_RATIO
+      end
+      false
+    end
+
+    def liquidity_flag_sell
+      if limit_asks_base
+        liquidity_sell = @current_ob.total_side_amount(:sell)
+        return true if liquidity_sell > limit_asks_base * LOW_LIQUIDITY_RATIO
+      end
+      false
+    end
+
     def schedule
       desired_best_sell = @desired_ob.best_price(:sell)
       desired_best_buy = @desired_ob.best_price(:buy)
@@ -102,8 +133,8 @@ module Arke::Scheduler
       list += cancel_risky_orders(:buy, desired_best_buy)
       list += adjust_levels(:sell, @price_levels[:asks], desired_best_sell)
       list += adjust_levels(:buy,  @price_levels[:bids], desired_best_buy)
-      list += cancel_out_of_boundaries_orders(:buy,  @price_levels[:bids].last&.price_point)
-      list += cancel_out_of_boundaries_orders(:sell, @price_levels[:asks].last&.price_point)
+      list += cancel_out_of_boundaries_orders(:buy,  @price_levels[:bids].last&.price_point, liquidity_flag_buy)
+      list += cancel_out_of_boundaries_orders(:sell, @price_levels[:asks].last&.price_point, liquidity_flag_sell)
       list.sort_by(&:priority).reverse
     end
   end

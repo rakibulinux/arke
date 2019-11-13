@@ -9,6 +9,8 @@ module Arke::Strategy
   class Copy < Base
     include Arke::Helpers::Splitter
     include Arke::Helpers::Spread
+    attr_reader :limit_asks_base
+    attr_reader :limit_bids_base
 
     def initialize(sources, target, config, reactor)
       super
@@ -29,8 +31,8 @@ module Arke::Strategy
       raise "levels_count must be minimum 1" if @levels_count <= 1
       raise "spread_bids must be higher than zero" if @spread_bids.negative?
       raise "spread_asks must be higher than zero" if @spread_asks.negative?
-      raise "limit_asks_base must be higher than zero" if @limit_asks_base <= 0
-      raise "limit_bids_base must be higher than zero" if @limit_bids_base <= 0
+      raise "limit_asks_base must be higher than zero" if limit_asks_base <= 0
+      raise "limit_bids_base must be higher than zero" if limit_bids_base <= 0
       raise "side must be asks, bids or both" if !@side_asks && !@side_bids
     end
 
@@ -57,18 +59,17 @@ module Arke::Strategy
       limit_bids_quote = target.account.balance(target.quote)["total"]
 
       target_base_total = target.account.balance(target.base)["total"]
-      limit_bids_base = @limit_bids_base
 
-      if target_base_total < @limit_asks_base
-        limit_asks_base = target_base_total
+      if target_base_total < limit_asks_base
+        limit_asks_base_applied = target_base_total
         Arke::Log.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower then the limit set to #{@limit_asks_base}")
       else
-        limit_asks_base = @limit_asks_base
+        limit_asks_base_applied = limit_asks_base
       end
 
       ob_adjusted = ob.adjust_volume(
         limit_bids_base,
-        limit_asks_base,
+        limit_asks_base_applied,
         limit_bids_quote,
         limit_asks_quote
       )
