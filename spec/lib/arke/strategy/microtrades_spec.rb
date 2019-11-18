@@ -98,11 +98,11 @@ describe Arke::Strategy::Microtrades do
       expect(strategy).to receive(:rand).exactly(:twice).and_return(600)
       linked_strategy.target.start
 
-      expect(linked_strategy.target.open_orders.total_side_amount(:buy)).to eq(245.24247407.to_d)
-      expect(linked_strategy.target.open_orders.total_side_amount(:sell)).to eq(562.58956088.to_d)
+      expect(linked_strategy.target.open_orders.total_side_amount(:buy)).to eq(285.56554348.to_d)
+      expect(linked_strategy.target.open_orders.total_side_amount(:sell)).to eq(700.37113197.to_d)
 
-      expect(strategy.get_amount(:buy)).to eq 337.5537
-      expect(strategy.get_amount(:sell)).to eq 147.1454
+      expect(strategy.get_amount(:buy)).to eq 420.2226
+      expect(strategy.get_amount(:sell)).to eq 171.3393
     end
 
     it "does not limit the amount of sell and buy orders when it doesn't exceed 60% of linked strategy open orders total supply" do
@@ -110,8 +110,8 @@ describe Arke::Strategy::Microtrades do
       expect(strategy).to receive(:rand).exactly(:twice).and_return(100)
       linked_strategy.target.start
 
-      expect(linked_strategy.target.open_orders.total_side_amount(:buy)).to eq(245.24247407.to_d)
-      expect(linked_strategy.target.open_orders.total_side_amount(:sell)).to eq(562.58956088.to_d)
+      expect(linked_strategy.target.open_orders.total_side_amount(:buy)).to eq(285.56554348.to_d)
+      expect(linked_strategy.target.open_orders.total_side_amount(:sell)).to eq(700.37113197.to_d)
 
       expect(strategy.get_amount(:buy)).to eq 100
       expect(strategy.get_amount(:sell)).to eq 100

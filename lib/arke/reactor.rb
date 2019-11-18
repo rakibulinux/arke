@@ -176,12 +176,18 @@ module Arke
       logger.debug { "ID:#{strategy.id} Desired Orderbook\n#{desired_orderbook}" }
       return if @dry_run
 
+      scheduler_opts = {
+        price_levels: price_levels,
+        strategy_id:  strategy.id,
+      }
+      scheduler_opts[:limit_asks_base] = strategy.limit_asks_base if strategy.respond_to?(:limit_asks_base)
+      scheduler_opts[:limit_bids_base] = strategy.limit_bids_base if strategy.respond_to?(:limit_bids_base)
+      scheduler_opts[:limit_bids_quote] = strategy.limit_bids_quote if strategy.respond_to?(:limit_bids_quote)
       scheduler = ::Arke::Scheduler::Smart.new(
         strategy.target.open_orders,
         desired_orderbook,
         strategy.target,
-        price_levels: price_levels,
-        strategy_id:  strategy.id
+        scheduler_opts
       )
       strategy.target.account.executor.push(scheduler.schedule)
     end
