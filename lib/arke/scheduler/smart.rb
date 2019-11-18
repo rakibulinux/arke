@@ -27,14 +27,14 @@ module Arke::Scheduler
       actions
     end
 
-    def cancel_out_of_boundaries_orders(side, last_level_price)
+    def cancel_out_of_boundaries_orders(side, last_level_price, low_liquidity=false)
       return [] if last_level_price.nil?
 
       actions = []
       @current_ob[side].each do |price, orders|
         orders.each do |_id, order|
           if better(side, last_level_price, price)
-            priority = 1.to_d + (price - last_level_price).abs
+            priority = (low_liquidity ? 1e6 : 1).to_d + (price - last_level_price).abs
             actions.push(::Arke::Action.new(:order_stop, @target, order: order, priority: priority))
           end
         end
@@ -58,19 +58,22 @@ module Arke::Scheduler
       logger.debug { "price_levels: #{price_levels.inspect}" }
       logger.debug { "current: #{current.inspect}" }
       logger.debug { "desired: #{desired.inspect}" }
-
+      levels_count = price_levels.count.to_d
       price_levels.each_with_index do |price_point, i|
         raise "PricePoint expected, got #{price_point.class}" unless price_point.is_a?(::Arke::PricePoint)
 
         current_amount = current_amount(side, current, i, desired_best_price)
         desired_amount = desired[i] ? desired[i][:orders].sum : 0
         diff_amount = desired_amount - current_amount
-        level_priority = 1e3 * (1 + 1 / (i.to_d + 1)) # Priority to first levels
+
+        level_bonus = 1e3.to_d * (levels_count - i + 1) / levels_count # Priority to first levels
+        liquidity_factor = 1e3.to_d * (desired_amount.zero? ? 1 : diff_amount / desired_amount).abs # Priority to liquidity change
+        level_priority = (level_bonus + liquidity_factor).round(2)
 
         if diff_amount.negative?
           current[i][:orders].sort_by(&:amount).each do |order|
             diff_amount += order.amount.to_d
-            priority = level_priority + 100.to_d / order.amount.to_d
+            priority = level_priority + 100.to_d / (1 + order.amount.to_d) # Cancel small amounts first to avoid fragmentation
             actions.push(::Arke::Action.new(:order_stop, @target, order: order, priority: priority))
             break if diff_amount >= 0
           end
