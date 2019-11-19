@@ -9,7 +9,11 @@ module Arke
 
         def execute
           accounts_configs.each do |acc_config|
-            platform_do(Arke::Exchange.create(acc_config))
+            begin
+              platform_do(Arke::Exchange.create(acc_config))
+            rescue StandardError => e
+              ::Arke::Log.error("#{e}")
+            end
           end
         end
       end

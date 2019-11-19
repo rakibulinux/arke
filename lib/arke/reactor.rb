@@ -89,10 +89,7 @@ module Arke
           Fiber.new do
             EM::Synchrony.add_periodic_timer(FETCH_OPEN_ORDERS_PERIOD) { fetch_openorders(strategy) }
 
-            unless @dry_run
-              logger.info { "ID:#{strategy.id} Purging open orders on #{strategy.target.account.driver}" }
-              strategy.target.account.executor.start
-            end
+            strategy.target.account.executor.start unless @dry_run
 
             if strategy.delay_the_first_execute
               logger.warn { "ID:#{strategy.id} Delaying the first execution" }
