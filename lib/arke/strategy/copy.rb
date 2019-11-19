@@ -7,8 +7,8 @@ module Arke::Strategy
   # * it updates open orders every period
   # * when an order matches it buys the liquidity on the source exchange
   class Copy < Base
-    include Arke::Helpers::Splitter
-    include Arke::Helpers::Spread
+    include ::Arke::Helpers::Splitter
+    include ::Arke::Helpers::Spread
     attr_reader :limit_asks_base
     attr_reader :limit_bids_base
 

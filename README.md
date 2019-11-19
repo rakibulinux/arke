@@ -205,6 +205,18 @@ It is commonly used to create candles on a market with low activity.
 | `min_price`          | OPTIONAL. Price for ask orders (using if `linked_strategy_id` doesn't exist) |
 | `max_price`          | OPTIONAL. Price for bid orders (using if `linked_strategy_id` doesn't exist) |
 
+##### Circuitbraker strategy
+
+This strategy monitors orders on an account, compare prices with a source exchange and cancel those which are too far from current orderbook offers on the source.
+
+It is a security in case the strategy which creates the market crash or have a defect.
+
+| Field                | Description                                                  |
+| -------------------- | ------------------------------------------------------------ |
+| `spread_bids`        | Spread to apply on bids side (in percentage)                 |
+| `spread_asks`        | Spread to apply on asks side (in percentage)                 |
+
+The spread applied on circuitbraker strategy should be lower than the spead used by the strategy creating the orderbook.
 
 
 #### Market configuration

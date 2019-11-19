@@ -7,8 +7,8 @@ module Arke::Strategy
   # * it updates open orders every period
   # * when an order matches it buys the liquidity on the source exchange
   class Fixedprice < Base
-    include Arke::Helpers::Splitter
-    include Arke::Helpers::Spread
+    include ::Arke::Helpers::Splitter
+    include ::Arke::Helpers::Spread
 
     def initialize(sources, target, config, reactor)
       super

@@ -1,12 +1,9 @@
+# frozen_string_literal: true
+
 module Arke::Helpers
   module Spread
     def apply_spread(side, price, spread)
-      if side == :sell
-        mult = 1 + spread
-      else
-        mult = 1 - spread
-      end
-
+      mult = 1 + (side == :sell ? spread : -spread)
       price * mult
     end
   end
