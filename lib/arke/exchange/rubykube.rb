@@ -24,6 +24,11 @@ module Arke::Exchange
 
     def ws_connect_private
       ws_connect(:private)
+      Fiber.new do
+        EM::Synchrony.add_periodic_timer(290) do
+          ws_write_message(:private, "ping")
+        end
+      end.resume
     end
 
     # Ping the api
