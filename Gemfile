@@ -75,3 +75,5 @@ gem 'simplecov', require: false, group: :test
 # gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 gem "irb", "~> 1.0", :groups => [:development, :test]
+
+gem "telegram-bot-ruby", "~> 0.11.0"
