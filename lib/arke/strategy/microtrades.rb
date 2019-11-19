@@ -4,8 +4,8 @@ module Arke::Strategy
   # * create random market orders
   # * the order amount is randomly from the min amount of the market to 2 times the min amount
   class Microtrades < Base
-    include Arke::Helpers::Precision
-    include Arke::Helpers::Spread
+    include ::Arke::Helpers::Precision
+    include ::Arke::Helpers::Spread
     class EmptyOrderBook < StandardError; end
 
     SIDES_MAP = {"asks" => :sell, "bids" => :buy, "both" => "both"}.freeze
