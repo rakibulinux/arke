@@ -10,6 +10,8 @@ module Arke::Strategy
     include Arke::Helpers::Splitter
     include Arke::Helpers::Spread
     include Arke::Helpers::Flags
+    attr_reader :limit_asks_base
+    attr_reader :limit_bids_base
 
     DEFAULT_ORDERBACK_GRACE_TIME = 0.01
 
@@ -40,8 +42,8 @@ module Arke::Strategy
       raise "levels_count must be minimum 1" if @levels_count <= 1
       raise "spread_bids must be higher than zero" if @spread_bids.negative?
       raise "spread_asks must be higher than zero" if @spread_asks.negative?
-      raise "limit_asks_base must be higher than zero" if @limit_asks_base <= 0
-      raise "limit_bids_base must be higher than zero" if @limit_bids_base <= 0
+      raise "limit_asks_base must be higher than zero" if limit_asks_base <= 0
+      raise "limit_bids_base must be higher than zero" if limit_bids_base <= 0
       raise "side must be asks, bids or both" if !@side_asks && !@side_bids
 
       if @enable_orderback
@@ -130,8 +132,8 @@ module Arke::Strategy
       top_bid = source.orderbook[:buy].first
       raise "Source order book is empty" if top_ask.nil? || top_bid.nil?
 
-      price_points_asks = @side_asks ? split_constant(:asks, top_ask.first, @levels_count, split_opts) : nil
-      price_points_bids = @side_bids ? split_constant(:bids, top_bid.first, @levels_count, split_opts) : nil
+      price_points_asks = @side_asks ? split_constant_pp(:asks, top_ask.first, @levels_count, split_opts) : nil
+      price_points_bids = @side_bids ? split_constant_pp(:bids, top_bid.first, @levels_count, split_opts) : nil
       ob_agg = source.orderbook.aggregate(
         price_points_bids,
         price_points_asks,
@@ -146,23 +148,23 @@ module Arke::Strategy
       source_base_free = source.account.balance(source.base)["free"]
       target_base_total = target.account.balance(target.base)["total"]
 
-      if source_base_free < @limit_bids_base
-        limit_bids_base = source_base_free
+      if source_base_free < limit_bids_base
+        limit_bids_base_applied = source_base_free
         Arke::Log.warn("#{source.base} balance on #{source.account.driver} is #{source_base_free} lower then the limit set to #{@limit_bids_base}")
       else
-        limit_bids_base = @limit_bids_base
+        limit_bids_base_applied = limit_bids_base
       end
 
-      if target_base_total < @limit_asks_base
-        limit_asks_base = target_base_total
+      if target_base_total < limit_asks_base
+        limit_asks_base_applied = target_base_total
         Arke::Log.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower then the limit set to #{@limit_asks_base}")
       else
-        limit_asks_base = @limit_asks_base
+        limit_asks_base_applied = limit_asks_base
       end
 
       ob_adjusted = ob.adjust_volume(
-        limit_bids_base,
-        limit_asks_base,
+        limit_bids_base_applied,
+        limit_asks_base_applied,
         limit_bids_quote,
         limit_asks_quote
       )
@@ -175,7 +177,7 @@ module Arke::Strategy
       push_debug("3_ob_adjusted", "\n#{ob_adjusted}")
       push_debug("4_ob_spread", "\n#{ob_spread}")
 
-      ob_spread
+      [ob_spread, {asks: price_points_asks, bids: price_points_bids}]
     end
   end
 end

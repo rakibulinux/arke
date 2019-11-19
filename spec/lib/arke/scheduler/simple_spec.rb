@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-describe Arke::ActionScheduler do
+describe Arke::Scheduler::Simple do
   let(:market) { "ethusd" }
   let(:exchange_config) do
     {
@@ -22,7 +22,7 @@ describe Arke::ActionScheduler do
   let(:current_openorders) { Arke::Orderbook::OpenOrders.new(market) }
   let(:desired_orderbook) { Arke::Orderbook::Orderbook.new(market) }
   let(:target) { Arke::Market.new(exchange_config["market"], Arke::Exchange::Bitfaker.new(exchange_config)) }
-  let(:action_scheduler) { Arke::ActionScheduler.new(current_openorders, desired_orderbook, target) }
+  let(:action_scheduler) { Arke::Scheduler::Simple.new(current_openorders, desired_orderbook, target) }
   let(:order_buy) { Arke::Order.new(market, 1, 1, :buy, "limit", 9) }
   let(:order_sell) { Arke::Order.new(market, 1.1, 1, :sell, "limit", 10) }
   let(:order_sell2) { Arke::Order.new(market, 1.4, 1, :sell, "limit", 11) }
@@ -237,7 +237,7 @@ describe Arke::ActionScheduler do
       desired_orderbook.update(Arke::Order.new(market, 2.0, 1,  :sell))
       desired_orderbook.update(Arke::Order.new(market, 2.1, 1,  :buy))
       desired_orderbook.update(Arke::Order.new(market, 1.9, 1,  :buy))
-      expect { action_scheduler.schedule }.to raise_error(Arke::ActionScheduler::InvalidOrderBook)
+      expect { action_scheduler.schedule }.to raise_error(Arke::Scheduler::InvalidOrderBook)
     end
   end
 end

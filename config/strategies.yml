@@ -6,9 +6,9 @@ accounts:
   debug: false
   host: "https://demo.openware.com"
   ws: "wss://demo.openware.com"
-  key: "bbd00510b6a40ad6"
-  secret: "d8f3609b30491cd04f1d3b8ed99b4a37"
-  delay: 0.1
+  key: "353886962a3b3a79"
+  secret: "36827b03603d94496518390737a30562"
+  delay: 3
 
 - id: bitfaker
   driver: bitfaker
@@ -31,14 +31,15 @@ strategies:
   type: copy
   debug: true
   enabled: true
-  period: 90
+  period: 5
   params:
     spread_bids: 0.003
     spread_asks: 0.003
-    limit_asks_base: 10
-    limit_bids_base: 10
-    levels_size: 0.25
-    levels_count: 5
+    limit_asks_base: 100
+    limit_bids_base: 100
+    max_amount_per_order: 0.5
+    levels_size: 1
+    levels_count: 10
     side: both
   target:
     account_id: demo
@@ -62,7 +63,7 @@ strategies:
 - id: microtrades-FTHUSD
   type: microtrades
   debug: true
-  enabled: true
+  enabled: false
   period: 5
   period_random_delay: 10
   params:

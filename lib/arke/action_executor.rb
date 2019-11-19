@@ -3,11 +3,12 @@ module Arke
     include Arke::Helpers::Precision
     attr_reader :id, :account, :logger
 
-    def initialize(account)
+    def initialize(account, opts={})
       @account = account
       @id = account.id
       @queue = EM::Queue.new
       @logger = Arke::Log
+      @purge_on_push = opts[:purge_on_push] ? true : false
     end
 
     def start
@@ -21,7 +22,7 @@ module Arke
     end
 
     def push(actions)
-      # TODO: limit queue size by removing old create order actions once we reached a threashold and display a WARN
+      @queue = EM::Queue.new if @purge_on_push
       actions.each do |action|
         @queue << action
       end

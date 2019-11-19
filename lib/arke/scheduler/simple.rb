@@ -1,12 +1,16 @@
 # frozen_string_literal: true
 
-module Arke
-  class ActionScheduler
-    class InvalidOrderBook < StandardError; end
-    include Helpers::Precision
-    attr_accessor :actions
+module Arke::Scheduler
+  class InvalidOrderBook < StandardError; end
 
-    def initialize(current_ob, desired_ob, target)
+  class Simple
+    include ::Arke::Helpers::Precision
+    attr_accessor :actions
+    attr_reader :logger
+
+    def initialize(current_ob, desired_ob, target, opts={})
+      @logger = Arke::Log
+      @opts = opts
       @current_ob = current_ob
       @desired_ob = desired_ob
       @target = target
@@ -62,7 +66,7 @@ module Arke
 
         current.each do |_price, orders|
           orders.each do |id, order|
-            list.push(Action.new(:order_stop, @target, id: id, order: order))
+            list.push(::Arke::Action.new(:order_stop, @target, id: id, order: order))
           end
         end
       end
@@ -75,7 +79,7 @@ module Arke
           price = apply_precision(price, @target.quote_precision)
           amount = apply_precision(amount, @target.base_precision, side == :sell ? @target.min_ask_amount : @target.min_bid_amount)
           if price.positive? && amount.positive?
-            list.push(Action.new(:order_create, @target, order: Order.new(@market, price, amount, side)))
+            list.push(::Arke::Action.new(:order_create, @target, order: ::Arke::Order.new(@market, price, amount, side)))
           end
         end
       end

@@ -29,7 +29,7 @@ module Arke
       @markets = []
       accounts_configs.each do |config|
         account = @accounts[config["id"]] = Arke::Exchange.create(config)
-        executor = ActionExecutor.new(account)
+        executor = ActionExecutor.new(account, purge_on_push: true)
         account.executor = executor
       end
     end
@@ -91,7 +91,6 @@ module Arke
 
             unless @dry_run
               logger.info { "ID:#{strategy.id} Purging open orders on #{strategy.target.account.driver}" }
-              strategy.target.account.cancel_all_orders(strategy.target.id)
               strategy.target.account.executor.start
             end
 
@@ -169,7 +168,7 @@ module Arke
     end
 
     def execute_strategy(strategy)
-      desired_orderbook = strategy.call
+      desired_orderbook, price_levels = strategy.call()
 
       if strategy.debug
         strategy.debug_infos.each do |label, data|
@@ -182,13 +181,25 @@ module Arke
       logger.debug { "ID:#{strategy.id} Desired Orderbook\n#{desired_orderbook}" }
       return if @dry_run
 
-      actions = ActionScheduler.new(strategy.target.open_orders, desired_orderbook, strategy.target).schedule
-      strategy.target.account.executor.push(actions)
+      scheduler_opts = {
+        price_levels: price_levels,
+        strategy_id:  strategy.id,
+      }
+      scheduler_opts[:limit_asks_base] = strategy.limit_asks_base if strategy.respond_to?(:limit_asks_base)
+      scheduler_opts[:limit_bids_base] = strategy.limit_bids_base if strategy.respond_to?(:limit_bids_base)
+      scheduler_opts[:limit_bids_quote] = strategy.limit_bids_quote if strategy.respond_to?(:limit_bids_quote)
+      scheduler = ::Arke::Scheduler::Smart.new(
+        strategy.target.open_orders,
+        desired_orderbook,
+        strategy.target,
+        scheduler_opts
+      )
+      strategy.target.account.executor.push(scheduler.schedule)
     end
 
     def fetch_openorders(strategy)
       actions = []
-      (GRACE_TIME/strategy.target.account.delay).ceil.times do
+      (GRACE_TIME / strategy.target.account.delay).ceil.times do
         actions << Action.new(:noop, strategy.target)
       end
       actions << Action.new(:fetch_openorders, strategy.target)
@@ -200,16 +211,7 @@ module Arke
     # * broadcasts +:shutdown+ action to workers
     def stop
       puts "Shutdown trading"
-      if @strategies.empty?
-        EM.stop
-      else
-        Fiber.new do
-          @strategies.each do |strategy|
-            strategy.target.account.cancel_all_orders(strategy.target.id)
-            EM.stop
-          end
-        end.resume
-      end
+      EM.stop
       @shutdown = true
     end
   end

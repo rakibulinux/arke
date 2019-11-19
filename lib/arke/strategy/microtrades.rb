@@ -89,7 +89,7 @@ module Arke::Strategy
         Arke::Log.error "ID:#{id} #{e}"
         Arke::Log.error e.backtrace.join("\n").to_s
       end.resume
-      nil
+      [nil, nil]
     end
   end
 end

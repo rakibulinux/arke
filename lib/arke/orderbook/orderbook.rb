@@ -4,21 +4,22 @@ module Arke::Orderbook
   class Orderbook < Base
     def new_price(price, volume)
       {
-        volume:       volume.to_f,
-        high_price:   price.to_f,
-        low_price:    price.to_f,
-        volume_price: volume.to_f * price,
+        volume:       volume.to_d,
+        high_price:   price.to_d,
+        low_price:    price.to_d,
+        volume_price: volume.to_d * price,
       }
     end
 
     def group_by_price_points(side, price_points, minimum_volume)
+      price_points = price_points.clone
       tree = ::RBTree.new
-      volume_base = 0.0
-      volume_quote = 0.0
+      volume_base = 0.0.to_d
+      volume_quote = 0.0.to_d
 
       @book[side].each do |order_price, order_volume|
-        while !price_points.empty? && better(side, price_points.first, order_price)
-          price_point = price_points.first
+        while !price_points.empty? && better(side, price_points.first.price_point, order_price)
+          price_point = price_points.first.price_point
           # Create an order with minimum volume if there is no order in range
           if tree[price_point].nil? || tree[price_point][:volume].to_f.zero?
             tree[price_point] = new_price(price_point, minimum_volume)
@@ -29,7 +30,7 @@ module Arke::Orderbook
         end
         break if price_points.empty?
 
-        price_point = price_points.first
+        price_point = price_points.first.price_point
         tree[price_point] ||= new_price(order_price, 0.0)
         volume_base += order_volume
         volume_quote += order_volume * order_price
@@ -47,22 +48,22 @@ module Arke::Orderbook
       tree, volume_base, volume_quote = group_by_price_points(side, price_points, minimum_volume)
 
       # Add remaining price points in case there is no more orders in the input
-      price_points.each do |price_point|
-        next if tree[price_point]
+      price_points.each do |pp|
+        next if tree[pp.price_point]
 
-        tree[price_point] = new_price(price_point, minimum_volume)
+        tree[pp.price_point] = new_price(pp.price_point, minimum_volume)
         volume_base += minimum_volume
-        volume_quote += minimum_volume * price_point
+        volume_quote += minimum_volume * pp.price_point
       end
 
       # Calculate weighted_price
       wtree = ::RBTree.new
       tree.each do |price_point, _data|
         wtree[price_point] = {
-          volume:         tree[price_point][:volume],
-          high_price:     tree[price_point][:high_price],
-          low_price:      tree[price_point][:low_price],
-          weighted_price: tree[price_point][:volume_price] / tree[price_point][:volume],
+          volume:         tree[price_point][:volume].to_d.round(16),
+          high_price:     tree[price_point][:high_price].to_d,
+          low_price:      tree[price_point][:low_price].to_d,
+          weighted_price: (tree[price_point][:volume_price].to_d / tree[price_point][:volume]).round(16),
         }
       end
 
@@ -102,7 +103,7 @@ module Arke::Orderbook
             ::Arke::Log.warn "Bids volume throttled to #{amount} because of quote currency"
             do_break = true
           end
-          bids[price] = amount
+          bids[price] = amount.round(16)
           volume_bids_base += amount
           volume_bids_quote += amount_quote
           break if do_break
@@ -127,7 +128,7 @@ module Arke::Orderbook
             ::Arke::Log.warn "Asks volume throttled to #{amount} because of quote currency"
             do_break = true
           end
-          asks[price] = amount
+          asks[price] = amount.round(16)
           volume_asks_base += amount
           volume_asks_quote += amount_quote
           break if do_break
@@ -142,10 +143,10 @@ module Arke::Orderbook
         @market,
         buy:               bids,
         sell:              asks,
-        volume_bids_quote: volume_bids_quote,
-        volume_asks_quote: volume_asks_quote,
-        volume_bids_base:  volume_bids_base,
-        volume_asks_base:  volume_asks_base
+        volume_bids_quote: volume_bids_quote.round(16),
+        volume_asks_quote: volume_asks_quote.round(16),
+        volume_bids_base:  volume_bids_base.round(16),
+        volume_asks_base:  volume_asks_base.round(16),
       )
     end
 

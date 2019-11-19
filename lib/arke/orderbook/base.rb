@@ -2,6 +2,8 @@
 
 module Arke::Orderbook
   class Base
+    include ::Arke::Helpers::Orderbook
+
     attr_reader :book, :market
     attr_reader :volume_bids_quote, :volume_asks_quote
 
@@ -67,14 +69,6 @@ module Arke::Orderbook
       @volume_asks_base ||= @book[:sell].inject(0.0) {|sum, n| sum + n.last }
     end
 
-    def better_or_equal(side, a, b)
-      side == :buy ? a >= b : a <= b
-    end
-
-    def better(side, a, b)
-      side == :buy ? a > b : a < b
-    end
-
     def [](side)
       @book[side]
     end
@@ -88,13 +82,13 @@ module Arke::Orderbook
       volume_asks_quote = 0.0
 
       self[:buy].each do |k, v|
-        price = k * bids_spread
-        bids[price] = v
+        price = (BigDecimal(k) * bids_spread).round(16)
+        bids[price] = v.round(16)
         volume_bids_quote += price * v
       end
       self[:sell].each do |k, v|
-        price = k * asks_spread
-        asks[price] = v
+        price = (BigDecimal(k) * asks_spread).round(16)
+        asks[price] = v.round(16)
         volume_asks_quote += price * v
       end
 
@@ -107,6 +101,41 @@ module Arke::Orderbook
         volume_bids_base:  volume_bids_base,
         volume_asks_base:  volume_asks_base
       )
+    end
+
+    def group_by_level(side, price_points)
+      return [] if price_points.empty?
+      result = []
+      level_index = 0
+      init_level = proc do |price_point|
+        {
+          price:  price_point,
+          orders: []
+        }
+      end
+
+      result[0] = init_level.call(price_points.first.price_point)
+
+      @book[side].each do |order_price, data|
+        while level_index < price_points.size && better(side, price_points[level_index].price_point, order_price)
+          level_index += 1
+          break unless price_point = price_points[level_index]&.price_point
+
+          result[level_index] = init_level.call(price_point)
+        end
+        break if level_index >= price_points.size
+
+        price_point = price_points[level_index].price_point
+        result[level_index] ||= init_level.call(price_point)
+
+        case self
+        when OpenOrders
+          result[level_index][:orders] += data.values
+        else
+          result[level_index][:orders] << data
+        end
+      end
+      result
     end
 
     def indent(line, indentation)
