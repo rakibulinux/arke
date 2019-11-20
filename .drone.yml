@@ -54,7 +54,7 @@ steps:
       - GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git push -f gitolite HEAD:master
 
 
-  - name: "First Docker build and push"
+  - name: "GCR Docker build and push"
     image: plugins/gcr
     settings:
       repo:
@@ -70,13 +70,15 @@ steps:
       - name: bundler-cache
         path: /usr/local/bundle
 
-  - name: "Second Docker build and push"
-    image: plugins/gcr
+  - name: "Push to Openware Registry"
+    image: plugins/docker
     settings:
-      repo:
-        from_secret: gcr_repo_second
-      json_key:
-        from_secret: gcr_creds_base64_second
+      username:
+        from_secret: ow_registry_username
+      password:
+        from_secret: ow_registry_password
+      repo: reg.openware.work/openware/arke
+      registry: reg.openware.work
     when:
       branch:
         - master
