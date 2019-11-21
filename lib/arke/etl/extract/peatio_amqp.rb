@@ -9,17 +9,15 @@ module Arke::ETL::Extract
 
     def process(_type, id, _event, payload)
       data = JSON.parse(payload)["trades"].first
-      total = (data["price"].to_d * data["amount"].to_d)
-      trade = ::PublicTrade.new(
-        id:         data["tid"],
-        exchange:   "peatio",
-        market:     id,
-        taker_type: data["taker_type"],
-        amount:     data["amount"],
-        price:      data["price"],
-        total:      total,
-        created_at: data["date"] * 1000
-      )
+      trade = ::Arke::PublicTrade.new
+      trade.id = data["tid"]
+      trade.market = id
+      trade.exchange = "peatio"
+      trade.taker_type = data["taker_type"]
+      trade.amount = data["amount"]
+      trade.price = data["price"]
+      trade.total = trade.total
+      trade.created_at = data["date"] * 1000
       emit(trade)
     end
   end

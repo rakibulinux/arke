@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'pry'
 module Arke::ETL::Extract
   class Tickers < Base
     def initialize(config)
@@ -9,16 +10,15 @@ module Arke::ETL::Extract
     end
 
     def start
-      EM::Synchrony.add_periodic_timer(5) do
-        @influxdb.query("SELECT MAX(price) AS high, MIN(price) AS low, LAST(price) as last, FIRST(price) AS open, MEAN(price) AS avg_price, SUM(amount) AS volume, (LAST(price) - FIRST(price)) / FIRST(price) * 100 AS price_change_percent INTO tickers FROM trades WHERE time > now() - 24h GROUP BY market")
-
-        result = @influxdb.query("select * from tickers group by market order by desc limit 1")
+      EM::Synchrony.add_periodic_timer(2) do
+        markets = convert_markets(@config["markets"])
+        result = @influxdb.query("select * from tickers where market=~#{markets} group by market order by desc limit 1")
         tickers = {}
-        @config["markets"].each do |market|
+        result.each do |ticker|
+          binding.pry
           data = {}
-          last = @influxdb.query("SELECT price from trades where market='#{market.downcase}' order by desc limit 1")
-          t = result.find {|t| t["tags"]["market"] == market.downcase }
-          values = t.present? ? t["values"].first : {}
+          last = @influxdb.query("SELECT price from trades where market='#{market}' order by desc limit 1")
+          values = ticker["values"].first
           data["last"] = last.blank? ? 0 : last.first["values"].first["price"]
 
           data["price_change_percent"] = "#{'%+.2f' % values["price_change_percent"].to_d}%"

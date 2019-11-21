@@ -18,7 +18,7 @@ module Arke::ETL::Load
 
       data = obj[0]
       case data
-      when ::PublicTrade
+      when Arke::PublicTrade
         trade = {
           "tid"        => data.id,
           "taker_type" => data.taker_type.to_s,
@@ -27,10 +27,10 @@ module Arke::ETL::Load
           "amount"     => data.amount.to_s
         }
         return ["public", data.market.downcase, "trades", {"trades" => [trade]}]
-      when ::Kline
+      when Arke::Kline
         kline = [data.created_at, data.open, data.high, data.low, data.close, data.volume]
         return ["public", data.market.downcase, data.period, kline]
-      when ::PublicTicker
+      when Arke::PublicTicker
         return ["public", "global", "tickers", data.tickers]
       when String
         return obj

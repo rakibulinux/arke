@@ -22,17 +22,8 @@ module Arke::ETL::Extract
 
           result.map do |c|
             values = c["values"].first
-            kline = ::Kline.new(
-              market: c["tags"]["market"],
-              period: "kline-#{period}",
-              open: values["open"],
-              high: values["high"],
-              low: values["low"],
-              close: values["close"],
-              volume: values["volume"],
-              created_at: values["time"]
-            )
-
+            kline = ::Arke::Kline.new(c["tags"]["market"], "kline-#{period}", values["open"], values["high"],
+                                      values["low"], values["close"], values["volume"], values["time"])
             emit(kline)
           end
         end

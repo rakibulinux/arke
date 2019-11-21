@@ -6,30 +6,15 @@ shared_params:
 jobs:
 
   # - extract: Tickers
-  # #   # transform:
-  # #   #   - Debug:
-  # #   #       id: pre_process
-  # #   #   - Sample:
-  # #   #       ratio: 0.1
   #   process:
-  # #     # - transform:
-  # #     #     - Debug:
-  # #     # #         id: after_process
-  # #     - load: Print
+  #     - load: TickersWriter
   #     - load:
   #         AMQP:
   #           exchange: arke.events.ranger
 
   # - extract: Kline
-  #   # transform:
-  #   #   - Debug:
-  #   #       id: pre_process
-  #   #   - Sample:
-  #   #       ratio: 0.1
   #   process:
-  #   #   # - transform:
-  #   #   #     - Debug:
-  #   #   # #         id: after_process
+  #     - load: KlineWriter
   #     - load:
   #         AMQP:
   #           exchange: arke.events.ranger

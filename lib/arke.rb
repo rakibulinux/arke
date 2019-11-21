@@ -59,6 +59,7 @@ require "arke/etl/load/amqp"
 require "arke/etl/load/peatio_amqp"
 require "arke/etl/load/influx"
 require "arke/etl/load/kline"
+require "arke/etl/load/tickers_writer"
 require "arke/influxdb"
 
 require "arke/orderbook/base"
