@@ -75,6 +75,9 @@ module Arke::Strategy
       )
       ob_spread = ob_adjusted.spread(@spread_bids, @spread_asks)
 
+      price_points_asks = price_points_asks&.map {|pp| ::Arke::PricePoint.new(apply_spread(:sell, pp.price_point, @spread_asks)) }
+      price_points_bids = price_points_bids&.map {|pp| ::Arke::PricePoint.new(apply_spread(:buy, pp.price_point, @spread_bids)) }
+
       push_debug("0_levels_count", @levels_count)
       push_debug("0_levels_size", @levels_size)
       push_debug("0_top_ask", top_ask&.first)
@@ -85,7 +88,6 @@ module Arke::Strategy
       push_debug("2_ob", "\n#{ob}")
       push_debug("3_ob_adjusted", "\n#{ob_adjusted}")
       push_debug("4_ob_spread", "\n#{ob_spread}")
-
       [ob_spread, {asks: price_points_asks, bids: price_points_bids}]
     end
   end
