@@ -72,24 +72,30 @@ module Arke
     def run
       EM.synchrony do
         trap("INT") { stop }
+        # Connect private web-sockets
         @accounts.each do |_id, account|
           account.ws_connect_private if account.flag?(WS_PRIVATE)
         end
 
-        @markets.each do |market|
-          market.start
-        end
+        # Fetch open orders if needed
+        @markets.each(&:start)
 
+        # Setup fetching balance
         update_balances
         Fiber.new do
           EM::Synchrony.add_periodic_timer(23) { update_balances }
         end.resume
 
+        # Initialize executors
+        @strategies.each do |strategy|
+          strategy.target.account.executor.create_queue(strategy.id)
+        end
+        @accounts.each_value {|account| account.executor.start } unless @dry_run
+
+        # Start strategies
         @strategies.each do |strategy|
           Fiber.new do
             EM::Synchrony.add_periodic_timer(FETCH_OPEN_ORDERS_PERIOD) { fetch_openorders(strategy) }
-
-            strategy.target.account.executor.start unless @dry_run
 
             if strategy.delay_the_first_execute
               logger.warn { "ID:#{strategy.id} Delaying the first execution" }
@@ -191,7 +197,7 @@ module Arke
         strategy.target,
         scheduler_opts
       )
-      strategy.target.account.executor.push(scheduler.schedule)
+      strategy.target.account.executor.push(strategy.id, scheduler.schedule)
     end
 
     def fetch_openorders(strategy)
