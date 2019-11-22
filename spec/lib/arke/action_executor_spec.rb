@@ -92,16 +92,16 @@ describe Arke::ActionExecutor do
     end
 
     it "applies offsets to timers to spread API calls over time" do
-      expect(block).to receive(:call).with("a", 0.5, 1.0)
-      expect(block).to receive(:call).with("b", 1.5, 1.0)
-      expect(block).to receive(:call).with("c", 2.5, 1.0)
+      expect(block).to receive(:call).with("a", 0.0, 3.0)
+      expect(block).to receive(:call).with("b", 1.0, 3.0)
+      expect(block).to receive(:call).with("c", 2.0, 3.0)
       action_executor.start(&block.method(:call))
     end
 
     context "one strategy" do
       let(:queue_ids) { %w[a] }
       it "works with one strategy" do
-        expect(block).to receive(:call).with("a", 1.5, 3.0)
+        expect(block).to receive(:call).with("a", 0.0, 3.0)
         action_executor.start(&block.method(:call))
       end
     end

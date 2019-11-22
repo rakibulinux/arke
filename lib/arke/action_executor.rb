@@ -25,15 +25,14 @@ module Arke
     end
 
     def start
-      period = account.delay.to_d / @queues.size
-      half_period = period / 2
+      offset_period = account.delay.to_d / @queues.size
 
       @queues.each_with_index do |(queue_id, _), idx|
-        offset = half_period + period * idx
+        offset = offset_period * idx
         if block_given?
-          yield(queue_id, offset, period)
+          yield(queue_id, offset, account.delay.to_d)
         else
-          schedule_timers(queue_id, offset, period)
+          schedule_timers(queue_id, offset, account.delay.to_d)
         end
       end
     end
