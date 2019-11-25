@@ -26,7 +26,7 @@ steps:
         path: /usr/local/bundle
 
   - name: Bump and tag
-    image: quay.io/openware/sdk-tools:1.0.0-a669337
+    image: quay.io/openware/sdk-tools:1.0.0-1288533
     environment:
       BOT_NAME: Kite
       BOT_EMAIL: kite-bot@heliostech.fr
@@ -101,8 +101,8 @@ steps:
       branch:
         - master
 
-  - name: docs-generate
-    image: quay.io/openware/sdk-tools:1.0.0-a669337
+  - name: Push and Notify
+    image: quay.io/openware/sdk-tools:1.0.0-1288533
     environment:
       BOT_USERNAME: kite-bot
       BOT_NAME: Kite Bot
@@ -110,31 +110,18 @@ steps:
       REPO_NAME: ${DRONE_REPO}
       BRANCH_NAME: ${DRONE_BRANCH}
       SDK_BRANCH: ${DRONE_BRANCH}
-      GITHUB_API_KEY:
-        from_secret: kite_bot_key
-    commands:
-      - BUNDLE_GEMFILE=/sdk/Gemfile bundle exec rake --rakefile=/sdk/Rakefile ci:postbuild[/drone/src]
-    when:
-      branch:
-        - master
-
-  - name: Telegram and Slack notifying
-    image: quay.io/openware/sdk-tools:1.0.0-a669337
-    environment:
-      REPO_NAME: ${DRONE_REPO}
-      BRANCH_NAME: ${DRONE_BRANCH}
       TELEGRAM_BOT_TOKEN:
         from_secret: telegram_bot_token
       TELEGRAM_CHAT_ID:
         from_secret: telegram_chat_id
-      GITHUB_API_KEY:
-        from_secret: kite_bot_key
       SLACK_TOKEN:
         from_secret: slack_token
       SLACK_CHANNEL:
         from_secret: slack_channel
+      GITHUB_API_KEY:
+        from_secret: kite_bot_key
     commands:
-      - BUNDLE_GEMFILE=/sdk/Gemfile bundle exec rake --rakefile=/sdk/Rakefile ci:notify:all
+      - BUNDLE_GEMFILE=/sdk/Gemfile bundle exec rake --rakefile=/sdk/Rakefile ci:postbuild[/drone/src]
     when:
       branch:
         - master
