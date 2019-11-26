@@ -21,6 +21,15 @@ shared_context "mocked binance" do
         }
       )
 
+    stub_request(:get, "https://api.binance.com/api/v1/depth?limit=1000&symbol=BTCUSDT")
+      .to_return(
+        status:  200,
+        body:    file_fixture("binance-BTCUSDT.json").read,
+        headers: {
+          "content-type" => "application/json;charset=utf-8",
+        }
+      )
+
     stub_request(:post, %r{https://api.binance.com/api/v3/order})
       .with(headers: authorized_headers)
       .to_return(status: 200, body: "", headers: {})

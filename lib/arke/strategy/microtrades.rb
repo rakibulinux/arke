@@ -22,9 +22,9 @@ module Arke::Strategy
       @enable_orderback = false
       @sides = SIDES_MAP[@side]
       check_config
-      Arke::Log.info "ID:#{id} Market infos: #{market_infos}"
-      Arke::Log.info "ID:#{id} Min amount: #{@min_amount}"
-      Arke::Log.info "ID:#{id} Max amount: #{@max_amount}"
+      logger.info "ID:#{id} Market infos: #{market_infos}"
+      logger.info "ID:#{id} Min amount: #{@min_amount}"
+      logger.info "ID:#{id} Max amount: #{@max_amount}"
     end
 
     def check_config
@@ -80,14 +80,14 @@ module Arke::Strategy
       Fiber.new do
         side = @sides == "both" ? %i[buy sell].sample : @sides
         order = Arke::Order.new(target.id, get_price(side), get_amount(side), side)
-        Arke::Log.warn "ID:#{id} Creating order #{order}"
+        logger.warn "ID:#{id} Creating order #{order}"
         order = target.account.create_order(order)
-        Arke::Log.warn "ID:#{id} Created order #{order}"
+        logger.warn "ID:#{id} Created order #{order}"
         EM::Synchrony.sleep(0.1)
         target.account.stop_order(order)
       rescue StandardError => e
-        Arke::Log.error "ID:#{id} #{e}"
-        Arke::Log.error e.backtrace.join("\n").to_s
+        logger.error "ID:#{id} #{e}"
+        logger.error e.backtrace.join("\n").to_s
       end.resume
       [nil, nil]
     end

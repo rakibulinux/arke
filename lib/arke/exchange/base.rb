@@ -6,13 +6,14 @@ module Arke::Exchange
     include ::Arke::Helpers::Precision
     include Arke::Helpers::Flags
 
-    attr_reader :delay, :driver, :opts, :id, :ws, :host, :key, :secret
+    attr_reader :delay, :driver, :opts, :id, :ws, :host, :key, :secret, :logger
     attr_accessor :timer, :executor
 
     DEFAULT_DELAY = 1
     WEBSOCKET_CONNECTION_RETRY_DELAY = 2
 
     def initialize(opts)
+      @logger = Arke::Log
       @driver = opts["driver"]
       @host = opts["host"]
       @api_key = opts["key"]
@@ -41,7 +42,7 @@ module Arke::Exchange
     end
 
     def ws_connect(ws_id)
-      Arke::Log.info "ACCOUNT:#{id} Websocket connecting to #{@ws_url}"
+      logger.info { "ACCOUNT:#{id} Websocket connecting to #{@ws_url}" }
       raise "websocket url missing for account #{id}" unless @ws_url
 
       headers = if ws_id == :private && respond_to?(:generate_headers)
@@ -57,7 +58,7 @@ module Arke::Exchange
         @ws_queues[ws_id].pop do |msg|
           ws_write_message(ws_id, msg)
         end
-        Arke::Log.info "ACCOUNT:#{id} Websocket connected"
+        logger.info { "ACCOUNT:#{id} Websocket connected" }
       end
 
       @ws.on(:message) do |msg|
@@ -67,7 +68,7 @@ module Arke::Exchange
       @ws.on(:close) do |e|
         @ws = nil
         @ws_status[ws_id] = false
-        Arke::Log.error "ACCOUNT:#{id} Websocket disconnected: #{e.code} Reason: #{e.reason}"
+        logger.error "ACCOUNT:#{id} Websocket disconnected: #{e.code} Reason: #{e.reason}"
         Fiber.new do
           EM::Synchrony.sleep(WEBSOCKET_CONNECTION_RETRY_DELAY)
           ws_connect(ws_id)
@@ -88,20 +89,20 @@ module Arke::Exchange
         @ws_public_messages_out.push(msg)
         return
       end
-      Arke::Log.debug("ACCOUNT:#{id} pushing websocket message: #{msg}")
+      logger.debug { "ACCOUNT:#{id} pushing websocket message: #{msg}" }
       @ws.send(msg)
     end
 
     def ws_read_public_message(msg)
-      Arke::Log.info("ACCOUNT:#{id} received public message: #{msg}")
+      logger.info { "ACCOUNT:#{id} received public message: #{msg}" }
     end
 
     def ws_read_private_message(msg)
-      Arke::Log.info("ACCOUNT:#{id} received private message: #{msg}")
+      logger.info { "ACCOUNT:#{id} received private message: #{msg}" }
     end
 
     def ws_read_message(ws_id, msg)
-      Arke::Log.debug("ACCOUNT:#{id} received websocket message: #{msg.data}")
+      logger.debug { "ACCOUNT:#{id} received websocket message: #{msg.data}" }
 
       object = JSON.parse(msg.data)
       case ws_id
@@ -113,7 +114,7 @@ module Arke::Exchange
     end
 
     def info(msg)
-      Arke::Log.info "#{@driver}: #{msg}"
+      logger.info "#{@driver}: #{msg}"
     end
 
     def to_s
@@ -170,7 +171,7 @@ module Arke::Exchange
 
     def update_forced_balance(balances)
       @forced_balances = balances.map do |key, value|
-        currency = {
+        {
             "currency" => key,
             "free"     => value,
             "locked"   => 0,

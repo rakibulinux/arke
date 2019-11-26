@@ -3,7 +3,7 @@
 describe Arke::Exchange::Bitfinex do
   include_context "mocked bitfinex"
 
-  let(:config) { YAML.load_file("spec/support/fixtures/test_config.yaml") }
+  let(:config) { YAML.safe_load(file_fixture("test_config.yaml").read) }
   let(:market_config) do
     {
       "id"             => "ETHUSD",

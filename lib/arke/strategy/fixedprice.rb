@@ -24,7 +24,7 @@ module Arke::Strategy
       @side_asks = %w[asks both].include?(@side)
       @side_bids = %w[bids both].include?(@side)
 
-      Arke::Log.info "Initializing #{self.class} strategy with order_back #{@enable_orderback ? 'enabled' : 'disabled'}"
+      logger.info "Initializing #{self.class} strategy with order_back #{@enable_orderback ? 'enabled' : 'disabled'}"
       check_config
     end
 
@@ -96,7 +96,7 @@ module Arke::Strategy
 
       if target_base_total < @limit_asks_base
         limit_asks_base = target_base_total
-        Arke::Log.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower then the limit set to #{@limit_asks_base}")
+        logger.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower then the limit set to #{@limit_asks_base}")
       else
         limit_asks_base = @limit_asks_base
       end

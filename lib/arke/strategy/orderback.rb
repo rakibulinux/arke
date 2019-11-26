@@ -29,8 +29,8 @@ module Arke::Strategy
       @enable_orderback = params["enable_orderback"] ? true : false
       @min_order_back_amount = params["min_order_back_amount"].to_f
       @orderback_timer = params["orderback_timer"] || DEFAULT_ORDERBACK_GRACE_TIME
-      Arke::Log.info "min order back amount: #{@min_order_back_amount}"
-      Arke::Log.info "Initializing #{self.class} strategy with order_back #{@enable_orderback ? 'enabled' : 'disabled'}"
+      logger.info "min order back amount: #{@min_order_back_amount}"
+      logger.info "Initializing #{self.class} strategy with order_back #{@enable_orderback ? 'enabled' : 'disabled'}"
       sources.each {|s| s.apply_flags(FETCH_PRIVATE_BALANCE) }
       register_callbacks
       check_config
@@ -64,7 +64,7 @@ module Arke::Strategy
       order_sell = target.open_orders.get_by_id(:sell, trade.order_id)
 
       if order_buy && order_sell
-        Arke::Log.error "ID:#{id} one order made a trade ?! order id:#{trade.order_id}"
+        logger.error "ID:#{id} one order made a trade ?! order id:#{trade.order_id}"
         return
       end
       order_back(trade, order_buy) if order_buy
@@ -72,12 +72,12 @@ module Arke::Strategy
     end
 
     def order_back(trade, order)
-      Arke::Log.info("ID:#{id} Trade on #{trade.market}, #{order.side} price: #{trade.price} amount: #{trade.volume}")
+      logger.info("ID:#{id} Trade on #{trade.market}, #{order.side} price: #{trade.price} amount: #{trade.volume}")
       spread = order.side == :sell ? @spread_asks : @spread_bids
       price = apply_spread(order.side, trade.price, -spread)
       type = order.side == :sell ? :buy : :sell
 
-      Arke::Log.info("ID:#{id} Buffering order back #{trade.market}, #{type} price: #{price} amount: #{trade.volume}")
+      logger.info("ID:#{id} Buffering order back #{trade.market}, #{type} price: #{price} amount: #{trade.volume}")
       @trades[trade.id] ||= {}
       @trades[trade.id][trade.order_id] = [trade.market, price, trade.volume, type]
 
@@ -88,10 +88,10 @@ module Arke::Strategy
         grouped_trades.each do |k, v|
           order = Arke::Order.new(target.id, k[0].to_f, v, k[1].to_sym)
           if order.amount > @min_order_back_amount
-            Arke::Log.info("ID:#{id} Pushing order back #{order} (min order back amount: #{@min_order_back_amount})")
+            logger.info("ID:#{id} Pushing order back #{order} (min order back amount: #{@min_order_back_amount})")
             orders << order
           else
-            Arke::Log.info("ID:#{id} Discard order back #{order} (min order back amount: #{@min_order_back_amount})")
+            logger.info("ID:#{id} Discard order back #{order} (min order back amount: #{@min_order_back_amount})")
           end
         end
 
@@ -150,14 +150,14 @@ module Arke::Strategy
 
       if source_base_free < limit_bids_base
         limit_bids_base_applied = source_base_free
-        Arke::Log.warn("#{source.base} balance on #{source.account.driver} is #{source_base_free} lower then the limit set to #{@limit_bids_base}")
+        logger.warn("#{source.base} balance on #{source.account.driver} is #{source_base_free} lower then the limit set to #{@limit_bids_base}")
       else
         limit_bids_base_applied = limit_bids_base
       end
 
       if target_base_total < limit_asks_base
         limit_asks_base_applied = target_base_total
-        Arke::Log.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower then the limit set to #{@limit_asks_base}")
+        logger.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower then the limit set to #{@limit_asks_base}")
       else
         limit_asks_base_applied = limit_asks_base
       end

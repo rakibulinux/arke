@@ -65,9 +65,9 @@ module Arke::Scheduler
       current = @current_ob.group_by_level(side, price_levels)
       desired = @desired_ob.group_by_level(side, price_levels)
 
-      logger.debug { "price_levels: #{price_levels.inspect}" }
-      logger.debug { "current: #{current.inspect}" }
-      logger.debug { "desired: #{desired.inspect}" }
+      logger.debug { "#{side} price_levels: #{price_levels.inspect}" }
+      logger.debug { "#{side} current: #{current.inspect}" }
+      logger.debug { "#{side} desired: #{desired.inspect}" }
       levels_count = price_levels.count.to_d
       price_levels.each_with_index do |price_point, i|
         raise "PricePoint expected, got #{price_point.class}" unless price_point.is_a?(::Arke::PricePoint)
@@ -127,6 +127,9 @@ module Arke::Scheduler
       desired_best_sell = @desired_ob.best_price(:sell)
       desired_best_buy = @desired_ob.best_price(:buy)
 
+      logger.debug { "SmartScheduler: desired_best_sell #{desired_best_sell}" }
+      logger.debug { "SmartScheduler: desired_best_buy  #{desired_best_buy}" }
+
       if !desired_best_buy.nil? && !desired_best_sell.nil? && desired_best_sell <= desired_best_buy
         raise InvalidOrderBook.new("Ask price < Bid price")
       end
@@ -138,7 +141,9 @@ module Arke::Scheduler
       list += adjust_levels(:buy,  @price_levels[:bids], desired_best_buy)
       list += cancel_out_of_boundaries_orders(:buy,  @price_levels[:bids].last&.price_point, liquidity_flag_buy)
       list += cancel_out_of_boundaries_orders(:sell, @price_levels[:asks].last&.price_point, liquidity_flag_sell)
-      list.sort_by(&:priority).reverse
+      list = list.sort_by(&:priority).reverse
+      logger.debug { "SmartScheduler: returned actions: #{list}" }
+      list
     end
   end
 end

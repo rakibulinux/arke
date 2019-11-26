@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Arke
   class ActionExecutor
     include Arke::Helpers::Precision
@@ -25,6 +27,10 @@ module Arke
     end
 
     def start
+      if @queues.empty?
+        logger.info { "ACCOUNT:#{id} no strategy registered" }
+        return
+      end
       offset_period = account.delay.to_d / @queues.size
 
       @queues.each_with_index do |(queue_id, _), idx|
@@ -61,6 +67,7 @@ module Arke
 
     def schedule(action)
       return unless action
+
       case action.type
       when :order_create
         execute do
@@ -68,7 +75,7 @@ module Arke
           logger.info { "ACCOUNT:#{id} Creating order: #{order}" }
           price = apply_precision(order.price, action.destination.quote_precision)
           amount = apply_precision(order.amount, action.destination.base_precision.to_f,
-            order.side == :sell ? action.destination.min_ask_amount.to_f : action.destination.min_bid_amount.to_f)
+                                   order.side == :sell ? action.destination.min_ask_amount.to_f : action.destination.min_bid_amount.to_f)
           begin
             order = Arke::Order.new(order.market, price, amount, order.side)
             action.destination.account.create_order(order)
@@ -76,20 +83,22 @@ module Arke
             logger.error { "ACCOUNT:#{id} #{e}\n#{e.backtrace.join("\n")}" }
           end
         end
+
       when :order_stop
         execute do
-          begin
-            logger.info { "ACCOUNT:#{id} Canceling order: #{action.params}" }
-            action.destination.account.stop_order(action.params[:order])
-          rescue StandardError
-            logger.error { "ACCOUNT:#{id} #{$!}" }
-          end
+          logger.info { "ACCOUNT:#{id} Canceling order: #{action.params}" }
+          action.destination.account.stop_order(action.params[:order])
+        rescue StandardError => e
+          logger.error { "ACCOUNT:#{id} #{e}" }
         end
+
       when :fetch_openorders
-        Arke::Log.info "ACCOUNT:#{id} Fetching open orders"
+        logger.info { "ACCOUNT:#{id} Fetching open orders" }
         action.destination.fetch_openorders
+
       when :noop
-        Arke::Log.info "ACCOUNT:#{id} empty action"
+        logger.info { "ACCOUNT:#{id} empty action" }
+
       else
         logger.error { "ACCOUNT:#{id} Unknown Action type: #{action.type}" }
       end

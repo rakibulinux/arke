@@ -6,7 +6,7 @@ module Arke::Exchange
 
     def initialize(opts)
       super
-      @path = opts["orderbook"] || File.join("./spec/support/fixtures/bitfinex.yaml")
+      @path = opts["orderbook"] || File.join("./spec/fixtures/files/bitfinex.yaml")
     end
 
     def cancel_all_orders(_market)

@@ -5,12 +5,13 @@ module Arke::Strategy
   class Base
     attr_accessor :timer
     attr_reader :debug_infos, :period, :period_random_delay, :linked_strategy_id
-    attr_reader :sources, :target, :id, :debug
+    attr_reader :sources, :target, :id, :debug, :logger
 
     SIDES = %w[asks bids both].freeze
     DEFAULT_PERIOD = 10
 
     def initialize(sources, target, config, reactor)
+      @logger = Arke::Log
       @config = config
       @id = @config["id"]
       @volume_ratio = config["volume_ratio"]
@@ -27,7 +28,7 @@ module Arke::Strategy
       @sources = sources
       @target = target
       @reactor = reactor
-      Arke::Log.info { "ID:#{id} ----====[ #{self.class.to_s.split('::').last} Strategy ]====----" }
+      logger.info { "ID:#{id} ----====[ #{self.class.to_s.split('::').last} Strategy ]====----" }
     end
 
     def delay_the_first_execute
