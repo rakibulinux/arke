@@ -67,14 +67,14 @@ describe Arke::Orderbook::OpenOrders do
     end
   end
 
-  it "#total_side_amount_in_base" do
+  it "#total_side_amount_in_quote" do
     open_orders.add_order(delete_order)
     open_orders.add_order(update_order)
     open_orders.add_order(skip_order)
     open_orders.add_order(create_order)
 
-    expect(open_orders.total_side_amount_in_base(:sell)).to eq 9000
-    expect(open_orders.total_side_amount_in_base(:buy)).to eq 8000
+    expect(open_orders.total_side_amount_in_quote(:sell)).to eq 9000
+    expect(open_orders.total_side_amount_in_quote(:buy)).to eq 8000
   end
 
   context "open_orders#get_diff" do

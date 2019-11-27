@@ -44,7 +44,7 @@ module Arke::Orderbook
       amount
     end
 
-    def total_side_amount_in_base(side)
+    def total_side_amount_in_quote(side)
       amount = 0.to_d
       @book[side].each_value do |o|
         amount += o.values.sum(&:amount) * o.values.first.price

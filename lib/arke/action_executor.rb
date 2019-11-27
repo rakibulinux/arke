@@ -65,6 +65,16 @@ module Arke
       Fiber.new { yield }.resume
     end
 
+    def colored_side(side)
+      return "buy".green if side.to_sym == :buy
+      return "sell".red if side.to_sym == :sell
+
+      side
+    end
+
+    CREATING = "Creating".green
+    CANCELING = "Canceling".red
+
     def schedule(action)
       return unless action
 
@@ -72,7 +82,7 @@ module Arke
       when :order_create
         execute do
           order = action.params[:order]
-          logger.info { "ACCOUNT:#{id} Creating order: #{order}" }
+          logger.info { "ACCOUNT:#{id} #{CREATING} #{colored_side(order.side)} order: #{action.params}" }
           price = apply_precision(order.price, action.destination.quote_precision)
           amount = apply_precision(order.amount, action.destination.base_precision.to_f,
                                    order.side == :sell ? action.destination.min_ask_amount.to_f : action.destination.min_bid_amount.to_f)
@@ -86,8 +96,9 @@ module Arke
 
       when :order_stop
         execute do
-          logger.info { "ACCOUNT:#{id} Canceling order: #{action.params}" }
-          action.destination.account.stop_order(action.params[:order])
+          order = action.params[:order]
+          logger.info { "ACCOUNT:#{id} #{CANCELING} #{colored_side(order.side)} order: #{action.params}" }
+          action.destination.account.stop_order(order)
         rescue StandardError => e
           logger.error { "ACCOUNT:#{id} #{e}" }
         end
@@ -97,7 +108,7 @@ module Arke
         action.destination.fetch_openorders
 
       when :noop
-        logger.info { "ACCOUNT:#{id} empty action" }
+        logger.info { "ACCOUNT:#{id} noop" }
 
       else
         logger.error { "ACCOUNT:#{id} Unknown Action type: #{action.type}" }

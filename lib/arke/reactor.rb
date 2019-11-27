@@ -185,8 +185,9 @@ module Arke
       return if @dry_run
 
       scheduler_opts = {
-        price_levels: price_levels,
-        strategy_id:  strategy.id,
+        price_levels:         price_levels,
+        strategy_id:          strategy.id,
+        max_amount_per_order: strategy.max_amount_per_order,
       }
       scheduler_opts[:limit_asks_base] = strategy.limit_asks_base if strategy.respond_to?(:limit_asks_base)
       scheduler_opts[:limit_bids_base] = strategy.limit_bids_base if strategy.respond_to?(:limit_bids_base)
@@ -206,7 +207,7 @@ module Arke
         actions << Action.new(:noop, strategy.target)
       end
       actions << Action.new(:fetch_openorders, strategy.target)
-      strategy.target.account.executor.push(actions)
+      strategy.target.account.executor.push(strategy.id, actions)
     end
 
     # Stops workers and strategy execution

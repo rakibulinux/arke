@@ -140,15 +140,16 @@ The *Copy* strategy uses a source exchange market to create an orderbook on a ta
 
 Orders amount are set according to the source orders volume of the same price level.
 
-| Field             | Description                                                  |
-| ----------------- | ------------------------------------------------------------ |
-| `spread_bids`     | Spread for bids side (in percentage)                         |
-| `spread_asks`     | Spread for asks side (in percentage)                         |
-| `limit_asks_base` | Sum of amounts of orders of ask side                         |
-| `limit_bids_base` | Sum of amounts of orders of bid side                         |
-| `levels_size`     | Minimum price difference between orders                      |
-| `levels_count`    | Number of orders for each side                               |
-| `side`            | Side where orders will be created (valid: `asks`, `bids`, `both`) |
+| Field                  | Description                                                  |
+| ---------------------- | ------------------------------------------------------------ |
+| `spread_bids`          | Spread for bids side (in percentage)                         |
+| `spread_asks`          | Spread for asks side (in percentage)                         |
+| `limit_asks_base`      | Sum of amounts of orders of ask side                         |
+| `limit_bids_base`      | Sum of amounts of orders of bid side                         |
+| `levels_size`          | Minimum price difference between orders                      |
+| `levels_count`         | Number of orders for each side                               |
+| `max_amount_per_order` | Maximum size for one order, if more liquidity is needed for one level several orders of this size will be created |
+| `side`                 | Side where orders will be created (valid: `asks`, `bids`, `both`) |
 
 
 
@@ -165,6 +166,7 @@ An soon as an order is matched, the strategy creates an order on the source exch
 | `limit_bids_base`       | Sum of amounts of orders of bid side                         |
 | `levels_size`           | Minimum price difference between orders                      |
 | `levels_count`          | Number of orders for each side                               |
+| `max_amount_per_order` | Maximum size for one order, if more liquidity is needed for one level several orders of this size will be created |
 | `side`                  | Side where orders will be created (valid: `asks`, `bids`, `both`) |
 | `enable_orderback`      | Flag for enabling orderback, could be: `true` or `false`     |
 | `min_order_back_amount` | The amount of the trade must be higher than this value for the order back to be created, otherwise the trade will be ignored. |
@@ -186,6 +188,7 @@ It creates an order arround the reference *price* with a random value *random_de
 | `levels_size`     | Minimum price difference between orders                      |
 | `levels_count`    | Number of orders for each side                               |
 | `side`            | Side where orders will be created (valid: `asks`, `bids`, `both`) |
+| `max_amount_per_order` | Maximum size for one order, if more liquidity is needed for one level several orders of this size will be created |
 | `price`           | Reference price for the strategy to create orderbook         |
 | `random_delta`    | Random value for deviation of the reference price (maximum deviation = random_delta / 2) |
 

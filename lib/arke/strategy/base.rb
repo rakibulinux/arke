@@ -6,6 +6,7 @@ module Arke::Strategy
     attr_accessor :timer
     attr_reader :debug_infos, :period, :period_random_delay, :linked_strategy_id
     attr_reader :sources, :target, :id, :debug, :logger
+    attr_reader :max_amount_per_order
 
     SIDES = %w[asks bids both].freeze
     DEFAULT_PERIOD = 10
@@ -24,6 +25,7 @@ module Arke::Strategy
       params = @config["params"] || {}
       @linked_strategy_id = params["linked_strategy_id"]
       @side = SIDES.include?(params["side"]) ? params["side"] : "both"
+      @max_amount_per_order = params["max_amount_per_order"]&.to_d
       @trades = []
       @sources = sources
       @target = target
