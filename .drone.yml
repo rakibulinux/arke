@@ -40,6 +40,7 @@ steps:
     when:
       branch:
         - master
+        - "*-stable"
 
   - name: Publish to Gitolite
     image: alpine/git
@@ -64,6 +65,7 @@ steps:
     when:
       branch:
         - master
+        - "*-stable"
     volumes:
       - name: gem-cache
         path: /root/.gem
@@ -82,6 +84,7 @@ steps:
     when:
       branch:
         - master
+        - "*-stable"
     volumes:
       - name: gem-cache
         path: /root/.gem
@@ -100,6 +103,7 @@ steps:
     when:
       branch:
         - master
+        - "*-stable"
 
   - name: Push and Notify
     image: quay.io/openware/sdk-tools:1.0.0-1288533
@@ -125,6 +129,7 @@ steps:
     when:
       branch:
         - master
+        - "*-stable"
 
 services:
 - name: database
