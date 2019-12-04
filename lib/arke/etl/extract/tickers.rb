@@ -32,7 +32,7 @@ module Arke::ETL::Extract
           data["at"] = values["time"]
           tickers[market.downcase] = data
         end
-        ticker = Arke::Ticker.new(tickers: tickers)
+        ticker = Arke::Ticker.new(tickers)
         emit(ticker)
       end
     end
