@@ -74,9 +74,9 @@ module Arke::Orderbook
       [final_tree, volume_base, volume_quote]
     end
 
-    def aggregate(price_points_buy, price_points_sell, min_ask_amount, min_bid_amount)
-      bids_ob, vol_bids_base, vol_bids_quote = aggregate_side(:buy, price_points_buy, min_bid_amount)
-      asks_ob, vol_asks_base, vol_asks_quote = aggregate_side(:sell, price_points_sell, min_ask_amount)
+    def aggregate(price_points_buy, price_points_sell, min_amount)
+      bids_ob, vol_bids_base, vol_bids_quote = aggregate_side(:buy, price_points_buy, min_amount)
+      asks_ob, vol_asks_base, vol_asks_quote = aggregate_side(:sell, price_points_sell, min_amount)
       Aggregated.new(
         @market,
         buy:               bids_ob,

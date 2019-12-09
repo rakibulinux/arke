@@ -56,5 +56,49 @@ shared_context "mocked rubykube" do
         ].to_json,
         headers: {}
       )
+
+    stub_request(:get, %r{peatio/public/markets})
+      .to_return(
+        status:  200,
+        body:    [
+          {
+            "id"               => "ethbtc",
+            "name"             => "ETH/BTC",
+            "base_unit"        => "eth",
+            "quote_unit"       => "btc",
+            "min_price"        => "0.001",
+            "max_price"        => "0.3",
+            "min_amount"       => "0.025",
+            "amount_precision" => 4,
+            "price_precision"  => 6,
+            "state"            => "enabled"
+          },
+          {
+            "id"               => "btcusd",
+            "name"             => "BTC/USD",
+            "base_unit"        => "btc",
+            "quote_unit"       => "usd",
+            "min_price"        => "100.0",
+            "max_price"        => "100000.0",
+            "min_amount"       => "0.0005",
+            "amount_precision" => 6,
+            "price_precision"  => 2,
+            "state"            => "enabled"
+          },
+          {
+            "id"               => "ethusd",
+            "name"             => "ETH/USD",
+            "base_unit"        => "eth",
+            "quote_unit"       => "usd",
+            "min_price"        => "100.0",
+            "max_price"        => "100000.0",
+            "min_amount"       => "0.0005",
+            "amount_precision" => 4,
+            "price_precision"  => 2,
+            "state"            => "enabled"
+          }
+        ].to_json,
+        headers: {}
+      )
   end
 end

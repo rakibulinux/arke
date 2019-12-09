@@ -40,13 +40,7 @@ describe Arke::Strategy::Microtrades do
       "target" => {
         "driver" => "bitfaker",
         "market" => {
-          "id"              => "BTCUSD",
-          "base"            => "BTC",
-          "quote"           => "USD",
-          "base_precision"  => 4,
-          "quote_precision" => 4,
-          "min_ask_amount"  => 0.001,
-          "min_bid_amount"  => 0.001,
+          "id" => "BTCUSD",
         },
       }
     }
@@ -101,8 +95,8 @@ describe Arke::Strategy::Microtrades do
       expect(linked_strategy.target.open_orders.total_side_amount(:buy)).to eq(285.56554348.to_d)
       expect(linked_strategy.target.open_orders.total_side_amount(:sell)).to eq(700.37113197.to_d)
 
-      expect(strategy.get_amount(:buy)).to eq 420.2226
-      expect(strategy.get_amount(:sell)).to eq 171.3393
+      expect(strategy.get_amount(:buy)).to eq 420.222679
+      expect(strategy.get_amount(:sell)).to eq 171.339326
     end
 
     it "does not limit the amount of sell and buy orders when it doesn't exceed 60% of linked strategy open orders total supply" do

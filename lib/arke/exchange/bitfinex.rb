@@ -124,6 +124,26 @@ module Arke::Exchange
       @connection.get("/v1/symbols").body
     end
 
+    def symbols_details
+      @symbols_details ||= @connection.get("/v1/symbols_details").body
+    end
+
+    def market_config(market)
+      info = symbols_details&.find {|i| i["pair"].downcase == market.downcase }
+      raise "Pair #{market} not found" unless info
+
+      {
+        "id"               => info.fetch("pair"),
+        "base_unit"        => nil,
+        "quote_unit"       => nil,
+        "min_price"        => nil,
+        "max_price"        => nil,
+        "min_amount"       => info.fetch("minimum_order_size"),
+        "amount_precision" => 8,
+        "price_precision"  => 8,
+      }
+    end
+
     def new_trade(data, market)
       amount = data[2]
       pm_id = @platform_markets[market]

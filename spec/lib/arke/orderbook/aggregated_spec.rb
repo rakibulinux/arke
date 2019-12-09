@@ -211,7 +211,7 @@ describe Arke::Orderbook::Aggregated do
     end
 
     it "aggregates complete orderbook" do
-      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1, 0.1)
+      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1)
       expect(book[:buy].to_hash).to eq(
         6.0.to_d => {high_price: 6.to_d, low_price: 6.to_d, volume: 0.1.to_d, weighted_price: 6.to_d},
         8.5.to_d => {high_price: 9.to_d, low_price: 8.to_d, volume: 2.to_d, weighted_price: 8.5.to_d}
@@ -227,7 +227,7 @@ describe Arke::Orderbook::Aggregated do
     end
 
     it "aggregates only bids side" do
-      book = orderbook.aggregate(price_points_buy, nil, nil, 0.1)
+      book = orderbook.aggregate(price_points_buy, nil, 0.1)
       expect(book[:buy].to_hash).to eq(
         6.0.to_d => {high_price: 6.to_d, low_price: 6.to_d, volume: 0.1.to_d, weighted_price: 6.0.to_d},
         8.5.to_d => {high_price: 9.to_d, low_price: 8.to_d, volume: 2.0.to_d, weighted_price: 8.5.to_d}
@@ -236,7 +236,7 @@ describe Arke::Orderbook::Aggregated do
     end
 
     it "aggregates only asks side" do
-      book = orderbook.aggregate(nil, price_points_sell, 0.1, nil)
+      book = orderbook.aggregate(nil, price_points_sell, 0.1)
       expect(book[:buy].to_hash).to eq({})
       expect(book[:sell].to_hash).to eq(
         4.0.to_d => {high_price: 5, low_price: 2, volume: 3, weighted_price: 4.0},
@@ -246,7 +246,7 @@ describe Arke::Orderbook::Aggregated do
 
     context "to_ob" do
       it "returns a Orderbook object" do
-        book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1, 0.1).to_ob
+        book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1).to_ob
         expect(book[:buy].to_hash).to eq(
           6.0.to_d => 0.1.to_d,
           8.5.to_d => 2.0.to_d

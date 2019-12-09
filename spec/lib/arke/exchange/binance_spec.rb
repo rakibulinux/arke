@@ -5,11 +5,7 @@ describe Arke::Exchange::Binance do
 
   let(:market_config) do
     {
-      "id"             => "ETHUSDT",
-      "base"           => "ETH",
-      "quote"          => "USDT",
-      "min_ask_amount" => 0.01,
-      "min_bid_amount" => 0.01,
+      "id" => "ETHUSDT"
     }
   end
 
@@ -280,6 +276,21 @@ describe Arke::Exchange::Binance do
       expect(callback).to receive(:call).with(trade)
       binance.register_on_public_trade_cb(&callback.method(:call))
       binance.ws_read_message(:public, trade_event)
+    end
+  end
+
+  context "market_config" do
+    it "returns market configuration" do
+      expect(binance.market_config("ETHUSDT")).to eq(
+        "id"               => "ETHUSDT",
+        "base_unit"        => "ETH",
+        "quote_unit"       => "USDT",
+        "min_price"        => 0.01,
+        "max_price"        => 10_000_000,
+        "min_amount"       => 0.00001,
+        "amount_precision" => 8,
+        "price_precision"  => 8
+      )
     end
   end
 end

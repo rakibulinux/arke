@@ -83,9 +83,9 @@ module Arke
         execute do
           order = action.params[:order]
           logger.info { "ACCOUNT:#{id} #{CREATING} #{colored_side(order.side)} order: #{action.params}" }
-          price = apply_precision(order.price, action.destination.quote_precision)
-          amount = apply_precision(order.amount, action.destination.base_precision.to_f,
-                                   order.side == :sell ? action.destination.min_ask_amount.to_f : action.destination.min_bid_amount.to_f)
+          price = apply_precision(order.price, action.destination.price_precision)
+          amount = apply_precision(order.amount, action.destination.amount_precision.to_f,
+                                   order.side == :sell ? action.destination.min_amount.to_f : action.destination.min_amount.to_f)
           begin
             order = Arke::Order.new(order.market, price, amount, order.side)
             action.destination.account.create_order(order)

@@ -1,4 +1,4 @@
-log_level: DEBUG
+log_level: INFO
 
 accounts:
 - id: demo
@@ -6,9 +6,9 @@ accounts:
   debug: false
   host: "https://demo.openware.com"
   ws: "wss://demo.openware.com"
-  key: "353886962a3b3a79"
-  secret: "36827b03603d94496518390737a30562"
-  delay: 3
+  key: "df6330db624fcc67"
+  secret: "c2ac593fd25281a4cbf9df6f88d700a0"
+  delay: 1
 
 - id: bitfaker
   driver: bitfaker
@@ -27,11 +27,11 @@ accounts:
   delay: 1
 
 strategies:
-- id: copy-FTHUSD
+- id: copy-ETHUSD
   type: copy
   debug: true
   enabled: true
-  period: 5
+  period: 30
   params:
     spread_bids: 0.003
     spread_asks: 0.003
@@ -44,21 +44,12 @@ strategies:
   target:
     account_id: demo
     market:
-      id: fthusd
-      base: fth
-      quote: usd
-      base_precision: 2
-      quote_precision: 2
-      min_bid_amount: 0.01
-      min_ask_amount: 0.01
+      - id: ethusd
+
   sources:
   - account_id: binance
     market:
-      id: ETHUSDT
-      base: ETH
-      quote: USDT
-      min_bid_amount: 0.01
-      min_ask_amount: 0.01
+      - id: ETHUSDT
 
 - id: microtrades-FTHUSD
   type: microtrades
@@ -72,11 +63,4 @@ strategies:
     max_amount: 0.30
   target:
       account_id: demo
-      market:
-        id: fthusd
-        base: fth
-        quote: usd
-        base_precision: 2
-        quote_precision: 2
-        min_ask_amount: 0.01
-        min_bid_amount: 0.01
+      market: { id: ethusd }

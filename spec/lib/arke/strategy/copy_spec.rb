@@ -3,6 +3,8 @@
 require "rails_helper"
 
 describe Arke::Strategy::Copy do
+  include_context "mocked binance"
+
   let!(:strategy) { Arke::Strategy::Copy.new([source], target, config, nil) }
   let(:source_account) { Arke::Exchange.create(source_config) }
   let(:target_account) { Arke::Exchange.create(target_config) }
@@ -47,11 +49,7 @@ describe Arke::Strategy::Copy do
     {
       "account_id" => 1,
       "market"     => {
-        "id"             => "BTCUSD",
-        "base"           => "BTC",
-        "quote"          => "USD",
-        "min_ask_amount" => 0.001,
-        "min_bid_amount" => 0.001,
+        "id" => "BTCUSD",
       }
     }
   end
@@ -67,11 +65,7 @@ describe Arke::Strategy::Copy do
     {
       "account_id" => 2,
       "market"     => {
-        "id"             => "BTCUSD",
-        "base"           => "BTC",
-        "quote"          => "USD",
-        "min_ask_amount" => 0.1,
-        "min_bid_amount" => 0.1,
+        "id" => "BTCUSD",
       },
     }
   end
@@ -79,8 +73,6 @@ describe Arke::Strategy::Copy do
   let(:target_orderbook) { strategy.call }
   let(:target_bids) { target_orderbook.first[:buy] }
   let(:target_asks) { target_orderbook.first[:sell] }
-
-  include_context "mocked binance"
 
   before(:each) do
     target.account.fetch_balances
@@ -206,9 +198,7 @@ describe Arke::Strategy::Copy do
       {
         "account_id" => 1,
         "market"     => {
-          "id"    => "BTCUSDT",
-          "base"  => "BTC",
-          "quote" => "USDT",
+          "id" => "BTCUSDT",
         }
       }
     end

@@ -16,17 +16,7 @@ describe Arke::Exchange::Rubykube do
   end
 
   let!(:market) { Arke::Market.new(market_config, rubykube) }
-
-  let(:market_config) do
-    {
-      "id"             => "ETHUSD",
-      "base"           => "ETH",
-      "quote"          => "USD",
-      "min_ask_amount" => 0.01,
-      "min_bid_amount" => 0.01,
-    }
-  end
-
+  let(:market_config) { {"id" => "ethusd"} }
   let(:strategy) { Arke::Strategy::Copy.new(strategy_config) }
   let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
   let(:rubykube) { Arke::Exchange::Rubykube.new(exchange_config) }
@@ -66,6 +56,174 @@ describe Arke::Exchange::Rubykube do
           {"currency" => "usd", "total" => 1_000_000.0, "free" => 999_990.0, "locked" => 10.0},
         ]
       )
+    end
+  end
+
+  context "rubykube#market_config after peatio 2.2.14" do
+    it "generates market configuration" do
+      expect(rubykube.market_config("btcusd")).to eq(
+        "id"               => "btcusd",
+        "base_unit"        => "btc",
+        "quote_unit"       => "usd",
+        "min_price"        => 100.0,
+        "max_price"        => 100_000.0,
+        "min_amount"       => 0.0005,
+        "amount_precision" => 6,
+        "price_precision"  => 2
+      )
+    end
+  end
+
+  context "rubykube#market_config before peatio 2.2.14" do
+    it "generates market configuration" do
+      stub_request(:get, %r{peatio/public/markets})
+        .to_return(
+          status:  200,
+          body:    [
+            {
+              "id"             => "btcusd",
+              "name"           => "BTC/USD",
+              "ask_unit"       => "btc",
+              "bid_unit"       => "usd",
+              "min_ask_price"  => "100.0",
+              "max_bid_price"  => "100000.0",
+              "min_ask_amount" => "0.0005",
+              "min_bid_amount" => "0.0005",
+              "ask_precision"  => 6,
+              "bid_precision"  => 2
+            }
+          ].to_json,
+          headers: {}
+        )
+      expect(rubykube.market_config("btcusd")).to eq(
+        "id"               => "btcusd",
+        "base_unit"        => "btc",
+        "quote_unit"       => "usd",
+        "min_price"        => 100,
+        "max_price"        => 100_000,
+        "min_amount"       => 0.0005,
+        "amount_precision" => 6,
+        "price_precision"  => 2
+      )
+    end
+  end
+
+  context "rubykube#market_config misconfiguration" do
+    it "doesn't raise error for missing non required fields" do
+      stub_request(:get, %r{peatio/public/markets})
+        .to_return(
+          status:  200,
+          body:    [
+            {
+              "id"               => "btcusd",
+              "base_unit"        => "btc",
+              "quote_unit"       => "usd",
+              "amount_precision" => 6,
+              "price_precision"  => 2,
+              "state"            => "enabled"
+            }
+          ].to_json,
+          headers: {}
+        )
+      expect(rubykube.market_config("btcusd")).to eq(
+        "id"               => "btcusd",
+        "base_unit"        => "btc",
+        "quote_unit"       => "usd",
+        "min_price"        => nil,
+        "max_price"        => nil,
+        "min_amount"       => nil,
+        "amount_precision" => 6,
+        "price_precision"  => 2
+      )
+    end
+
+    it "raises error if id is missing" do
+      stub_request(:get, %r{peatio/public/markets})
+        .to_return(
+          status:  200,
+          body:    [
+            {
+              "base_unit"        => "btc",
+              "quote_unit"       => "usd",
+              "amount_precision" => 6,
+              "price_precision"  => 2
+            }
+          ].to_json,
+          headers: {}
+        )
+      expect { rubykube.market_config("btcusd") }.to raise_error("Market btcusd not found")
+    end
+
+    it "raises error if base_unit is missing" do
+      stub_request(:get, %r{peatio/public/markets})
+        .to_return(
+          status:  200,
+          body:    [
+            {
+              "id"               => "btcusd",
+              "quote_unit"       => "usd",
+              "amount_precision" => 6,
+              "price_precision"  => 2,
+              "state"            => "enabled"
+            }
+          ].to_json,
+          headers: {}
+        )
+      expect { rubykube.market_config("btcusd") }.to raise_error(/base_unit/)
+    end
+
+    it "raises error if quote_unit is missing" do
+      stub_request(:get, %r{peatio/public/markets})
+        .to_return(
+          status:  200,
+          body:    [
+            {
+              "id"               => "btcusd",
+              "base_unit"        => "btc",
+              "amount_precision" => 6,
+              "price_precision"  => 2,
+              "state"            => "enabled"
+            }
+          ].to_json,
+          headers: {}
+        )
+      expect { rubykube.market_config("btcusd") }.to raise_error(/quote_unit/)
+    end
+
+    it "raises error if amount_precision is missing" do
+      stub_request(:get, %r{peatio/public/markets})
+        .to_return(
+          status:  200,
+          body:    [
+            {
+              "id"              => "btcusd",
+              "base_unit"       => "btc",
+              "quote_unit"      => "usd",
+              "price_precision" => 2,
+              "state"           => "enabled"
+            }
+          ].to_json,
+          headers: {}
+        )
+      expect { rubykube.market_config("btcusd") }.to raise_error(/amount_precision/)
+    end
+
+    it "raises error if price_precision is missing" do
+      stub_request(:get, %r{peatio/public/markets})
+        .to_return(
+          status:  200,
+          body:    [
+            {
+              "id"               => "btcusd",
+              "base_unit"        => "btc",
+              "quote_unit"       => "usd",
+              "amount_precision" => 6,
+              "state"            => "enabled"
+            }
+          ].to_json,
+          headers: {}
+        )
+      expect { rubykube.market_config("btcusd") }.to raise_error(/price_precision/)
     end
   end
 

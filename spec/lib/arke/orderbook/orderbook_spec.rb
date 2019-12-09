@@ -102,7 +102,7 @@ describe ::Arke::Orderbook::Orderbook do
     end
 
     it "adjusts volume based on base volume requirements" do
-      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1, 0.1)
+      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1)
                       .to_ob
                       .adjust_volume(0.2, 0.3)
       expect(book[:buy].to_hash).to eq(
@@ -120,7 +120,7 @@ describe ::Arke::Orderbook::Orderbook do
     end
 
     it "stops when reaching quote limit" do
-      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1, 0.1)
+      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1)
                       .to_ob
                       .adjust_volume(0.2, 0.3, 1.1, 1.2)
       expect(book[:buy].to_hash).to eq(
@@ -137,7 +137,7 @@ describe ::Arke::Orderbook::Orderbook do
     end
 
     it "does nothing if the orderbook volume is lower than the provided limit" do
-      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1, 0.1)
+      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1)
                       .to_ob
                       .adjust_volume(4, 6)
       expect(book[:buy].to_hash).to eq(
@@ -153,7 +153,7 @@ describe ::Arke::Orderbook::Orderbook do
     end
 
     it "does nothing if the limits are nil" do
-      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1, 0.1)
+      book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1)
                       .to_ob
                       .adjust_volume(nil, nil)
       expect(book[:buy].to_hash).to eq(

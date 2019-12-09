@@ -13,8 +13,7 @@ module Arke::Strategy
     def initialize(sources, target, config, reactor)
       super
       params = @config["params"] || {}
-      market_infos = target.account.get_market_infos(target.id)
-      @min_amount = (params["min_amount"] || target_min_amount(market_infos)).to_f
+      @min_amount = (params["min_amount"] || target.min_amount)
       @max_amount = (params["max_amount"] || @min_amount * 2).to_f
       @min_price = params["min_price"]
       @max_price = params["max_price"]
@@ -22,7 +21,6 @@ module Arke::Strategy
       @enable_orderback = false
       @sides = SIDES_MAP[@side]
       check_config
-      logger.info "ID:#{id} Market infos: #{market_infos}"
       logger.info "ID:#{id} Min amount: #{@min_amount}"
       logger.info "ID:#{id} Max amount: #{@max_amount}"
     end
@@ -39,15 +37,15 @@ module Arke::Strategy
 
     def target_min_amount(market_infos)
       [
-        market_infos["min_ask_amount"],
-        market_infos["min_bid_amount"],
-        target.min_ask_amount,
-        target.min_bid_amount,
+        market_infos["min_amount"],
+        market_infos["min_amount"],
+        target.min_amount,
+        target.min_amount,
       ].map(&:to_f).reject(&:zero?).min
     end
 
     def get_amount(side)
-      side_min_value = side == :sell ? target.min_ask_amount.to_f : target.min_bid_amount.to_f
+      side_min_value = side == :sell ? target.min_amount.to_f : target.min_amount.to_f
       amount = rand(@min_amount..@max_amount)
       if @linked_strategy_id
         linked_target = @reactor.find_strategy(@linked_strategy_id).target
@@ -55,7 +53,7 @@ module Arke::Strategy
         side_amount = linked_target.open_orders.total_side_amount(side)
         amount = (side_amount * 0.6) > amount ? amount : (side_amount * 0.6)
       end
-      apply_precision(amount, target.base_precision.to_f, side_min_value)
+      apply_precision(amount, target.amount_precision.to_f, side_min_value)
     end
 
     def get_price(side)
@@ -73,7 +71,7 @@ module Arke::Strategy
       else
         price = side == :buy ? @max_price : @min_price
       end
-      apply_precision(price, target.quote_precision.to_f)
+      apply_precision(price, target.price_precision.to_f)
     end
 
     def call

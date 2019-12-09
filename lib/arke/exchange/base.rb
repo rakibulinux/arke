@@ -195,6 +195,10 @@ module Arke::Exchange
       @balances.find {|b| b["currency"].casecmp?(currency) }
     end
 
+    def market_config(_market)
+      raise "#{self.class} doesn't support market_config"
+    end
+
     def build_query(params)
       params.keys.sort.map {|k| "#{Faraday::Utils.escape(k)}=#{Faraday::Utils.escape(params[k])}" }.join("&")
     end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Arke::Exchange
   class Okex < Base
     attr_accessor :orderbook
@@ -10,8 +12,7 @@ module Arke::Exchange
       end
     end
 
-    def start
-    end
+    def start; end
 
     def build_order(data, side)
       Arke::Order.new(
@@ -26,12 +27,12 @@ module Arke::Exchange
       orderbook = Arke::Orderbook::Orderbook.new(market)
       snapshot = JSON.parse(@connection.get("api/spot/v3/instruments/#{market}/book").body)
 
-      Array(snapshot['bids']).each do |order|
+      Array(snapshot["bids"]).each do |order|
         orderbook.update(
           build_order(order, :buy)
         )
       end
-      Array(snapshot['asks']).each do |order|
+      Array(snapshot["asks"]).each do |order|
         orderbook.update(
           build_order(order, :sell)
         )
@@ -41,7 +42,7 @@ module Arke::Exchange
 
     def markets
       JSON.parse(@connection.get("/api/spot/v3/instruments/ticker").body)
-      .map { |p| p['instrument_id'] }
+          .map {|p| p["instrument_id"] }
     end
   end
 end

@@ -16,7 +16,7 @@ Run Arke with this command
 ```yaml
 log_level: INFO
 accounts:
-- id: 1
+- id: example-account1
   driver: rubykube
   debug: false
   host: "https://example.com"
@@ -25,18 +25,17 @@ accounts:
   secret: ""
   delay: 0.75
 
-- id: 2
+- id: example-account2
   driver: rubykube
   debug: false
   host: "https://example.com"
   ws: "wss://example.com"
   key: ""
   secret: ""
-  delay: 0.01
+  delay: 1
 
-- id: 3
+- id: binance-account
   driver: binance
-  host: "api.binance.com"
   key: ""
   secret: ""
   delay: 1
@@ -59,24 +58,14 @@ strategies:
     min_order_back_amount: 0.0002
 
   target:
-    account_id: 1
+    account_id: example-account1
     market:
       id: BTCUSDT
-      base: btc
-      quote: usdt
-      base_precision: 4
-      quote_precision: 4
-      min_ask_amount: 0.015
-      min_bid_amount: 0.015
 
   sources:
-  - account_id: 3
+  - account_id: binance-account
     market:
       id: BTCUSDT
-      base: BTC
-      quote: USDT
-      base_precision: 8
-      quote_precision: 8
 
 - id: BTCUSDT-micro
   type: microtrades
@@ -92,13 +81,9 @@ strategies:
     max_price: 230
 
   target:
-    account_id: 2
+    account_id: example-account2
     market:
       id: BTCUSDT
-      base: btc
-      quote: usdt
-      base_precision: 4
-      quote_precision: 4
 
 ```
 
@@ -106,7 +91,7 @@ strategies:
 
 | Field    | Description                                                  |
 | -------- | ------------------------------------------------------------ |
-| `id`     | ID identifying the account (have to be unique)               |
+| `id`     | ID identifying the account (must be unique)                  |
 | `driver` | Name of exchange driver (supported values are: `rubykube`, `binance`, `bitfinex`) |
 | `debug`  | Flag to extend logs verbosity, valid values are: `true` or `false` |
 | `host`   | Base URL of the exchange API                                 |
@@ -227,10 +212,6 @@ The spread applied on circuitbraker strategy should be lower than the spead used
 | Field                   | Description                                                  |
 | ----------------------- | ------------------------------------------------------------ |
 | `id`                    | ID of market                                                 |
-| `base`                  | Base currency of market                                      |
-| `quote`                 | Quote currency of market                                     |
-| `base_precision`        | Base precision of market                                     |
-| `quote_precision`       | Quote precision of market                                    |
 
 
 

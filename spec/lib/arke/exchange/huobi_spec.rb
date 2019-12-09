@@ -11,18 +11,11 @@ describe Arke::Exchange::Huobi do
       "host"           => "api.huobi.pro",
       "key"            => "Uwg8wqlxueiLCsbTXjlogviL8hdd60",
       "secret"         => "OwpadzSYOSkzweoJkjPrFeVgjOwOuxVHk8FXIlffdWw",
-      :faraday_adapter => faraday_adapter
+      :faraday_adapter => faraday_adapter,
+      "ts_pattern"     => "%Y-%m-%dT%H"
     )
   end
-  let(:market_config) do
-    {
-      "id"             => "ETHUSDT",
-      "base"           => "ETH",
-      "quote"          => "USDT",
-      "min_ask_amount" => 0.01,
-      "min_bid_amount" => 0.01,
-    }
-  end
+  let(:market_config) { {"id" => "ethusdt"} }
   let!(:market) { Arke::Market.new(market_config, huobi) }
 
   context "ojbect initialization" do
@@ -94,22 +87,40 @@ describe Arke::Exchange::Huobi do
     end
   end
 
+  context "market_config" do
+    it "returns market config" do
+      expect(huobi.market_config("btcusdt")).to eq(
+        "id"               => "btcusdt",
+        "base_unit"        => "btc",
+        "quote_unit"       => "usdt",
+        "min_price"        => nil,
+        "max_price"        => nil,
+        "min_amount"       => 0.0001,
+        "max_amount"       => 1000,
+        "amount_precision" => 6,
+        "price_precision"  => 2
+      )
+    end
+  end
+
   context "get_balances" do
     it "fetchs the account balance in arke format" do
-      expect(huobi.get_balances).to eq([
-                                         {
-                                           "currency" => "USDT",
-                                           "total"    => 155.0,
-                                           "free"     => 123.0,
-                                           "locked"   => 32.0,
-                                         },
-                                         {
-                                           "currency" => "ETH",
-                                           "total"    => 499_999_894_616.1302471000,
-                                           "free"     => 499_999_894_616.1302471000,
-                                           "locked"   => 0.0,
-                                         }
-                                       ])
+      expect(huobi.get_balances).to eq(
+        [
+          {
+            "currency" => "USDT",
+            "total"    => 155.0,
+            "free"     => 123.0,
+            "locked"   => 32.0,
+          },
+          {
+            "currency" => "ETH",
+            "total"    => 499_999_894_616.1302471000,
+            "free"     => 499_999_894_616.1302471000,
+            "locked"   => 0.0,
+          }
+        ]
+      )
     end
   end
 

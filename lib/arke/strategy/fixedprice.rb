@@ -60,14 +60,14 @@ module Arke::Strategy
       volume_asks_base = 0.to_d
       volume_bids_base = 0.to_d
 
-      max_amount_ask = 2.to_d * @limit_asks_base / @levels_count - 2 * target.min_ask_amount
-      max_amount_bid = 2.to_d * @limit_bids_base / @levels_count - 2 * target.min_bid_amount
+      max_amount_ask = 2.to_d * @limit_asks_base / @levels_count - 2 * target.min_amount
+      max_amount_bid = 2.to_d * @limit_bids_base / @levels_count - 2 * target.min_amount
 
-      max_amount_ask = target.min_ask_amount if max_amount_ask.negative?
-      max_amount_bid = target.min_bid_amount if max_amount_bid.negative?
+      max_amount_ask = target.min_amount if max_amount_ask.negative?
+      max_amount_bid = target.min_amount if max_amount_bid.negative?
 
-      ask_amounts = split_linear(nil, max_amount_ask, @levels_count, last_value: target.min_ask_amount)
-      bid_amounts = split_linear(nil, max_amount_bid, @levels_count, last_value: target.min_bid_amount)
+      ask_amounts = split_linear(nil, max_amount_ask, @levels_count, last_value: target.min_amount)
+      bid_amounts = split_linear(nil, max_amount_bid, @levels_count, last_value: target.min_amount)
 
       ob_asks = price_points_asks.map do |pp|
         amount = ask_amounts.shift

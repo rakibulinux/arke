@@ -52,7 +52,7 @@ module Arke::Strategy
 
       price_points_asks = @side_asks ? split_constant_pp(:asks, top_ask.first, @levels_count, split_opts) : nil
       price_points_bids = @side_bids ? split_constant_pp(:bids, top_bid.first, @levels_count, split_opts) : nil
-      ob_agg = source.orderbook.aggregate(price_points_bids, price_points_asks, target.min_ask_amount, target.min_bid_amount)
+      ob_agg = source.orderbook.aggregate(price_points_bids, price_points_asks, target.min_amount)
       ob = ob_agg.to_ob
 
       limit_asks_quote = nil

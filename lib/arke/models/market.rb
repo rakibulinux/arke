@@ -3,19 +3,19 @@
 class Arke::Market
   include Arke::Helpers::Flags
 
-  attr_reader :base, :quote, :base_precision, :quote_precision
-  attr_reader :min_ask_amount, :min_bid_amount, :account, :id, :orderbook
+  attr_reader :base, :quote, :amount_precision, :price_precision
+  attr_reader :min_amount, :account, :id, :orderbook
   attr_accessor :open_orders
 
   def initialize(market, account, mode=0x0)
     @id = market["id"]
     @account = account
-    @base = market["base"]
-    @quote = market["quote"]
-    @base_precision = market["base_precision"]
-    @quote_precision = market["quote_precision"]
-    @min_ask_amount = market["min_ask_amount"]
-    @min_bid_amount = market["min_bid_amount"]
+    market_config = account.market_config(@id)
+    @base = market_config["base_unit"]
+    @quote = market_config["quote_unit"]
+    @amount_precision = market_config["amount_precision"]
+    @price_precision = market_config["price_precision"]
+    @min_amount = market_config["min_amount"]
     @open_orders = Arke::Orderbook::OpenOrders.new(id)
     @orderbook = Arke::Orderbook::Orderbook.new(id)
     apply_flags(mode)
@@ -28,10 +28,9 @@ class Arke::Market
       raise "market base currency must be lowercase for this exchange" if base != base.downcase
       raise "market quote currency must be lowercase for this exchange" if quote != quote.downcase
     end
-    raise "base_precision is missing in market #{id} configuration" if flag?(WRITE) && @base_precision.nil?
-    raise "quote_precision is missing in market #{id} configuration" if flag?(WRITE) && @quote_precision.nil?
-    raise "min_ask_amount is missing in market #{id} configuration" if flag?(WRITE) && @min_ask_amount.nil?
-    raise "min_bid_amount is missing in market #{id} configuration" if flag?(WRITE) && @min_bid_amount.nil?
+    raise "amount_precision is missing in market #{id} configuration" if flag?(WRITE) && @amount_precision.nil?
+    raise "price_precision is missing in market #{id} configuration" if flag?(WRITE) && @price_precision.nil?
+    raise "min_amount is missing in market #{id} configuration" if flag?(WRITE) && @min_amount.nil?
   end
 
   def apply_flags(flags)
@@ -42,9 +41,7 @@ class Arke::Market
 
   def start
     check_config
-    if flag?(FETCH_PRIVATE_OPEN_ORDERS)
-      fetch_openorders
-    end
+    fetch_openorders if flag?(FETCH_PRIVATE_OPEN_ORDERS)
   end
 
   def update_orderbook

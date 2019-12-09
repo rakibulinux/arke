@@ -11,11 +11,7 @@ describe Arke::Exchange::Hitbtc do
   end
   let(:market_config) do
     {
-      "id"             => "ETHUSD",
-      "base"           => "ETH",
-      "quote"          => "USD",
-      "min_ask_amount" => 0.01,
-      "min_bid_amount" => 0.01,
+      "id" => "ETHUSD"
     }
   end
   let!(:market) { Arke::Market.new(market_config, hitbtc) }
@@ -70,6 +66,21 @@ describe Arke::Exchange::Hitbtc do
   context "markets" do
     it "gets all markets from platform" do
       expect(hitbtc.markets).to contain_exactly("ETHBTC", "ETHUSD")
+    end
+  end
+
+  context "market_config" do
+    it "returns market config" do
+      expect(hitbtc.market_config("ETHBTC")).to eq(
+        "id"               => "ETHBTC",
+        "base_unit"        => "ETH",
+        "quote_unit"       => "BTC",
+        "min_price"        => nil,
+        "max_price"        => nil,
+        "min_amount"       => 0.001,
+        "amount_precision" => 3,
+        "price_precision"  => 6
+      )
     end
   end
 

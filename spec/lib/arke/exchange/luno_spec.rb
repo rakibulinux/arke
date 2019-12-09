@@ -10,11 +10,7 @@ describe Arke::Exchange::Luno do
   end
   let(:market_config) do
     {
-      "id"             => "XBTZAR",
-      "base"           => "XBT",
-      "quote"          => "ZAR",
-      "min_ask_amount" => 0.001,
-      "min_bid_amount" => 0.001,
+      "id" => "XBTZAR"
     }
   end
   let!(:market) { Arke::Market.new(market_config, luno) }
@@ -73,6 +69,22 @@ describe Arke::Exchange::Luno do
 
     it "creates order" do
       expect { luno.create_order(order) }.to_not raise_error(Exception)
+    end
+  end
+
+  context "market_config" do
+    it "returns market configuration" do
+      expect(luno.market_config("ETHZAR")).to eq(
+        "id"               => "ETHZAR",
+        "base_unit"        => "ETH",
+        "quote_unit"       => "ZAR",
+        "min_price"        => 1000.0,
+        "max_price"        => 10_000.0,
+        "min_amount"       => 0.0005,
+        "max_amount"       => 100.0,
+        "amount_precision" => 6.0,
+        "price_precision"  => 0.0
+      )
     end
   end
 end

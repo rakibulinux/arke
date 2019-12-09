@@ -47,7 +47,7 @@ module Arke::Strategy
       raise "side must be asks, bids or both" if !@side_asks && !@side_bids
 
       if @enable_orderback
-        if @min_order_back_amount < target.min_ask_amount || @min_order_back_amount < target.min_bid_amount
+        if @min_order_back_amount < target.min_amount || @min_order_back_amount < target.min_amount
           raise "min_order_back_amount is too small"
         end
       end
@@ -137,8 +137,7 @@ module Arke::Strategy
       ob_agg = source.orderbook.aggregate(
         price_points_bids,
         price_points_asks,
-        target.min_ask_amount,
-        target.min_bid_amount
+        target.min_amount
       )
       ob = ob_agg.to_ob
 

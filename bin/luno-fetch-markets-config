@@ -1,0 +1,21 @@
+#!/bin/ruby
+# frozen_string_literal: true
+
+require "pp"
+require "json"
+require "faraday"
+
+pairs = %w[XBTEUR XBTIDR ETHNGN ETHZAR XBTMYR XBTNGN ETHXBT XBTZAR XBTZMW XBTSGD XBTUGX BCHXBT]
+config = {}
+
+pairs.each do |pair|
+  raise "Can't deduce base/quote from #{pair}" if pair.size != 6
+
+  warn "fetching #{pair}"
+  response = Faraday.get "https://www.luno.com/ajax/1/market_params?pair=#{pair}"
+  config[pair] = JSON.parse(response.body)
+  config[pair]["base_unit"] = pair[0..2]
+  config[pair]["quote_unit"] = pair[3..5]
+end
+
+pp config

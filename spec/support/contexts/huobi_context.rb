@@ -24,6 +24,88 @@ shared_context "mocked huobi" do
         headers: {}
       )
 
+    stub_request(:get, "https://api.huobi.pro/v1/common/symbols")
+      .to_return(
+        status:  200,
+        body:    {
+          "status": "ok",
+          "data":   [
+            {
+              "base-currency":               "btc",
+              "quote-currency":              "usdt",
+              "price-precision":             2,
+              "amount-precision":            6,
+              "symbol-partition":            "main",
+              "symbol":                      "btcusdt",
+              "state":                       "online",
+              "value-precision":             8,
+              "min-order-amt":               0.0001,
+              "max-order-amt":               1000,
+              "min-order-value":             1,
+              "leverage-ratio":              5,
+              "super-margin-leverage-ratio": 3
+            },
+            {
+              "base-currency":               "eth",
+              "quote-currency":              "usdt",
+              "price-precision":             2,
+              "amount-precision":            4,
+              "symbol-partition":            "main",
+              "symbol":                      "ethusdt",
+              "state":                       "online",
+              "value-precision":             8,
+              "min-order-amt":               0.001,
+              "max-order-amt":               10_000,
+              "min-order-value":             1,
+              "leverage-ratio":              5,
+              "super-margin-leverage-ratio": 3
+            },
+            {
+              "base-currency":    "mtx",
+              "quote-currency":   "eth",
+              "price-precision":  8,
+              "amount-precision": 2,
+              "symbol-partition": "innovation",
+              "symbol":           "mtxeth",
+              "state":            "online",
+              "value-precision":  8,
+              "min-order-amt":    0.1,
+              "max-order-amt":    1_000_000,
+              "min-order-value":  0.001
+            },
+            {
+              "base-currency":    "zla",
+              "quote-currency":   "btc",
+              "price-precision":  8,
+              "amount-precision": 2,
+              "symbol-partition": "innovation",
+              "symbol":           "zlabtc",
+              "state":            "online",
+              "value-precision":  8,
+              "min-order-amt":    0.1,
+              "max-order-amt":    1_000_000,
+              "min-order-value":  0.0001
+            },
+            {
+              "base-currency":    "wtc",
+              "quote-currency":   "usdt",
+              "price-precision":  4,
+              "amount-precision": 4,
+              "symbol-partition": "innovation",
+              "symbol":           "wtcusdt",
+              "state":            "online",
+              "value-precision":  8,
+              "min-order-amt":    0.1,
+              "max-order-amt":    300_000,
+              "min-order-value":  1
+            },
+          ]
+        }.to_json,
+        headers: {
+          "content-type" => "application/json;charset=utf-8"
+        }
+      )
+
     stub_request(:get, build_url("/v1/account/accounts", "GET"))
       .to_return(status: 200, body: {
         "data": [
@@ -124,7 +206,7 @@ shared_context "mocked huobi" do
       AccessKeyId:      api_key,
       SignatureMethod:  "HmacSHA256",
       SignatureVersion: 2,
-      Timestamp:        Time.now.getutc.strftime("%Y-%m-%dT%H:%M:%S")
+      Timestamp:        Time.now.getutc.strftime("%Y-%m-%dT%H")
     }
     data = "#{method}\napi.huobi.pro\n#{path}\n#{Rack::Utils.build_query(hash_sort(h))}"
     h["Signature"] = Base64.encode64(OpenSSL::HMAC.digest("sha256", secret, data)).gsub("\n", "")

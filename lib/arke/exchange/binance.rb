@@ -11,7 +11,7 @@ module Arke::Exchange
       @client = ::Binance::Client::REST.new(api_key: @api_key, secret_key: @secret, adapter: @adapter)
       @min_notional = {}
       @min_quantity = {}
-      @base_precision = {}
+      @amount_precision = {}
       @markets = opts["markets"]
     end
 
@@ -102,13 +102,13 @@ module Arke::Exchange
 
     def get_amount(order)
       min_notional = @min_notional[order.market] ||= get_min_notional(order.market)
-      base_precision = @base_precision[order.market] ||= get_base_precision(order.market)
+      amount_precision = @amount_precision[order.market] ||= get_amount_precision(order.market)
       percentage = 0.2
       notional = order.price * order.amount
       if notional > min_notional
         order.amount
       elsif (min_notional * percentage) < notional
-        return (min_notional / order.price).ceil(base_precision)
+        return (min_notional / order.price).ceil(amount_precision)
       else
         raise "Amount of order too small"
       end
@@ -155,7 +155,7 @@ module Arke::Exchange
       end
     end
 
-    def get_base_precision(market)
+    def get_amount_precision(market)
       min_quantity = @min_quantity[market] ||= get_min_quantity(market)
       return 0 if min_quantity >= 1
 
@@ -167,16 +167,39 @@ module Arke::Exchange
       n
     end
 
+    def get_symbol_info(market)
+      @exchange_info ||= @client.exchange_info["symbols"]
+      @exchange_info.find {|s| s["symbol"] == market }
+    end
+
+    def get_symbol_filter(market, filter)
+      get_symbol_info(market)["filters"].find {|f| f["filterType"] == filter }
+    end
+
     def get_min_quantity(market)
-      @client.exchange_info["symbols"]
-             .find {|s| s["symbol"] == market }["filters"]
-             .find {|f| f["filterType"] == "LOT_SIZE" }["minQty"].to_f
+      get_symbol_filter(market, "LOT_SIZE")["minQty"].to_f
     end
 
     def get_min_notional(market)
-      @client.exchange_info["symbols"]
-             .find {|s| s["symbol"] == market }["filters"]
-             .find {|f| f["filterType"] == "MIN_NOTIONAL" }["minNotional"].to_f
+      get_symbol_filter(market, "MIN_NOTIONAL")["minNotional"].to_f
+    end
+
+    def market_config(market)
+      info = get_symbol_info(market)
+      raise "#{market} not found" unless info
+
+      price_filter = get_symbol_filter(market, "PRICE_FILTER")
+
+      {
+        "id"               => info.fetch("symbol"),
+        "base_unit"        => info.fetch("baseAsset"),
+        "quote_unit"       => info.fetch("quoteAsset"),
+        "min_price"        => price_filter&.fetch("minPrice").to_f,
+        "max_price"        => price_filter&.fetch("maxPrice").to_f,
+        "min_amount"       => get_min_quantity(market),
+        "amount_precision" => info.fetch("baseAssetPrecision"),
+        "price_precision"  => info.fetch("quotePrecision")
+      }
     end
   end
 end

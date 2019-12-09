@@ -2,11 +2,12 @@
 
 module Arke::Exchange
   class Huobi < Base
-    attr_reader :orderbook
+    attr_reader :orderbook, :ts_pattern
 
     def initialize(opts)
       super
 
+      @ts_pattern = opts['ts_pattern'] || "%Y-%m-%dT%H:%M:%S"
       @connection = Faraday.new(url: "https://#{opts['host']}") do |builder|
         builder.response :logger if opts["debug"]
         builder.use FaradayMiddleware::ParseJson, content_type: /\bjson$/
@@ -87,6 +88,27 @@ module Arke::Exchange
       end
     end
 
+    def symbols
+      get("/v1/common/symbols").body["data"]
+    end
+
+    def market_config(market)
+      market_infos = symbols.find {|s| s["symbol"] == market }
+      raise "Symbol #{market} not found" unless market_infos
+
+      {
+        "id"               => market_infos.fetch("symbol"),
+        "base_unit"        => market_infos["base-currency"],
+        "quote_unit"       => market_infos["quote-currency"],
+        "min_price"        => nil,
+        "max_price"        => nil,
+        "min_amount"       => market_infos["min-order-amt"],
+        "max_amount"       => market_infos["max-order-amt"],
+        "amount_precision" => market_infos["amount-precision"],
+        "price_precision"  => market_infos["price-precision"],
+      }
+    end
+
     private
 
     def build_order(data, side)
@@ -103,7 +125,7 @@ module Arke::Exchange
         AccessKeyId:      @api_key,
         SignatureMethod:  "HmacSHA256",
         SignatureVersion: 2,
-        Timestamp:        Time.now.getutc.strftime("%Y-%m-%dT%H:%M:%S")
+        Timestamp:        Time.now.getutc.strftime(ts_pattern)
       }
       h = h.merge(params) if method == "GET"
       data = "#{method}\napi.huobi.pro\n#{path}\n#{Rack::Utils.build_query(hash_sort(h))}"

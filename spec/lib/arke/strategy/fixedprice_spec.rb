@@ -32,11 +32,7 @@ describe Arke::Strategy::Fixedprice do
       "target" => {
         "driver" => "bitfaker",
         "market" => {
-          "id"             => "BTCUSD",
-          "base"           => "BTC",
-          "quote"          => "USD",
-          "min_ask_amount" => 0.001,
-          "min_bid_amount" => 0.001,
+          "id" => "BTCUSD",
         },
       }
     }
@@ -63,18 +59,18 @@ describe Arke::Strategy::Fixedprice do
     let(:side) { "both" }
     it "outputs a target orberbook" do
       expect(target_bids.to_hash).to eq(
-        120.4910.to_d => 0.0010.to_d,
-        120.5008.to_d => 0.1204.to_d,
-        120.5106.to_d => 0.2398.to_d,
-        120.5204.to_d => 0.3592.to_d,
-        120.5302.to_d => 0.4786.to_d
+        120.4910.to_d => 0.10.to_d,
+        120.5008.to_d => 0.16.to_d,
+        120.5106.to_d => 0.22.to_d,
+        120.5204.to_d => 0.28.to_d,
+        120.5302.to_d => 0.34.to_d
       )
       expect(target_asks.to_hash).to eq(
-        124.2401.to_d => 0.3186.to_d,
-        124.2502.to_d => 0.2392.to_d,
-        124.2603.to_d => 0.1598.to_d,
-        124.2704.to_d => 0.0804.to_d,
-        124.2805.to_d => 0.0010.to_d
+        124.2401.to_d => 0.18.to_d,
+        124.2502.to_d => 0.16.to_d,
+        124.2603.to_d => 0.14.to_d,
+        124.2704.to_d => 0.12.to_d,
+        124.2805.to_d => 0.10.to_d
       )
     end
   end
@@ -84,11 +80,11 @@ describe Arke::Strategy::Fixedprice do
     it "outputs a target orberbook" do
       expect(target_bids.to_hash).to eq({})
       expect(target_asks.to_hash).to eq(
-        124.2401.to_d => 0.3186.to_d,
-        124.2502.to_d => 0.2392.to_d,
-        124.2603.to_d => 0.1598.to_d,
-        124.2704.to_d => 0.0804.to_d,
-        124.2805.to_d => 0.0010.to_d
+        124.2401.to_d => 0.18.to_d,
+        124.2502.to_d => 0.16.to_d,
+        124.2603.to_d => 0.14.to_d,
+        124.2704.to_d => 0.12.to_d,
+        124.2805.to_d => 0.10.to_d
       )
     end
   end
@@ -97,11 +93,11 @@ describe Arke::Strategy::Fixedprice do
     let(:side) { "bids" }
     it "outputs a target orberbook" do
       expect(target_bids.to_hash).to eq(
-        120.4910.to_d => 0.0010.to_d,
-        120.5008.to_d => 0.1204.to_d,
-        120.5106.to_d => 0.2398.to_d,
-        120.5204.to_d => 0.3592.to_d,
-        120.5302.to_d => 0.4786.to_d
+        120.4910.to_d => 0.10.to_d,
+        120.5008.to_d => 0.16.to_d,
+        120.5106.to_d => 0.22.to_d,
+        120.5204.to_d => 0.28.to_d,
+        120.5302.to_d => 0.34.to_d
       )
       expect(target_asks.to_hash).to eq({})
     end
@@ -114,18 +110,19 @@ describe Arke::Strategy::Fixedprice do
 
     it "outputs a target orberbook" do
       expect(target_bids.to_hash).to eq(
-        122.95.to_d => 0.0010.to_d,
-        122.96.to_d => 0.1204.to_d,
-        122.97.to_d => 0.2398.to_d,
-        122.98.to_d => 0.3592.to_d,
-        122.99.to_d => 0.4786.to_d
+        122.95.to_d => 0.10e0.to_d,
+        122.96.to_d => 0.16e0.to_d,
+        122.97.to_d => 0.22e0.to_d,
+        122.98.to_d => 0.28e0.to_d,
+        122.99.to_d => 0.34e0.to_d,
       )
+
       expect(target_asks.to_hash).to eq(
-        123.01.to_d => 0.3186.to_d,
-        123.02.to_d => 0.2392.to_d,
-        123.03.to_d => 0.1598.to_d,
-        123.04.to_d => 0.0804.to_d,
-        123.05.to_d => 0.0010.to_d
+        123.01.to_d => 0.18.to_d,
+        123.02.to_d => 0.16.to_d,
+        123.03.to_d => 0.14.to_d,
+        123.04.to_d => 0.12.to_d,
+        123.05.to_d => 0.10.to_d
       )
     end
   end

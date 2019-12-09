@@ -6,11 +6,7 @@ describe Arke::Exchange::Bitfinex do
   let(:config) { YAML.safe_load(file_fixture("test_config.yaml").read) }
   let(:market_config) do
     {
-      "id"             => "ETHUSD",
-      "base"           => "ETH",
-      "quote"          => "USD",
-      "min_ask_amount" => 0.01,
-      "min_bid_amount" => 0.01,
+      "id" => "ETHUSD"
     }
   end
   let(:bitfinex_config) do

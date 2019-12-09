@@ -136,10 +136,28 @@ module Arke::Exchange
 
     def get_market_infos(market)
       response = @connection.get("#{@peatio_route}/public/markets").body
-      infos = response.select {|m| m["id"].downcase == market.downcase }.first
+      infos = response.select {|m| m["id"]&.downcase == market.downcase }.first
       raise "Market #{market} not found" unless infos
 
       infos
+    end
+
+    def market_config(market)
+      market_infos = get_market_infos(market)
+      base_unit = market_infos["ask_unit"] || market_infos.fetch("base_unit")
+      quote_unit = market_infos["bid_unit"] || market_infos.fetch("quote_unit")
+      amount_precision = market_infos["ask_precision"] || market_infos.fetch("amount_precision")
+      price_precision = market_infos["bid_precision"] || market_infos.fetch("price_precision")
+      {
+        "id"               => market_infos.fetch("id"),
+        "base_unit"        => base_unit,
+        "quote_unit"       => quote_unit,
+        "min_price"        => (market_infos["min_price"] || market_infos["min_ask_price"])&.to_f,
+        "max_price"        => (market_infos["max_price"] || market_infos["max_bid_price"])&.to_f,
+        "min_amount"       => (market_infos["min_amount"] || market_infos["min_ask_amount"] || market_infos["min_bid_amount"])&.to_f,
+        "amount_precision" => amount_precision,
+        "price_precision"  => price_precision
+      }
     end
 
     def generate_headers
@@ -201,6 +219,5 @@ module Arke::Exchange
         end
       end
     end
-
   end
 end

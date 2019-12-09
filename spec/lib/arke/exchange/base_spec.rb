@@ -8,13 +8,7 @@ describe Arke::Exchange::Binance do
 
   let(:market_config) do
     {
-      "market" => {
-        "id"             => "ETHUSDt",
-        "base"           => "ETH",
-        "quote"          => "USDT",
-        "min_ask_amount" => 0.01,
-        "min_bid_amount" => 0.01,
-      },
+      "market" => {"id" => "ETHUSDt"},
     }
   end
 
