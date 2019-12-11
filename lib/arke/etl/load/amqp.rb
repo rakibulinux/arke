@@ -30,8 +30,8 @@ module Arke::ETL::Load
       when Arke::Kline
         kline = [data.created_at, data.open, data.high, data.low, data.close, data.volume]
         return ["public", data.market.downcase, data.period, kline]
-      when Arke::Ticker
-        return ["public", "global", "tickers", data.tickers]
+      when Arke::Tickers
+        return ["public", "global", "tickers", data.for_notify]
       when String
         return obj
       end

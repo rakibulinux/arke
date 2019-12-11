@@ -1,23 +1,26 @@
 log_level: INFO
 
 shared_params:
-  markets: [BTCUSDT, ETHUSDT, LTCUSDT, ETHBTC, LTCBTC, BATETH, LINKETH, OMGETH, LTCETH, STEBTC, STEETH, STELTC, STEUSDT]
+  markets: [BTCUSDT, STEBTC]
 
 jobs:
 
-  # - extract: Tickers
-  #   process:
-  #     - load: TickersWriter
-  #     - load:
-  #         AMQP:
-  #           exchange: arke.events.ranger
+  - extract: Tickers
+    process:
+      - load:
+          AMQP:
+            exchange: arke.events.ranger
+      - transform: Split
+        load:
+          Influx:
+            measurment: tickers
 
-  # - extract: Kline
-  #   process:
-  #     - load: KlineWriter
-  #     - load:
-  #         AMQP:
-  #           exchange: arke.events.ranger
+  - extract: Kline
+    process:
+      - load:
+          AMQP:
+            exchange: arke.events.ranger
+
 
   # Store non sampled binance trades
   # - extract:
@@ -30,20 +33,20 @@ jobs:
   #       load:
   #         Influx:
   #           measurment: trades
-  # - extract:
-  #     Binance:
-  #       listen:
-  #         - public_trades
-  #   transform:
-  #    - Sample:
-  #        ratio: 0.2  
-  #   process:
-  #     - load:
-  #         Influx:
-  #           measurment: trades
-  #     - load:
-  #         AMQP:
-  #           exchange: arke.events.ranger
+  - extract:
+      Binance:
+        listen:
+          - public_trades
+    transform:
+     - Sample:
+         ratio: 0.2  
+    process:
+      - load:
+          Influx:
+            measurment: trades
+      - load:
+          AMQP:
+            exchange: arke.events.ranger
 
   # # Sample binance trades, store in influx and forward to arke AMQP
   # - extract:

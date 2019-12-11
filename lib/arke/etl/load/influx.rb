@@ -8,7 +8,7 @@ module Arke::ETL::Load
     end
 
     def call(object)
-      ::Arke::Log.info "Writing trade from #{object.exchange} to InfluxDB"
+      ::Arke::Log.info "Writing trade from #{object} to InfluxDB"
       @client.write_point(@config["measurment"], object.build_data, "ms")
     end
   end
