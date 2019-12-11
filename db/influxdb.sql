@@ -1,15 +1,15 @@
 CREATE DATABASE arke_development;
 
 CREATE CONTINUOUS QUERY "trade_to_cq_1m" ON arke_development
-RESAMPLE EVERY 5s FOR 10m
+RESAMPLE EVERY 1s FOR 3m
 BEGIN
-  SELECT FIRST(price) AS open, max(price) AS high, min(price) AS low, last(price) AS close, sum(amount) AS volume INTO candles_1m FROM trades GROUP BY time(1m), market fill(null)
+  SELECT FIRST(price) AS open, max(price) AS high, min(price) AS low, last(price) AS close, sum(amount) AS volume INTO candles_1m FROM trades GROUP BY time(1m), market
 END;
 
-CREATE CONTINUOUS QUERY "trade_amount_to_cq_1m" ON arke_development
-RESAMPLE EVERY 5s FOR 10m
+CREATE CONTINUOUS QUERY "candles_1m_to_cq_1m" ON arke_development
+RESAMPLE EVERY 1m FOR 2m
 BEGIN
-  SELECT sum(amount) AS volume INTO candles_1m FROM trades GROUP BY time(1m), market fill(0)
+  SELECT last(close) AS open, last(close) AS high, last(close) AS low, last(close) AS close, last(volume) * 0 as volume INTO candles_1m FROM candles_1m GROUP BY time(1m), market fill(previous)
 END;
 
 CREATE CONTINUOUS QUERY "cq_5m" ON arke_development
