@@ -63,4 +63,5 @@ strategies:
     max_amount: 0.30
   target:
       account_id: demo
-      market: { id: ethusd }
+      market:
+        - id: ethusd

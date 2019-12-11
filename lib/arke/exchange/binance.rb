@@ -123,9 +123,10 @@ module Arke::Exchange
         side:          order.side.upcase,
         type:          "LIMIT",
         time_in_force: "GTC",
-        quantity:      amount,
-        price:         order.price,
+        quantity:      "%f" % amount,
+        price:         "%f" % order.price,
       }
+      logger.debug { "Binance order: #{raw_order}" }
       @client.create_order!(raw_order)
     end
 
@@ -173,7 +174,10 @@ module Arke::Exchange
     end
 
     def get_symbol_filter(market, filter)
-      get_symbol_info(market)["filters"].find {|f| f["filterType"] == filter }
+      info = get_symbol_info(market)
+      raise "#{market} not found" unless info
+
+      info["filters"].find {|f| f["filterType"] == filter }
     end
 
     def get_min_quantity(market)

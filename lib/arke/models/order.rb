@@ -7,7 +7,7 @@ module Arke
 
     def initialize(market, price, amount, side, type="limit", id=nil)
       @market = market
-      @price = price
+      @price = price.to_d
       @amount = amount.to_d
       @side = side
       @type = type

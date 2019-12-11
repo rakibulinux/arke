@@ -240,10 +240,10 @@ module Arke::Exchange
     def create_order(order)
       order = {
         symbol: order.market,
-        amount: order.amount.to_s,
-        price:  order.price.to_s,
+        amount: "%f" % order.amount,
+        price:  "%f" % order.price,
         side:   order.side,
-        type:   "limit",
+        type:   "exchange limit",
       }
       authenticated_post("/v1/order/new", params: order).body
     end

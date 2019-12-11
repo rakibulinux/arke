@@ -79,8 +79,8 @@ module Arke::Exchange
       params = {
         pair:   order.market.upcase,
         type:   type,
-        volume: order.amount.to_f,
-        price:  order.price.to_f
+        volume: "%f" % order.amount,
+        price:  "%f" % order.price
       }
       path = "/api/1/postorder"
       BitX.conn.basic_auth(@api_key, @secret)

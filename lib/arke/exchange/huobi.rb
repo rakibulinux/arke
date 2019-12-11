@@ -68,8 +68,8 @@ module Arke::Exchange
         "account-id": @account_id,
         "symbol":     order.market.downcase,
         "type":       "#{order.side}-limit",
-        "amount":     order.amount,
-        "price":      order.price,
+        "amount":     "%f" % order.amount,
+        "price":      "%f" % order.price,
       }
       authenticated_request("/v1/order/orders/place", "POST", order)
     end

@@ -49,9 +49,9 @@ module Arke::Exchange
       params = {
         market:   order.market.downcase,
         side:     order.side.to_s,
-        volume:   order.amount,
+        volume:   "%f" % order.amount,
         ord_type: order.type,
-        price:    order.price,
+        price:    "%f" % order.price,
       }
       params.delete(:price) if order.type == "market"
       response = post("#{@peatio_route}/market/orders", params)

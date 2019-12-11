@@ -58,8 +58,8 @@ module Arke::Exchange
       ord = {
         symbol:   order.market.upcase,
         side:     order.side,
-        quantity: order.amount,
-        price:    order.price
+        quantity: "%f" % order.amount,
+        price:    "%f" % order.price
       }
       @connection.post do |req|
         req.url "/api/2/order"
