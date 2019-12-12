@@ -6,28 +6,36 @@ module Arke
         include Arke::Helpers::Commands
         option "--config", "FILE_PATH", "Strategies config file", default: "config/strategies.yml"
         option "--dry", :flag, "dry run on the target"
+        option "--backtrace", :flag, "display errors backtrace", default: false
 
         def execute
           accounts_configs.each do |acc_config|
             begin
               platform_do(Arke::Exchange.create(acc_config))
             rescue StandardError => e
-              ::Arke::Log.error("#{e}")
+              if backtrace?
+                ::Arke::Log.error("#{e}:#{e.backtrace.join("\n")}")
+              else
+                ::Arke::Log.error("#{e}")
+              end
             end
           end
         end
       end
 
       class DepositAddresses < Base
+        option "--currency", "CURRENCY_CODE", "Display only the address for this currency", default: nil
+
         def platform_do(account)
           puts "#{account.id}: #{account.host}".blue
           return puts "  get balances not supported".red unless account.respond_to?(:get_deposit_address)
           return puts "  get balances not supported".red unless account.respond_to?(:get_balances)
           return puts "  secret not configured".orange unless account.secret
 
-          account.currencies.each do |c|
+          currencies = currency ? [{"type" => "coin", "id" => currency}] : account.currencies
+          currencies.each do |c|
             d = c["type"] == "coin" ? account.get_deposit_address(c["id"])["address"] : "FIAT"
-            puts ("  %-8s: %s" % [c["id"], d]).green
+            puts(("  %-8s: %s" % [c["id"], d]).green)
           end
         end
       end

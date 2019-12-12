@@ -26,6 +26,10 @@ accounts:
   driver: bitfinex
   delay: 1
 
+- id: kraken
+  driver: kraken
+  delay: 1
+
 strategies:
 - id: copy-ETHUSD
   type: copy
@@ -44,12 +48,12 @@ strategies:
   target:
     account_id: demo
     market:
-      - id: ethusd
+      id: ethusd
 
   sources:
-  - account_id: binance
+  - account_id: kraken
     market:
-      - id: ETHUSDT
+      id: ETHUSD
 
 - id: microtrades-FTHUSD
   type: microtrades
@@ -64,4 +68,4 @@ strategies:
   target:
       account_id: demo
       market:
-        - id: ethusd
+        id: ethusd

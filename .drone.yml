@@ -6,7 +6,7 @@ steps:
   - name: Wait for services to be ready
     image: jwilder/dockerize
     commands:
-      - dockerize -wait tcp://database:3306 -wait http://vault:8200
+      - dockerize -wait tcp://database:3306 -wait http://vault:8200 -timeout 30s
 
   - name: Run rspec
     image: ruby:2.6.5
