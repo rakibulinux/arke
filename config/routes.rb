@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get '/admin', to: 'admin#index'
+
   namespace :api do
     namespace :v1 do
       resources :robots
@@ -13,6 +15,11 @@ Rails.application.routes.draw do
     end
 
     namespace :v2 do
+      namespace :admin do
+        resources :robots
+        resources :users
+      end
+
       namespace :public do
         namespace :markets do
           resources :kline, path: "/:market/k-line", only: [:index]

@@ -10,6 +10,7 @@
     "react": "^16.12.0",
     "react-admin": "^3.0.3",
     "react-dom": "^16.12.0",
+    "react-scripts": "^3.3.0",
     "ts-loader": "^6.2.1",
     "typescript": "^3.7.3"
   },

@@ -8,7 +8,7 @@ class Robot < ApplicationRecord
   STATES = %w[enabled disabled].freeze
   validates :name, :strategy,
             :state, presence: true
-  
+
   validates :strategy, inclusion: {in: STRATEGY_NAMES}
   validates :state, inclusion: {in: STATES}
 
