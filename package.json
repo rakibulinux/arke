@@ -1,6 +1,15 @@
 {
   "dependencies": {
-    "@rails/webpacker": "4.2.2"
+    "@babel/preset-react": "^7.7.4",
+    "@rails/webpacker": "4.2.2",
+    "@types/react": "^16.9.16",
+    "@types/react-dom": "^16.9.4",
+    "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
+    "prop-types": "^15.7.2",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.7.3"
   },
   "devDependencies": {
     "webpack-dev-server": "^3.9.0"
