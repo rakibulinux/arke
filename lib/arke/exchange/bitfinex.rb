@@ -138,9 +138,9 @@ module Arke::Exchange
         "quote_unit"       => nil,
         "min_price"        => nil,
         "max_price"        => nil,
-        "min_amount"       => info.fetch("minimum_order_size"),
+        "min_amount"       => info.fetch("minimum_order_size").to_d,
         "amount_precision" => 8,
-        "price_precision"  => 8,
+        "price_precision"  => info.fetch("price_precision").to_d,
       }
     end
 

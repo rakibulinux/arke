@@ -82,12 +82,10 @@ module Arke
       when :order_create
         execute do
           order = action.params[:order]
+          order.apply_requirements(action.destination.account)
           logger.info { "ACCOUNT:#{id} #{CREATING} #{colored_side(order.side)} order: #{action.params}" }
-          price = apply_precision(order.price, action.destination.price_precision)
-          amount = apply_precision(order.amount, action.destination.amount_precision.to_f,
-                                   order.side == :sell ? action.destination.min_amount.to_f : action.destination.min_amount.to_f)
+
           begin
-            order = Arke::Order.new(order.market, price, amount, order.side)
             action.destination.account.create_order(order)
           rescue StandardError => e
             logger.error { "ACCOUNT:#{id} #{e}\n#{e.backtrace.join("\n")}" }

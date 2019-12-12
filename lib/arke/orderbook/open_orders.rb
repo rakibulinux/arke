@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Arke::Orderbook
   class OpenOrders < Base
     def price_level(side, price)
@@ -9,8 +11,8 @@ module Arke::Orderbook
     end
 
     def clear
-      [:buy, :sell].each do |side|
-        @book[side].values.each { |h| h.keys.each { |id| remove_order(id)} }
+      %i[buy sell].each do |side|
+        @book[side].values.each {|h| h.keys.each {|id| remove_order(id) } }
       end
     end
 
@@ -18,21 +20,25 @@ module Arke::Orderbook
       !(@book[side][price].nil? || @book[side][price].empty?)
     end
 
-    def get_by_id(side, order_id)
-      @book[side].find{ |price, id| return id[order_id] }
+    def get_by_id(side, id)
+      @book[side].each_value do |orders|
+        return orders[id] if orders.key?(id)
+      end
+      nil
     end
 
     def price_amount(side, price)
-      @book[side][price].sum { |_id, order| order.amount }
+      @book[side][price].sum {|_id, order| order.amount }
     end
 
     def add_order(order)
       raise "Order id is nil" if order.id.nil?
+
       @book[order.side][order.price] ||= {}
       @book[order.side][order.price][order.id] = order
     end
 
-    def update(order)
+    def update(_order)
       raise "update disabled for OpenOrders"
     end
 
@@ -54,19 +60,19 @@ module Arke::Orderbook
 
     def remove_order(id)
       cleanup = []
-      @book[:sell].each { |k, v| v.delete(id); cleanup << [:sell, k] if v.empty? }
-      @book[:buy].each { |k, v| v.delete(id); cleanup << [:buy, k] if v.empty? }
-      cleanup.each { |side, price| @book[side].delete(price) }
+      @book[:sell].each {|k, v| v.delete(id); cleanup << [:sell, k] if v.empty? }
+      @book[:buy].each {|k, v| v.delete(id); cleanup << [:buy, k] if v.empty? }
+      cleanup.each {|side, price| @book[side].delete(price) }
     end
 
     def get_diff(orderbook, precision)
       diff = {
-        create: { buy: [], sell: [] },
-        delete: { buy: [], sell: [] },
-        update: { buy: [], sell: [] },
+        create: {buy: [], sell: []},
+        delete: {buy: [], sell: []},
+        update: {buy: [], sell: []},
       }
 
-      [:buy, :sell].each do |side|
+      %i[buy sell].each do |side|
         our = @book[side]
         their = orderbook.book[side]
 
@@ -94,15 +100,15 @@ module Arke::Orderbook
       diff
     end
 
-    def to_s_side(side, indentation = 0)
+    def to_s_side(side, indentation=0)
       chunks = []
       self[side].each do |price, orders|
         chunks << indent("%-05.5f       %-5.5f (ids: %s)" % [
           price,
-          orders.sum { |id, order| order.amount },
-          orders.map { |id, order| id }
+          orders.sum {|_id, order| order.amount },
+          orders.map {|id, _order| id }
         ],
-        indentation)
+                         indentation)
       end
       chunks.join("\n")
     end

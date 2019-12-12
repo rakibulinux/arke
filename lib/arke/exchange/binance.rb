@@ -103,14 +103,11 @@ module Arke::Exchange
     def get_amount(order)
       min_notional = @min_notional[order.market] ||= get_min_notional(order.market)
       amount_precision = @amount_precision[order.market] ||= get_amount_precision(order.market)
-      percentage = 0.2
       notional = order.price * order.amount
       if notional > min_notional
         order.amount
-      elsif (min_notional * percentage) < notional
-        return (min_notional / order.price).ceil(amount_precision)
       else
-        raise "Amount of order too small"
+        (min_notional / order.price).ceil(amount_precision)
       end
     end
 
@@ -158,14 +155,7 @@ module Arke::Exchange
 
     def get_amount_precision(market)
       min_quantity = @min_quantity[market] ||= get_min_quantity(market)
-      return 0 if min_quantity >= 1
-
-      n = 0
-      while min_quantity < 1
-        n += 1
-        min_quantity *= 10
-      end
-      n
+      value_precision(min_quantity)
     end
 
     def get_symbol_info(market)
@@ -201,7 +191,7 @@ module Arke::Exchange
         "min_price"        => price_filter&.fetch("minPrice").to_f,
         "max_price"        => price_filter&.fetch("maxPrice").to_f,
         "min_amount"       => get_min_quantity(market),
-        "amount_precision" => info.fetch("baseAssetPrecision"),
+        "amount_precision" => get_amount_precision(market),
         "price_precision"  => info.fetch("quotePrecision")
       }
     end

@@ -120,8 +120,8 @@ describe Arke::Exchange::Binance do
 
   context "order_create" do
     let(:order) { Arke::Order.new("ETHUSDT", 250, 1, :buy) }
-    let(:incorrect_order) { Arke::Order.new("ETHUSDT", 1, 1, :buy) }
     let(:small_order) { Arke::Order.new("ETHUSDT", 5, 1, :buy) }
+    let(:very_small_order) { Arke::Order.new("ETHUSDT", 1, 1, :buy) }
     let(:timestamp) { "1551720218" }
     let(:query) do
       "price=#{order.price.to_f}&quantity=#{order.amount.to_f}&recvWindow=5000&" \
@@ -150,7 +150,7 @@ describe Arke::Exchange::Binance do
     end
 
     it "incorrect order on Binance" do
-      expect { binance.create_order(incorrect_order) }.to raise_error(Exception)
+      expect { binance.create_order(very_small_order) }.to_not raise_error(Exception)
     end
   end
 
@@ -172,7 +172,7 @@ describe Arke::Exchange::Binance do
     end
 
     it "amount of order too small" do
-      expect { binance.get_amount(small_order) }.to raise_error(Exception)
+      expect { binance.get_amount(small_order) }.to_not raise_error(Exception)
     end
   end
 
@@ -288,7 +288,7 @@ describe Arke::Exchange::Binance do
         "min_price"        => 0.01,
         "max_price"        => 10_000_000,
         "min_amount"       => 0.00001,
-        "amount_precision" => 8,
+        "amount_precision" => 5,
         "price_precision"  => 8
       )
     end

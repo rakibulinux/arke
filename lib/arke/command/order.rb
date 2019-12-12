@@ -18,15 +18,18 @@ module Arke::Command
       acc_config = accounts_configs.find {|a| a["id"] == account_id }
       raise "market #{market_id} not found" unless acc_config
 
-      order = ::Arke::Order.new(market_id, price, amount, side)
-      logger.info order.inspect
-      return if dry?
-
       EM.synchrony do
         ex = Arke::Exchange.create(acc_config)
-        response = ex.create_order(order)
-        logger.info { "Response: #{response}" }
-        EM::Synchrony.add_timer(wait_time.to_f) { EM.stop }
+        order = ::Arke::Order.new(market_id, price, amount, side)
+        order.apply_requirements(ex)
+        logger.info order.inspect
+
+        unless dry?
+          response = ex.create_order(order)
+          logger.info { "Response: #{response}" }
+        end
+
+        EM.stop
       end
     end
   end

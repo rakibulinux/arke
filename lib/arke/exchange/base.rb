@@ -4,7 +4,7 @@ module Arke::Exchange
   # Base class for all exchanges
   class Base
     include ::Arke::Helpers::Precision
-    include Arke::Helpers::Flags
+    include ::Arke::Helpers::Flags
 
     attr_reader :delay, :driver, :opts, :id, :ws, :host, :key, :secret, :logger
     attr_accessor :timer, :executor
@@ -172,10 +172,10 @@ module Arke::Exchange
     def update_forced_balance(balances)
       @forced_balances = balances.map do |key, value|
         {
-            "currency" => key,
-            "free"     => value,
-            "locked"   => 0,
-            "total"    => value,
+          "currency" => key,
+          "free"     => value,
+          "locked"   => 0,
+          "total"    => value,
         }
       end
     end

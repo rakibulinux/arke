@@ -6,5 +6,10 @@ module Arke::Helpers
       mult = 1 + (side == :sell ? spread : -spread)
       price * mult
     end
+
+    def remove_spread(side, price, spread)
+      mult = 1 + (side == :sell ? spread : -spread)
+      price / mult
+    end
   end
 end

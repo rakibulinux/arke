@@ -25,6 +25,31 @@ describe Arke::Orderbook::OpenOrders do
     expect(open_orders.contains?(order.side, order.price + 100)).to eq(false)
   end
 
+  context "#get_by_id" do
+    it "returns the order with the given id" do
+      orders = Arke::Orderbook::OpenOrders.new(market)
+      order1 = Arke::Order.new(market, 100, 1, :sell, "limit", 1)
+      order2 = Arke::Order.new(market, 100, 2, :sell, "limit", 2)
+      order3 = Arke::Order.new(market, 102, 3, :sell, "limit", 3)
+      order4 = Arke::Order.new(market, 103, 4, :sell, "limit", 4)
+
+      orders.add_order(order1)
+      orders.add_order(order2)
+      orders.add_order(order3)
+      orders.add_order(order4)
+
+      expect(orders.get_by_id(:sell, 1)).to eq(order1)
+      expect(orders.get_by_id(:sell, 2)).to eq(order2)
+      expect(orders.get_by_id(:sell, 3)).to eq(order3)
+      expect(orders.get_by_id(:sell, 4)).to eq(order4)
+
+      expect(orders.get_by_id(:buy, 1)).to eq(nil)
+      expect(orders.get_by_id(:buy, 2)).to eq(nil)
+      expect(orders.get_by_id(:buy, 3)).to eq(nil)
+      expect(orders.get_by_id(:buy, 4)).to eq(nil)
+    end
+  end
+
   it "#remove_order" do
     order = skip_order
     open_orders.add_order(order)

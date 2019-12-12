@@ -119,6 +119,16 @@ shared_context "mocked bitfinex" do
         "margin":             true
       },
       {
+        "pair":               "btcust",
+        "price_precision":    5,
+        "initial_margin":     "30.0",
+        "minimum_margin":     "15.0",
+        "maximum_order_size": "2000.0",
+        "minimum_order_size": "0.0006",
+        "expiration":         "NA",
+        "margin":             true
+      },
+      {
         "pair":               "ltcusd",
         "price_precision":    5,
         "initial_margin":     "30.0",

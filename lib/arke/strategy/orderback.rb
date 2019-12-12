@@ -26,9 +26,10 @@ module Arke::Strategy
       @limit_bids_base = params["limit_bids_base"].to_f
       @side_asks = %w[asks both].include?(@side)
       @side_bids = %w[bids both].include?(@side)
+
       @enable_orderback = params["enable_orderback"] ? true : false
       @min_order_back_amount = params["min_order_back_amount"].to_f
-      @orderback_timer = params["orderback_timer"] || DEFAULT_ORDERBACK_GRACE_TIME
+      @orderback_grace_time = params["orderback_grace_time"]&.to_f || DEFAULT_ORDERBACK_GRACE_TIME
       logger.info "min order back amount: #{@min_order_back_amount}"
       logger.info "Initializing #{self.class} strategy with order_back #{@enable_orderback ? 'enabled' : 'disabled'}"
       sources.each {|s| s.apply_flags(FETCH_PRIVATE_BALANCE) }
@@ -45,12 +46,6 @@ module Arke::Strategy
       raise "limit_asks_base must be higher than zero" if limit_asks_base <= 0
       raise "limit_bids_base must be higher than zero" if limit_bids_base <= 0
       raise "side must be asks, bids or both" if !@side_asks && !@side_bids
-
-      if @enable_orderback
-        if @min_order_back_amount < target.min_amount || @min_order_back_amount < target.min_amount
-          raise "min_order_back_amount is too small"
-        end
-      end
     end
 
     def register_callbacks
@@ -74,19 +69,20 @@ module Arke::Strategy
     def order_back(trade, order)
       logger.info("ID:#{id} Trade on #{trade.market}, #{order.side} price: #{trade.price} amount: #{trade.volume}")
       spread = order.side == :sell ? @spread_asks : @spread_bids
-      price = apply_spread(order.side, trade.price, -spread)
+      price = remove_spread(order.side, trade.price, spread)
       type = order.side == :sell ? :buy : :sell
 
       logger.info("ID:#{id} Buffering order back #{trade.market}, #{type} price: #{price} amount: #{trade.volume}")
       @trades[trade.id] ||= {}
       @trades[trade.id][trade.order_id] = [trade.market, price, trade.volume, type]
 
-      @timer ||= EM::Synchrony.add_timer(@orderback_timer) do
+      @timer ||= EM::Synchrony.add_timer(@orderback_grace_time) do
         grouped_trades = group_trades(@trades)
         orders = []
         actions = []
         grouped_trades.each do |k, v|
           order = Arke::Order.new(target.id, k[0].to_f, v, k[1].to_sym)
+          order.apply_requirements(source.account)
           if order.amount > @min_order_back_amount
             logger.info("ID:#{id} Pushing order back #{order} (min order back amount: #{@min_order_back_amount})")
             orders << order
@@ -98,7 +94,7 @@ module Arke::Strategy
         orders.each do |order|
           actions << Arke::Action.new(:order_create, source, order: order)
         end
-        target.account.executor.push(actions)
+        source.account.executor.push(actions)
         @timer = nil
         @trades = {}
       end

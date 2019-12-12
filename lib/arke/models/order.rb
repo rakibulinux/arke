@@ -2,6 +2,8 @@
 
 module Arke
   class Order
+    include Arke::Helpers::Precision
+
     attr_reader :market, :price, :side, :type
     attr_accessor :amount, :id
 
@@ -26,6 +28,19 @@ module Arke
       order.price == price && \
       order.amount == amount && \
       order.side == side
+    end
+
+    #
+    # Apply market requirement to the orders
+    #
+    # - Price precision
+    # - Amount precision
+    # - Minimum amount
+    #
+    def apply_requirements(target_exchange)
+      config = target_exchange.market_config(@market)
+      @price = apply_precision(@price, config["price_precision"])
+      @amount = apply_precision(@amount, config["amount_precision"], config["min_amount"])
     end
   end
 end

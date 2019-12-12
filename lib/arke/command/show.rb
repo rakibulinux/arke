@@ -48,8 +48,32 @@ module Arke
         end
       end
 
+      class MarketConfig < Base
+        parameter "ACCOUNT_ID", "market id on the target platform", attribute_name: :account_id
+        parameter "MARKET_ID", "market id on the target platform", attribute_name: :market_id
+        def execute
+          logger = ::Arke::Log
+          logger.level = Logger::DEBUG
+          acc_config = accounts_configs.find {|a| a["id"] == account_id }
+          raise "market #{market_id} not found" unless acc_config
+
+          ex = Arke::Exchange.create(acc_config)
+          config = ex.market_config(market_id)
+
+          puts "%18s  %s" % ["id", config["id"].to_s]
+          puts "%18s  %s" % ["base_unit", config["base_unit"].to_s]
+          puts "%18s  %s" % ["quote_unit", config["quote_unit"].to_s]
+          puts "%18s  %s" % ["min_price", config["min_price"]&.to_f]
+          puts "%18s  %s" % ["max_price", config["max_price"]&.to_f]
+          puts "%18s  %s" % ["min_amount", config["min_amount"]&.to_f]
+          puts "%18s  %s" % ["amount_precision", config["amount_precision"]&.to_f]
+          puts "%18s  %s" % ["price_precision", config["price_precision"]&.to_f]
+        end
+      end
+
       subcommand "balances", "Show platforms balances", Balances
       subcommand "deposit_addresses", "Show platforms deposits addresses", DepositAddresses
+      subcommand "market_config", "Show a market configuration", MarketConfig
     end
   end
 end

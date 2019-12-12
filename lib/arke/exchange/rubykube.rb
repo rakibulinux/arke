@@ -135,8 +135,8 @@ module Arke::Exchange
     end
 
     def get_market_infos(market)
-      response = @connection.get("#{@peatio_route}/public/markets").body
-      infos = response.select {|m| m["id"]&.downcase == market.downcase }.first
+      @market_infos ||= @connection.get("#{@peatio_route}/public/markets").body
+      infos = @market_infos.select {|m| m["id"]&.downcase == market.downcase }.first
       raise "Market #{market} not found" unless infos
 
       infos

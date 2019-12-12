@@ -75,7 +75,7 @@ describe Arke::Strategy::Copy do
   let(:target_asks) { target_orderbook.first[:sell] }
 
   before(:each) do
-    target.account.fetch_balances
+    target.fetch_balances
     source.start
     source.update_orderbook
   end

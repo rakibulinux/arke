@@ -22,6 +22,21 @@ describe Arke::Exchange::Bitfinex do
   let(:bitfinex) { Arke::Exchange::Bitfinex.new(bitfinex_config) }
   let!(:market) { Arke::Market.new(market_config, bitfinex) }
 
+  context "market_config" do
+    it "generates market configuration" do
+      expect(bitfinex.market_config("BTCUST")).to eq(
+        "id"               => "btcust",
+        "base_unit"        => nil,
+        "quote_unit"       => nil,
+        "min_price"        => nil,
+        "max_price"        => nil,
+        "min_amount"       => 0.0006.to_d,
+        "amount_precision" => 8.to_d,
+        "price_precision"  => 5.to_d
+      )
+    end
+  end
+
   context "Bitfinex class" do
     let(:data_create) { [1, 10, 20] }
     let(:data_create_sell) { [2, 22, -33] }
