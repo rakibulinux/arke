@@ -6,6 +6,8 @@ class Robot < ApplicationRecord
 
   STRATEGY_NAMES = %w[copy orderback fixedprice microtrades].freeze
   STATES = %w[enabled disabled].freeze
+  PARAMS = %w[]
+
   validates :name, :strategy,
             :state, presence: true
 

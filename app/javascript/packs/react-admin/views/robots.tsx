@@ -7,6 +7,7 @@ import {
   DateField,
   Edit,
   Filter,
+  FormDataConsumer,
   List,
   ReferenceField,
   ReferenceInput,
@@ -14,8 +15,9 @@ import {
   SimpleForm,
   SimpleFormIterator,
   TextField,
-  TextInput
+  TextInput,
 } from 'react-admin';
+import { keys } from '@material-ui/core/styles/createBreakpoints';
 
 const StrategySelect = props => (
   <SelectInput source="strategy" choices={[
@@ -82,7 +84,7 @@ export const RobotEdit = props => (
       <TextInput source="name" />
       <StrategySelect />
       <StateSelect />
-      <TextInput source="params" />
+      <TextInput multiline source="params" format={i => JSON.stringify(i)} />
     </SimpleForm>
   </Edit>
 );
@@ -94,7 +96,21 @@ export const RobotCreate = props => (
       <TextInput source="name" />
       <StrategySelect />
       <StateSelect />
-      <TextInput source="params" />
+      <ArrayInput source="_params" >
+        <SimpleFormIterator>
+          <TextInput source="key" />
+          <FormDataConsumer>
+            {({ formData, scopedFormData, getSource, ...rest }) =>
+              scopedFormData && scopedFormData.key ? (
+                  <TextInput
+                      source={`params.${scopedFormData.key}`}
+                      {...rest}
+                  />
+              ) : null
+            }
+          </FormDataConsumer>
+        </SimpleFormIterator>
+      </ArrayInput>
     </SimpleForm>
   </Create>
 );

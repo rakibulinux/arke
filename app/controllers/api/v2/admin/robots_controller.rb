@@ -52,7 +52,21 @@ module Api::V2::Admin
 
     # Only allow a trusted parameter "white list" through.
     def robot_params
-      params.require(:robot).permit(:name, :params, :state, :strategy, :user_id)
+      params.require(:robot).permit(:name, :state, :strategy, :user_id, params: [
+                                                                                  :spread_bids,
+                                                                                  :spread_asks,
+                                                                                  :limit_asks_base,
+                                                                                  :limit_bids_base,
+                                                                                  :max_amount_per_order,
+                                                                                  :levels_size,
+                                                                                  :levels_count,
+                                                                                  :side,
+                                                                                  :linked_strategy_id,
+                                                                                  :min_amount,
+                                                                                  :max_amount,
+                                                                                ])
     end
   end
 end
+
+
