@@ -14,8 +14,6 @@ const useStyles = makeStyles({
 export const UrlField = ({ record = {}, source }: { record?: any, source: string }) => {
   const classes = useStyles({});
 
-  window.console.log(record);
-
   return (
     <a href={record[source]} className={classes.link}>
       {record[source]}

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Admin, Resource, ListGuesser } from 'react-admin';
 import UserIcon from '@material-ui/icons/Group';
 import { createMuiTheme } from '@material-ui/core/styles';
-import { red, purple, deepPurple } from '@material-ui/core/colors';
+import { red, deepPurple, pink } from '@material-ui/core/colors';
 
 import jsonServerProvider from './data-providers/ra-data-json-server';
 import { Dashboard } from './views/dashboard';
@@ -13,7 +13,7 @@ const dataProvider = jsonServerProvider('http://localhost:3000/api/v2/admin');
 const theme = createMuiTheme({
   palette: {
     // type: 'dark',
-    primary: purple,
+    primary: pink,
     secondary: deepPurple,
     error: red,
   },
