@@ -7,10 +7,13 @@ module Api::V2::Admin
 
     # GET /robots
     def index
-      paginate json: Robot.where(params.permit(:id))
+      robots = Robot.where(params.permit(:id, :user_id, :strategy, :state))
+      robots = robots.order(params[:order_by] => params[:order] || 'ASC') if params[:order_by]
+
+      paginate json: robots
     end
 
-      # GET /robots/1
+    # GET /robots/1
     def show
       json_response(@robot, 200)
     end
@@ -37,7 +40,7 @@ module Api::V2::Admin
 
     # DELETE /robots/1
     def destroy
-      @robot.destroy
+      json_response(@robot.destroy, 200)
     end
 
   private

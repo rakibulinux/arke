@@ -5,7 +5,7 @@ import CardHeader from '@material-ui/core/CardHeader';
 
 export const Dashboard =  () => (
   <Card>
-    <CardHeader title="Welcome to the administration" />
+    <CardHeader title="Welcome to the ArkeAdminPanel" />
     <CardContent>Lorem ipsum sic dolor amet...</CardContent>
   </Card>
 );

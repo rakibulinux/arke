@@ -1,21 +1,64 @@
 import * as React from 'react';
 import {
+  ArrayInput,
   AutocompleteInput,
-  List,
-  Datagrid,
-  TextField,
-  DateField,
-  ReferenceField,
-  Edit,
   Create,
+  Datagrid,
+  DateField,
+  Edit,
+  Filter,
+  List,
+  ReferenceField,
   ReferenceInput,
   SelectInput,
   SimpleForm,
-  TextInput,
+  SimpleFormIterator,
+  TextField,
+  TextInput
 } from 'react-admin';
 
+const StrategySelect = props => (
+  <SelectInput source="strategy" choices={[
+    { id: 'copy', name: 'copy' },
+    { id: 'orderback', name: 'orderback' },
+    { id: 'fixedprice', name: 'fixedprice' },
+    { id: 'microtrades', name: 'microtrades' },
+  ]} {...props} />
+);
+
+const StateSelect = props => (
+  <SelectInput source="state" choices={[
+    { id: 'disabled', name: 'disabled' },
+    { id: 'enabled', name: 'enabled' },
+  ]} {...props} />
+);
+
+const UserInput = props => (
+  <ReferenceInput source="user_id" reference="users" helperText="Unique user UID" {...props}>
+    <AutocompleteInput optionText="uid" />
+  </ReferenceInput>
+);
+
+const RobotFilter = props => (
+  <Filter {...props}>
+    <SelectInput source="state" choices={[
+      { id: 'disabled', name: 'disabled' },
+      { id: 'enabled', name: 'enabled' },
+    ]} {...props} />
+    <SelectInput source="strategy" choices={[
+      { id: 'copy', name: 'copy' },
+      { id: 'orderback', name: 'orderback' },
+      { id: 'fixedprice', name: 'fixedprice' },
+      { id: 'microtrades', name: 'microtrades' },
+    ]} {...props} />
+    <ReferenceInput source="user_id" reference="users" helperText="Unique user UID" {...props}>
+      <SelectInput optionText="uid" />
+    </ReferenceInput>
+  </Filter>
+);
+
 export const RobotList = props => (
-  <List {...props}>
+  <List filters={<RobotFilter />} {...props}>
     <Datagrid rowClick="edit">
       <TextField source="id" />
       <ReferenceField source="user_id" reference="users">
@@ -34,20 +77,11 @@ export const RobotList = props => (
 export const RobotEdit = props => (
   <Edit {...props}>
     <SimpleForm>
-      <ReferenceInput source="user_id" reference="users" helperText="Unique user UID">
-        <AutocompleteInput optionText="uid" />
-      </ReferenceInput>
+      <TextField source="id" />
+      <UserInput />
       <TextInput source="name" />
-      <SelectInput source="strategy" choices={[
-        { id: 'copy', name: 'copy' },
-        { id: 'orderback', name: 'orderback' },
-        { id: 'fixedprice', name: 'fixedprice' },
-        { id: 'microtrades', name: 'microtrades' },
-      ]} />
-      <SelectInput source="state" choices={[
-        { id: 'disabled', name: 'disabled' },
-        { id: 'enabled', name: 'enabled' },
-      ]} />
+      <StrategySelect />
+      <StateSelect />
       <TextInput source="params" />
     </SimpleForm>
   </Edit>
@@ -56,20 +90,10 @@ export const RobotEdit = props => (
 export const RobotCreate = props => (
   <Create {...props}>
     <SimpleForm>
-    <ReferenceInput source="user_id" reference="users" helperText="Unique user UID">
-        <AutocompleteInput optionText="uid" />
-      </ReferenceInput>
+      <UserInput />
       <TextInput source="name" />
-      <SelectInput source="strategy" choices={[
-        { id: 'copy', name: 'copy' },
-        { id: 'orderback', name: 'orderback' },
-        { id: 'fixedprice', name: 'fixedprice' },
-        { id: 'microtrades', name: 'microtrades' },
-      ]} />
-      <SelectInput source="state" choices={[
-        { id: 'disabled', name: 'disabled' },
-        { id: 'enabled', name: 'enabled' },
-      ]} />
+      <StrategySelect />
+      <StateSelect />
       <TextInput source="params" />
     </SimpleForm>
   </Create>

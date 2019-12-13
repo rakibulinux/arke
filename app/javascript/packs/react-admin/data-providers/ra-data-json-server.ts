@@ -8,7 +8,7 @@ import { fetchUtils, DataProvider } from 'ra-core';
  *
  * @example
  *
- * getList          => GET http://my.api.url/posts?_sort=title&_order=ASC&_start=0&_end=24
+ * getList          => GET http://my.api.url/posts?order_by=title&order=ASC&_start=0&_end=24
  * getOne           => GET http://my.api.url/posts/123
  * getManyReference => GET http://my.api.url/posts?author_id=345
  * getMany          => GET http://my.api.url/posts/123, GET http://my.api.url/posts/456, GET http://my.api.url/posts/789
@@ -39,8 +39,8 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson): DataProvider => ({
         const { field, order } = params.sort;
         const query = {
             ...fetchUtils.flattenObject(params.filter),
-            _sort: field,
-            _order: order,
+            order_by: field,
+            order: order,
             page: page,
             limit: perPage,
         };
@@ -84,8 +84,8 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson): DataProvider => ({
         const query = {
             ...fetchUtils.flattenObject(params.filter),
             [params.target]: params.id,
-            _sort: field,
-            _order: order,
+            order_by: field,
+            order: order,
             page: page,
             limit: perPage,
         };
