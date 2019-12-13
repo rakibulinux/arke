@@ -41,8 +41,8 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson): DataProvider => ({
             ...fetchUtils.flattenObject(params.filter),
             _sort: field,
             _order: order,
-            _start: (page - 1) * perPage,
-            _end: page * perPage,
+            page: page,
+            limit: perPage,
         };
         const url = `${apiUrl}/${resource}?${stringify(query)}`;
 
@@ -86,8 +86,8 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson): DataProvider => ({
             [params.target]: params.id,
             _sort: field,
             _order: order,
-            _start: (page - 1) * perPage,
-            _end: page * perPage,
+            page: page,
+            limit: perPage,
         };
         const url = `${apiUrl}/${resource}?${stringify(query)}`;
 

@@ -5,12 +5,7 @@ module Api::V2::Admin
   class UsersController < ApplicationController
 
     def index
-      users = User.all
-
-      users = User.where(params.permit('id')) if params[:id]
-
-      response.headers['X-Total-Count'] = users.count
-      json_response(users, 200)
+      paginate json: User.where(params.permit(:id))
     end
   end
 end

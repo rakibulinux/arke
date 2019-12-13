@@ -7,11 +7,7 @@ module Api::V2::Admin
 
     # GET /robots
     def index
-      robots = Robot.all
-
-      response.headers['X-Total-Count'] = robots.count
-
-      json_response(robots, 200)
+      paginate json: Robot.where(params.permit(:id))
     end
 
       # GET /robots/1
@@ -47,14 +43,13 @@ module Api::V2::Admin
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_robot
-      @robot = Robot.find_by(id: params[:id])
+      @robot = Robot.find_by(params.permit(:id))
       json_response({ errors: ['robots.doesnt_exist'] }, 404) if @robot.nil?
     end
 
     # Only allow a trusted parameter "white list" through.
     def robot_params
-      params.require(:robot).permit(:source_market_id, :source_id, :target_market_id,
-                                       :target_id, :name, :driver, :interval, :params, :state, :strategy, :user_id)
+      params.require(:robot).permit(:name, :params, :state, :strategy, :user_id)
     end
   end
 end
