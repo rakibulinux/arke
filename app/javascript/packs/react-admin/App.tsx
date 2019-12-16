@@ -5,9 +5,11 @@ import { createMuiTheme } from '@material-ui/core/styles';
 import { red } from '@material-ui/core/colors';
 
 import jsonServerProvider from './data-providers/ra-data-json-server';
-import { Dashboard } from './views/dashboard';
-import { RobotList, RobotCreate, RobotEdit } from './views/robots'
-import { AccountEdit, AccountList, AccountCreate } from './views/accounts';
+import { Dashboard } from './dashboard';
+import { RobotList, RobotCreate, RobotEdit } from './robots'
+import { AccountEdit, AccountCreate } from './accounts';
+import AccountList from './accounts/accountList'
+
 
 const dataProvider = jsonServerProvider('http://localhost:3000/api/v2');
 
@@ -26,7 +28,7 @@ const theme = createMuiTheme({
 const App = () => (
   <Admin dashboard={Dashboard} dataProvider={dataProvider} theme={theme} title={'ArkeAdmin'}>
     <Resource name="robots" list={RobotList} edit={RobotEdit} create={RobotCreate} />
-    <Resource name="accounts" icon={UserIcon} list={AccountList} create={AccountCreate} edit={AccountEdit} />
+    <Resource name="accounts" icon={UserIcon} list={AccountList} />
     <Resource name="exchanges" icon={UserIcon} list={ListGuesser} />
   </Admin>
 );
