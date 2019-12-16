@@ -15,12 +15,14 @@ Rails.application.routes.draw do
     end
 
     namespace :v2 do
-      namespace :admin do
+      namespace :private do
         resources :robots
-        resources :users
+        resources :accounts
       end
 
       namespace :public do
+        get :exchanges, to: 'exchanges#index'
+
         namespace :markets do
           resources :kline, path: "/:market/k-line", only: [:index]
           resources :trades, path: "/:market/trades", only: [:index]

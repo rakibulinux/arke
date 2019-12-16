@@ -1,7 +1,6 @@
 import * as React from 'react';
 import {
   ArrayInput,
-  AutocompleteInput,
   Create,
   Datagrid,
   DateField,
@@ -9,15 +8,12 @@ import {
   Filter,
   FormDataConsumer,
   List,
-  ReferenceField,
-  ReferenceInput,
   SelectInput,
   SimpleForm,
   SimpleFormIterator,
   TextField,
   TextInput,
 } from 'react-admin';
-import { keys } from '@material-ui/core/styles/createBreakpoints';
 
 const StrategySelect = props => (
   <SelectInput source="strategy" choices={[
@@ -35,12 +31,6 @@ const StateSelect = props => (
   ]} {...props} />
 );
 
-const UserInput = props => (
-  <ReferenceInput source="user_id" reference="users" helperText="Unique user UID" {...props}>
-    <AutocompleteInput optionText="uid" />
-  </ReferenceInput>
-);
-
 const RobotFilter = props => (
   <Filter {...props}>
     <SelectInput source="state" choices={[
@@ -53,9 +43,6 @@ const RobotFilter = props => (
       { id: 'fixedprice', name: 'fixedprice' },
       { id: 'microtrades', name: 'microtrades' },
     ]} {...props} />
-    <ReferenceInput source="user_id" reference="users" helperText="Unique user UID" {...props}>
-      <SelectInput optionText="uid" />
-    </ReferenceInput>
   </Filter>
 );
 
@@ -63,9 +50,6 @@ export const RobotList = props => (
   <List filters={<RobotFilter />} {...props}>
     <Datagrid rowClick="edit">
       <TextField source="id" />
-      <ReferenceField source="user_id" reference="users">
-        <TextField source="uid" />
-      </ReferenceField>
       <TextField source="name" />
       <TextField source="strategy" />
       <TextField source="params" />
@@ -80,7 +64,6 @@ export const RobotEdit = props => (
   <Edit {...props}>
     <SimpleForm>
       <TextField source="id" />
-      <UserInput />
       <TextInput source="name" />
       <StrategySelect />
       <StateSelect />
@@ -92,7 +75,6 @@ export const RobotEdit = props => (
 export const RobotCreate = props => (
   <Create {...props}>
     <SimpleForm>
-      <UserInput />
       <TextInput source="name" />
       <StrategySelect />
       <StateSelect />

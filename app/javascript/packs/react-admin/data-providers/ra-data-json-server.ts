@@ -1,6 +1,10 @@
 import { stringify } from 'query-string';
 import { fetchUtils, DataProvider } from 'ra-core';
 
+const PublicResouces = ['exchanges']
+
+const resourcePath = resource => `${PublicResouces.includes(resource) ? 'public' : 'private'}/${resource}`;
+
 /**
  * Maps react-admin queries to a json-server powered REST API
  *
@@ -44,7 +48,7 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson): DataProvider => ({
             page: page,
             limit: perPage,
         };
-        const url = `${apiUrl}/${resource}?${stringify(query)}`;
+        const url = `${apiUrl}/${resourcePath(resource)}?${stringify(query)}`;
 
         return httpClient(url).then(({ headers, json }) => {
             if (!headers.has('x-total-count')) {
@@ -66,7 +70,7 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson): DataProvider => ({
     },
 
     getOne: (resource, params) =>
-        httpClient(`${apiUrl}/${resource}/${params.id}`).then(({ json }) => ({
+        httpClient(`${apiUrl}/${resourcePath(resource)}/${params.id}`).then(({ json }) => ({
             data: json,
         })),
 
@@ -74,7 +78,7 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson): DataProvider => ({
         const query = {
             id: params.ids,
         };
-        const url = `${apiUrl}/${resource}?${stringify(query, { arrayFormat: 'bracket' })}`;
+        const url = `${apiUrl}/${resourcePath(resource)}?${stringify(query, { arrayFormat: 'bracket' })}`;
         return httpClient(url).then(({ json }) => ({ data: json }));
     },
 
@@ -89,7 +93,7 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson): DataProvider => ({
             page: page,
             limit: perPage,
         };
-        const url = `${apiUrl}/${resource}?${stringify(query)}`;
+        const url = `${apiUrl}/${resourcePath(resource)}?${stringify(query)}`;
 
         return httpClient(url).then(({ headers, json }) => {
             if (!headers.has('x-total-count')) {
@@ -111,7 +115,7 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson): DataProvider => ({
     },
 
     update: (resource, params) =>
-        httpClient(`${apiUrl}/${resource}/${params.id}`, {
+        httpClient(`${apiUrl}/${resourcePath(resource)}/${params.id}`, {
             method: 'PUT',
             body: JSON.stringify(params.data),
         }).then(({ json }) => ({ data: json })),
@@ -120,7 +124,7 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson): DataProvider => ({
     updateMany: (resource, params) =>
         Promise.all(
             params.ids.map(id =>
-                httpClient(`${apiUrl}/${resource}/${id}`, {
+                httpClient(`${apiUrl}/${resourcePath(resource)}/${id}`, {
                     method: 'PUT',
                     body: JSON.stringify(params.data),
                 })
@@ -128,7 +132,7 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson): DataProvider => ({
         ).then(responses => ({ data: responses.map(({ json }) => json.id) })),
 
     create: (resource, params) =>
-        httpClient(`${apiUrl}/${resource}`, {
+        httpClient(`${apiUrl}/${resourcePath(resource)}`, {
             method: 'POST',
             body: JSON.stringify(params.data),
         }).then(({ json }) => ({
@@ -136,7 +140,7 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson): DataProvider => ({
         })),
 
     delete: (resource, params) =>
-        httpClient(`${apiUrl}/${resource}/${params.id}`, {
+        httpClient(`${apiUrl}/${resourcePath(resource)}/${params.id}`, {
             method: 'DELETE',
         }).then(({ json }) => ({ data: json })),
 
@@ -144,7 +148,7 @@ export default (apiUrl, httpClient = fetchUtils.fetchJson): DataProvider => ({
     deleteMany: (resource, params) =>
         Promise.all(
             params.ids.map(id =>
-                httpClient(`${apiUrl}/${resource}/${id}`, {
+                httpClient(`${apiUrl}/${resourcePath(resource)}/${id}`, {
                     method: 'DELETE',
                 })
             )

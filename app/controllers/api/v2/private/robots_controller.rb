@@ -1,13 +1,13 @@
 # encoding: UTF-8
 # frozen_string_literal: true
 
-module Api::V2::Admin
-  class RobotsController < ApplicationController
+module Api::V2::Private
+  class RobotsController < BaseController
     before_action :set_robot, only: [:show, :update, :destroy]
 
     # GET /robots
     def index
-      robots = Robot.where(params.permit(:id, :user_id, :strategy, :state))
+      robots = @user.robots.where(params.permit(:id, :strategy, :state))
       robots = robots.order(params[:order_by] => params[:order] || 'ASC') if params[:order_by]
 
       paginate json: robots
@@ -20,7 +20,7 @@ module Api::V2::Admin
 
     # POST /robots
     def create
-      @robot = Robot.new(robot_params)
+      @robot = Robot.new(robot_params.merge(user_id: @user.id))
 
       if @robot.save
         json_response(@robot, 201)
@@ -46,7 +46,7 @@ module Api::V2::Admin
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_robot
-      @robot = Robot.find_by(params.permit(:id))
+      @robot = @user.robots.find_by(params.permit(:id))
       json_response({ errors: ['robots.doesnt_exist'] }, 404) if @robot.nil?
     end
 
