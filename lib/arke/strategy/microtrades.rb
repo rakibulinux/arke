@@ -13,11 +13,11 @@ module Arke::Strategy
     def initialize(sources, target, config, reactor)
       super
       params = @config["params"] || {}
-      @min_amount = (params["min_amount"] || target.min_amount)
-      @max_amount = (params["max_amount"] || @min_amount * 2).to_f
-      @min_price = params["min_price"]
-      @max_price = params["max_price"]
-      @price_difference = params["price_difference"] || 0.02 if linked_strategy_id
+      @min_amount = (params["min_amount"].to_d || target.min_amount)
+      @max_amount = (params["max_amount"].to_d || @min_amount * 2).to_f
+      @min_price = params["min_price"].to_d
+      @max_price = params["max_price"].to_d
+      @price_difference = params["price_difference"].to_d || 0.02 if linked_strategy_id
       @enable_orderback = false
       @sides = SIDES_MAP[@side]
       check_config

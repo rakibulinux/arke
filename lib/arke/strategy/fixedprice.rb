@@ -13,14 +13,14 @@ module Arke::Strategy
     def initialize(sources, target, config, reactor)
       super
       params = @config["params"] || {}
-      @levels_size = params["levels_size"].to_f
+      @levels_size = params["levels_size"].to_d
       @levels_count = params["levels_count"].to_i
-      @price = params["price"].to_f
-      @random_delta = params["random_delta"].to_f
-      @spread_bids = params["spread_bids"].to_f
-      @spread_asks = params["spread_asks"].to_f
-      @limit_asks_base = params["limit_asks_base"].to_f
-      @limit_bids_base = params["limit_bids_base"].to_f
+      @price = params["price"].to_d
+      @random_delta = params["random_delta"].to_d
+      @spread_bids = params["spread_bids"].to_d
+      @spread_asks = params["spread_asks"].to_d
+      @limit_asks_base = params["limit_asks_base"].to_d
+      @limit_bids_base = params["limit_bids_base"].to_d
       @side_asks = %w[asks both].include?(@side)
       @side_bids = %w[bids both].include?(@side)
 

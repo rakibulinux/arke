@@ -7,14 +7,14 @@ module Arke::Strategy
     def initialize(sources, target, config, reactor)
       super
       params = @config["params"] || {}
-      @spread_bids = params["spread_bids"].to_f
-      @spread_asks = params["spread_asks"].to_f
+      @spread_bids = params["spread_bids"]&.to_d
+      @spread_asks = params["spread_asks"]&.to_d
       check_config
     end
 
     def check_config
-      raise "spread_bids must be higher than zero" if @spread_bids.negative?
-      raise "spread_asks must be higher than zero" if @spread_asks.negative?
+      raise "spread_bids must be higher than zero" if @spread_bids.nil? || @spread_bids.negative?
+      raise "spread_asks must be higher than zero" if @spread_asks.nil? || @spread_asks.negative?
     end
 
     def call

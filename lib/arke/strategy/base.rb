@@ -15,13 +15,10 @@ module Arke::Strategy
       @logger = Arke::Log
       @config = config
       @id = @config["id"]
-      @volume_ratio = config["volume_ratio"]
-      @spread = config["spread"]
-      @precision = config["precision"]
       @debug = config["debug"] ? true : false
       @debug_infos = {}
       @period = (config["period"] || DEFAULT_PERIOD).to_f
-      @period_random_delay = config["period_random_delay"]
+      @period_random_delay = config["period_random_delay"].to_f
       params = @config["params"] || {}
       @linked_strategy_id = params["linked_strategy_id"]
       @side = SIDES.include?(params["side"]) ? params["side"] : "both"

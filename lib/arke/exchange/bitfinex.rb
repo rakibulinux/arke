@@ -132,10 +132,20 @@ module Arke::Exchange
       info = symbols_details&.find {|i| i["pair"].downcase == market.downcase }
       raise "Pair #{market} not found" unless info
 
+      market_id = info.fetch("pair")
+      if market_id.include?(":")
+        base, quote = market_id.split(":")
+      elsif market_id.size == 6
+        base = market_id[0..2]
+        quote = market_id[3..5]
+      else
+        base = nil
+        quote = nil
+      end
       {
-        "id"               => info.fetch("pair"),
-        "base_unit"        => nil,
-        "quote_unit"       => nil,
+        "id"               => market_id,
+        "base_unit"        => base,
+        "quote_unit"       => quote,
         "min_price"        => nil,
         "max_price"        => nil,
         "min_amount"       => info.fetch("minimum_order_size").to_d,

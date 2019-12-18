@@ -148,6 +148,16 @@ shared_context "mocked bitfinex" do
         "expiration":         "NA",
         "margin":             true
       },
+      {
+        "pair":               "cnh:cnht",
+        "price_precision":    5,
+        "initial_margin":     "30.0",
+        "minimum_margin":     "15.0",
+        "maximum_order_size": "500000.0",
+        "minimum_order_size": "6.0",
+        "expiration":         "NA",
+        "margin":             false
+      }
     ].to_json, headers: {"content-type" => "application/json;charset=utf-8"})
   end
 end

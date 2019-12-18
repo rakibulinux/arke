@@ -23,11 +23,21 @@ describe Arke::Exchange::Bitfinex do
     it "generates market configuration" do
       expect(bitfinex.market_config("BTCUST")).to eq(
         "id"               => "btcust",
-        "base_unit"        => nil,
-        "quote_unit"       => nil,
+        "base_unit"        => "btc",
+        "quote_unit"       => "ust",
         "min_price"        => nil,
         "max_price"        => nil,
         "min_amount"       => 0.0006.to_d,
+        "amount_precision" => 8.to_d,
+        "price_precision"  => 5.to_d
+      )
+      expect(bitfinex.market_config("cnh:cnht")).to eq(
+        "id"               => "cnh:cnht",
+        "base_unit"        => "cnh",
+        "quote_unit"       => "cnht",
+        "min_price"        => nil,
+        "max_price"        => nil,
+        "min_amount"       => 6.to_d,
         "amount_precision" => 8.to_d,
         "price_precision"  => 5.to_d
       )
