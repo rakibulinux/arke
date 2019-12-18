@@ -8,8 +8,8 @@ describe Arke::Strategy::Circuitbraker do
   let(:account) { Arke::Exchange.create(account_config) }
   let(:target_mode) { Arke::Helpers::Flags::DEFAULT_TARGET_FLAGS }
   let(:source_mode) { Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS }
-  let(:source) { Arke::Market.new(config["sources"].first["market"], account, Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS) }
-  let(:target) { Arke::Market.new(config["target"]["market"], account, target_mode) }
+  let(:source) { Arke::Market.new(config["sources"].first["market_id"], account, Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS) }
+  let(:target) { Arke::Market.new(config["target"]["market_id"], account, target_mode) }
   let(:spread_asks) { 0.005 }
   let(:spread_bids) { 0.006 }
   let(:executor) { double(:executor) }
@@ -28,24 +28,12 @@ describe Arke::Strategy::Circuitbraker do
         "spread_asks" => spread_asks,
       },
       "target"  => {
-        "driver" => "bitfaker",
-        "market" => {
-          "id"              => "BTCUSD",
-          "base"            => "BTC",
-          "quote"           => "USD",
-          "base_precision"  => 4,
-          "quote_precision" => 4,
-          "min_ask_amount"  => 0.001,
-          "min_bid_amount"  => 0.001,
-        },
+        "driver"    => "bitfaker",
+        "market_id" => "BTCUSD",
       },
       "sources" => [
         "account_id" => 1,
-        "market"     => {
-          "id"    => "BTCUSD",
-          "base"  => "BTC",
-          "quote" => "USD",
-        },
+        "market_id"  => "BTCUSD",
       ],
     }
   end

@@ -8,8 +8,8 @@ describe Arke::Strategy::Copy do
   let!(:strategy) { Arke::Strategy::Copy.new([source], target, config, nil) }
   let(:source_account) { Arke::Exchange.create(source_config) }
   let(:target_account) { Arke::Exchange.create(target_config) }
-  let(:source) { Arke::Market.new(config["sources"].first["market"], source_account, Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS) }
-  let(:target) { Arke::Market.new(config["target"]["market"], target_account, Arke::Helpers::Flags::DEFAULT_TARGET_FLAGS) }
+  let(:source) { Arke::Market.new(config["sources"].first["market_id"], source_account, Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS) }
+  let(:target) { Arke::Market.new(config["target"]["market_id"], target_account, Arke::Helpers::Flags::DEFAULT_TARGET_FLAGS) }
   let(:side) { "both" }
   let(:spread_asks) { 0.01 }
   let(:spread_bids) { 0.02 }
@@ -48,9 +48,7 @@ describe Arke::Strategy::Copy do
   let(:source_market) do
     {
       "account_id" => 1,
-      "market"     => {
-        "id" => "BTCUSD",
-      }
+      "market_id"  => "BTCUSD",
     }
   end
 
@@ -64,9 +62,7 @@ describe Arke::Strategy::Copy do
   let(:target_market) do
     {
       "account_id" => 2,
-      "market"     => {
-        "id" => "BTCUSD",
-      },
+      "market_id"  => "BTCUSD",
     }
   end
 
@@ -197,9 +193,7 @@ describe Arke::Strategy::Copy do
     let(:source_market) do
       {
         "account_id" => 1,
-        "market"     => {
-          "id" => "BTCUSDT",
-        }
+        "market_id"  => "BTCUSDT",
       }
     end
 

@@ -3,11 +3,7 @@
 describe Arke::Exchange::Binance do
   include_context "mocked binance"
 
-  let(:market_config) do
-    {
-      "id" => "ETHUSDT"
-    }
-  end
+  let(:market_id) { "ETHUSDT" }
 
   let(:binance) do
     Arke::Exchange::Binance.new(
@@ -17,7 +13,7 @@ describe Arke::Exchange::Binance do
     )
   end
 
-  let!(:market) { Arke::Market.new(market_config, binance) }
+  let!(:market) { Arke::Market.new(market_id, binance) }
 
   context "ojbect initialization" do
     it "is a sublass of Arke::Exchange::Base" do

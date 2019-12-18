@@ -15,8 +15,8 @@ describe Arke::Exchange::Huobi do
       "ts_pattern"     => "%Y-%m-%dT%H"
     )
   end
-  let(:market_config) { {"id" => "ethusdt"} }
-  let!(:market) { Arke::Market.new(market_config, huobi) }
+  let(:market_id) { "ethusdt" }
+  let!(:market) { Arke::Market.new(market_id, huobi) }
 
   context "ojbect initialization" do
     it "is a sublass of Arke::Exchange::Base" do

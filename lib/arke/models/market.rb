@@ -7,8 +7,10 @@ class Arke::Market
   attr_reader :min_amount, :account, :id, :orderbook
   attr_accessor :open_orders
 
-  def initialize(market, account, mode=0x0)
-    @id = market["id"]
+  def initialize(market_id, account, mode=0x0)
+    raise "missing market_id" unless market_id
+
+    @id = market_id
     @account = account
     market_config = account.market_config(@id)
     @base = market_config["base_unit"]
@@ -23,11 +25,7 @@ class Arke::Market
   end
 
   def check_config
-    if account.flag?(FORCE_MARKET_LOWERCASE)
-      raise "market id must be lowercase for this exchange" if id != id.downcase
-      raise "market base currency must be lowercase for this exchange" if base != base.downcase
-      raise "market quote currency must be lowercase for this exchange" if quote != quote.downcase
-    end
+    raise "market id must be lowercase for this exchange" if account.flag?(FORCE_MARKET_LOWERCASE) && id != id.downcase
     raise "amount_precision is missing in market #{id} configuration" if flag?(WRITE) && @amount_precision.nil?
     raise "price_precision is missing in market #{id} configuration" if flag?(WRITE) && @price_precision.nil?
     raise "min_amount is missing in market #{id} configuration" if flag?(WRITE) && @min_amount.nil?

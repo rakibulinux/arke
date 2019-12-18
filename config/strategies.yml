@@ -47,13 +47,11 @@ strategies:
     side: both
   target:
     account_id: demo
-    market:
-      id: ethusd
+    market_id: ethusd
 
   sources:
   - account_id: kraken
-    market:
-      id: ETHUSD
+    market_id: ETHUSD
 
 - id: microtrades-FTHUSD
   type: microtrades
@@ -67,5 +65,4 @@ strategies:
     max_amount: 0.30
   target:
       account_id: demo
-      market:
-        id: ethusd
+      market_id: ethusd

@@ -9,9 +9,8 @@ describe Arke::Exchange::Rubykube do
       "secret" => SecureRandom.hex
     }
   end
-
-  let(:market) { Arke::Market.new(market_config, rubykube) }
-  let(:market_config) { {"id" => "ethusd"} }
+  let(:market_id) { "ethusd" }
+  let(:market) { Arke::Market.new(market_id, rubykube) }
   let(:strategy) { Arke::Strategy::Copy.new({}) }
   let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
   let(:rubykube) { Arke::Exchange::Rubykube.new(exchange_config) }

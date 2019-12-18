@@ -5,8 +5,8 @@ require "rails_helper"
 describe Arke::Strategy::Orderback do
   let!(:strategy) { Arke::Strategy::Orderback.new([source], target, config, nil) }
   let(:account) { Arke::Exchange.create(account_config) }
-  let(:source) { Arke::Market.new(config["sources"].first["market"], account, Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS) }
-  let(:target) { Arke::Market.new(config["target"]["market"], account, Arke::Helpers::Flags::DEFAULT_TARGET_FLAGS) }
+  let(:source) { Arke::Market.new(config["sources"].first["market_id"], account, Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS) }
+  let(:target) { Arke::Market.new(config["target"]["market_id"], account, Arke::Helpers::Flags::DEFAULT_TARGET_FLAGS) }
   let(:side) { "both" }
   let(:spread_asks) { 0.01 }
   let(:spread_bids) { 0.02 }
@@ -33,15 +33,11 @@ describe Arke::Strategy::Orderback do
       },
       "target"  => {
         "account_id" => 1,
-        "market"     => {
-          "id" => "BTCUSD",
-        },
+        "market_id"  => "BTCUSD",
       },
       "sources" => [
         "account_id" => 1,
-        "market"     => {
-          "id" => "BTCUSD",
-        },
+        "market_id"  => "BTCUSD",
       ],
     }
   end

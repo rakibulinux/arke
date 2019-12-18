@@ -9,8 +9,9 @@ describe Arke::Exchange::Kraken do
     }
   end
   let(:kraken) { Arke::Exchange::Kraken.new(exchange_config) }
-  let(:market_config) { {"id" => "XBTUSD"} }
-  let(:market) { Arke::Market.new(market_config, kraken) }
+  let(:market_id) { "XBTUSD" }
+
+  let(:market) { Arke::Market.new(market_id, kraken) }
 
   context "market_config" do
     it "returns market configuration" do

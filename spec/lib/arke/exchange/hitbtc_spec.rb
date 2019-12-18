@@ -9,12 +9,8 @@ describe Arke::Exchange::Hitbtc do
       "secret" => "skhfksjhgksdjhfksjdfkjsdfksjhdkfsj"
     )
   end
-  let(:market_config) do
-    {
-      "id" => "ETHUSD"
-    }
-  end
-  let!(:market) { Arke::Market.new(market_config, hitbtc) }
+  let(:market_id) { "ETHUSD" }
+  let!(:market) { Arke::Market.new(market_id, hitbtc) }
 
   context "get_balances" do
     it "fetchs the account balance in arke format" do

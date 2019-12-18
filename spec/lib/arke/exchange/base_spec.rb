@@ -6,12 +6,6 @@ describe Arke::Exchange::Binance do
     Arke::Exchange::Base.new("driver" => "base")
   end
 
-  let(:market_config) do
-    {
-      "market" => {"id" => "ETHUSDt"},
-    }
-  end
-
   let(:balance_btc) do
     {
       "currency" => "BTC",

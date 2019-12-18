@@ -8,12 +8,8 @@ describe Arke::Exchange::Luno do
       "secret" => "skhfksjhgksdjhfksjdfkjsdfksjhdkfsj"
     )
   end
-  let(:market_config) do
-    {
-      "id" => "XBTZAR"
-    }
-  end
-  let!(:market) { Arke::Market.new(market_config, luno) }
+  let(:market_id) { "XBTZAR" }
+  let!(:market) { Arke::Market.new(market_id, luno) }
 
   context "get_balances" do
     it "fetchs the account balance in arke format" do

@@ -37,7 +37,12 @@ module Arke
     def build_market(config, mode)
       return nil unless config
 
-      @markets << Market.new(config["market"], get_account(config["account_id"]), mode)
+      market_id = config["market_id"]
+      if market_id.nil? && config["market"]&.key?("id")
+        market_id = config["market"]["id"]
+        logger.warn "market:id in configuration will be deprecated in favor of market_id"
+      end
+      @markets << Market.new(market_id, get_account(config["account_id"]), mode)
       @markets.last
     end
 

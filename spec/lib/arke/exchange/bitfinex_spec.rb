@@ -4,11 +4,8 @@ describe Arke::Exchange::Bitfinex do
   include_context "mocked bitfinex"
 
   let(:config) { YAML.safe_load(file_fixture("test_config.yaml").read) }
-  let(:market_config) do
-    {
-      "id" => "ETHUSD"
-    }
-  end
+  let(:market_id) { "ETHUSD" }
+
   let(:bitfinex_config) do
     {
       "driver"     => "bitfinex",
@@ -20,7 +17,7 @@ describe Arke::Exchange::Bitfinex do
   end
   let(:strategy) { Arke::Strategy::Copy.new(config) }
   let(:bitfinex) { Arke::Exchange::Bitfinex.new(bitfinex_config) }
-  let!(:market) { Arke::Market.new(market_config, bitfinex) }
+  let!(:market) { Arke::Market.new(market_id, bitfinex) }
 
   context "market_config" do
     it "generates market configuration" do

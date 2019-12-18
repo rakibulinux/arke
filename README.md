@@ -59,13 +59,11 @@ strategies:
 
   target:
     account_id: example-account1
-    market:
-      id: BTCUSDT
+    market_id: BTCUSDT
 
   sources:
   - account_id: binance-account
-    market:
-      id: BTCUSDT
+    market_id: BTCUSDT
 
 - id: BTCUSDT-micro
   type: microtrades
@@ -82,8 +80,7 @@ strategies:
 
   target:
     account_id: example-account2
-    market:
-      id: BTCUSDT
+    market_id: BTCUSDT
 
 ```
 
@@ -207,29 +204,23 @@ It is a security in case the strategy which creates the market crash or have a d
 The spread applied on circuitbraker strategy should be lower than the spead used by the strategy creating the orderbook.
 
 
-#### Market configuration
-
-| Field                   | Description                                                  |
-| ----------------------- | ------------------------------------------------------------ |
-| `id`                    | ID of market                                                 |
-
-
-
 ##### Target configuration
 
 | Field        | Description                                             |
 | ------------ | ------------------------------------------------------- |
 | `account_id` | ID of account which will place order on target exchange |
-| `market`     | Market configuration you can see above                  |
+| `market_id`  | ID of the market as it is on the target exchange        |
 
 
 
 ##### Sources configuration
 
+List of following configuration statement:
+
 | Field        | Description                                             |
 | ------------ | ------------------------------------------------------- |
 | `account_id` | ID of account which will place order on target exchange |
-| `market`     | Market configuration you can see above                  |
+| `market_id`  | ID of the market as it is on the source exchange        |
 
 ### InfluxDB
 

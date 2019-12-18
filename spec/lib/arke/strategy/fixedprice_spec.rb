@@ -5,7 +5,7 @@ require "rails_helper"
 describe Arke::Strategy::Fixedprice do
   let(:strategy) { Arke::Strategy::Fixedprice.new([], target, config, nil) }
   let(:account) { Arke::Exchange.create(config["target"]) }
-  let(:target) { Arke::Market.new(config["target"]["market"], account) }
+  let(:target) { Arke::Market.new(config["target"]["market_id"], account) }
 
   let(:price) { 123 }
   let(:random_delta) { 0 }
@@ -30,10 +30,8 @@ describe Arke::Strategy::Fixedprice do
         "side"            => side,
       },
       "target" => {
-        "driver" => "bitfaker",
-        "market" => {
-          "id" => "BTCUSD",
-        },
+        "driver"    => "bitfaker",
+        "market_id" => "BTCUSD",
       }
     }
   end
@@ -114,7 +112,7 @@ describe Arke::Strategy::Fixedprice do
         122.96.to_d => 0.16e0.to_d,
         122.97.to_d => 0.22e0.to_d,
         122.98.to_d => 0.28e0.to_d,
-        122.99.to_d => 0.34e0.to_d,
+        122.99.to_d => 0.34e0.to_d
       )
 
       expect(target_asks.to_hash).to eq(
