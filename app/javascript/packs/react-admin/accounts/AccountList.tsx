@@ -1,20 +1,18 @@
 import * as React from "react";
 import { connect } from "react-redux";
 import { push } from "react-router-redux";
-
 import {
-  Datagrid,
   List,
   TextField,
   CreateButton,
   ExportButton,
   ReferenceField,
-  DateField,
 } from "react-admin";
-import { withStyles } from "@material-ui/styles";
 import { Route } from "react-router";
-import { Drawer, Toolbar, Modal, Backdrop, Fade } from "@material-ui/core";
+import { Toolbar, Modal } from "@material-ui/core";
+import { makeStyles } from '@material-ui/core/styles';
 import { AccountCreate, AccountEdit }  from "./";
+import { StyledDatagrid } from "../partials";
 
 interface AccountProps {
   basePath: any;
@@ -39,9 +37,7 @@ const AccountActions = ({
   exporter,
   filters,
   filterValues,
-  onUnselectItems,
   resource,
-  selectedIds,
   showFilter,
   total
 }) => (
@@ -66,46 +62,46 @@ const AccountActions = ({
   </Toolbar>
 );
 
-const styles = {
+const useModalStyles = makeStyles({
   modal: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  paper: {
-    border: '2px solid #000',
-  },
-};
+});
 
 class AccountList extends React.Component<AccountProps> {
   render() {
     const props = this.props;
-    const classes = props.classes;
 
     return (
       <React.Fragment>
       <List {...props} actions={<AccountActions {...props}/>}>
-        <Datagrid rowClick="edit">
-          <TextField source="id" />
-          <ReferenceField source="exchange_id" reference="exchanges">
-            <TextField source="id" />
-          </ReferenceField>
+        <StyledDatagrid rowClick="edit">
           <TextField source="name" />
-          <DateField source="created_at" />
-          <DateField source="updated_at" />
+          <ReferenceField source="exchange_id" reference="exchanges" label="Driver">
+            <TextField source="name" />
+          </ReferenceField>
           <TextField source="api_key" />
-          <TextField source="api_secret" />
-        </Datagrid>
+          <TextField label="Requests delay" />
+          <TextField label="Status" />
+          {/* <SimpleForm toolbar={null} label="Active"> */}
+            {/* <BooleanInput source="_active" label="" /> */}
+          {/* </SimpleForm> */}
+          <TextField label="Actions" />
+        </StyledDatagrid>
       </List>
       <Route
         path="/accounts/create"
         component={() => (
-          <Modal open onClose={this.handleClose}
-          aria-labelledby="transition-modal-title"
-          aria-describedby="transition-modal-description"
-          className={classes.modal}
+          <Modal
+            open
+            onClose={this.handleClose}
+            aria-labelledby="transition-modal-title"
+            aria-describedby="transition-modal-description"
+            className={useModalStyles(props).modal}
           >
-            <AccountCreate {...props} className={classes.paper} />
+            <AccountCreate {...props} />
           </Modal>
         )}
       />
@@ -115,16 +111,18 @@ class AccountList extends React.Component<AccountProps> {
 
           if(isMatch) {
             return (
-              <Modal open onClose={this.handleClose}
-              aria-labelledby="transition-modal-title"
-              aria-describedby="transition-modal-description"
-              className={classes.modal}
+              <Modal
+                open
+                onClose={this.handleClose}
+                aria-labelledby="transition-modal-title"
+                aria-describedby="transition-modal-description"
+                className={useModalStyles(props).modal}
               >
-                  <AccountEdit
-                    id={match.params.id}
-                    onCancel={this.handleClose}
-                    {...props}
-                  />
+                <AccountEdit
+                  {...props}
+                  id={match.params.id}
+                  onCancel={this.handleClose}
+                />
               </Modal>
             );
           }
@@ -137,11 +135,11 @@ class AccountList extends React.Component<AccountProps> {
   }
 
   handleClose = () => {
-    this.props.history.push("/accounts");
+    this.props.history.push('/accounts');
   };
 }
 
 export default connect(
   undefined,
   { push }
-)(withStyles(styles)(AccountList));
+)(AccountList);

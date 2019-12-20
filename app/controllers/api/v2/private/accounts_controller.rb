@@ -40,7 +40,7 @@ module Api::V2::Private
 
     # DELETE /accounts/1
     def destroy
-      @account.destroy
+      json_response(@account.destroy.deep_dup, 200)
     end
 
   private
@@ -52,7 +52,7 @@ module Api::V2::Private
 
     # Only allow a trusted parameter "white list" through.
     def account_params
-      params.require(:account).permit(:exchange_id, :name, api_key: [:key, :secret])
+      params.require(:account).permit(:exchange_id, :name, :api_key, :api_secret)
     end
   end
 end

@@ -11,7 +11,7 @@ class Account < ApplicationRecord
   has_and_belongs_to_many :robots
 
   validates :name, presence: true, length: { minimum: 3 }, format: { with: /\A[a-z]+[a-z0-9_-]*\z/}
-  
+
   vault_attribute :api_key
   vault_attribute :api_secret
 

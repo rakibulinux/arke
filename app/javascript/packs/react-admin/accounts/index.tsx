@@ -1,41 +1,63 @@
 import * as React from 'react';
 import {
   Create,
-  Datagrid,
-  DateField,
   Edit,
-  EmailField,
-  Filter,
-  List,
-  NumberInput,
-  NumberField,
   SimpleForm,
-  SimpleShowLayout,
-  Show,
-  SelectInput,
-  TextField,
-  TextInput,
-  ReferenceField,
   ReferenceInput,
-  CreateButton,
-  CardActions,
-  ExportButton,
+  Toolbar,
+  SaveButton,
 } from 'react-admin';
-import { Drawer, Toolbar } from '@material-ui/core';
-import { Route } from 'react-router';
 
-const AccountForm = props => (
-  <SimpleForm {...props}>
-    <ReferenceInput source="exchange_id" reference="exchanges">
-      <SelectInput optionText="id" />
-    </ReferenceInput>
-    <TextInput source="name" />
-    <TextInput source="api_key" />
-    <TextInput source="api_secret" />
-  </SimpleForm>
+import { StyledSelectInput, StyledTextInput, StyledNumberInput } from '../partials';
+import { makeStyles } from '@material-ui/core/styles';
+import { CardHeader } from '@material-ui/core';
+
+const useToolbarStyles = makeStyles({
+  toolbar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    backgroundColor: 'inherit',
+    marginTop: '0px',
+    padding: '0 16px',
+  }
+});
+
+const useButtonStyles = makeStyles({
+  button: {
+    width: '100%',
+    padding: '8px 0px'
+  }
+});
+
+const AccountToolbar = props => (
+  <Toolbar {...props} classes={useToolbarStyles(props)}>
+    <SaveButton
+      classes={useButtonStyles(props)}
+      icon={<React.Fragment />}
+      label="SAVE"
+    />
+  </Toolbar>
 );
 
-export const AccountEdit = props => (
+const AccountForm = props => (
+  <React.Fragment>
+    {props.title &&  <CardHeader title={props.title} />}
+    <SimpleForm {...props} margin="dense" toolbar={<AccountToolbar />}>
+
+      <StyledTextInput source="name" label="Name" />
+      <ReferenceInput source="exchange_id" reference="exchanges" label="Driver">
+        <StyledSelectInput optionText="name" variant="standard" />
+      </ReferenceInput>
+      <StyledTextInput source="api_url" label="API base URL" />
+      <StyledTextInput source="ws_url" label="Websocket API base URL" />
+      <StyledNumberInput source="delay" />
+      <StyledTextInput source="api_key" />
+      <StyledTextInput source="api_secret" />
+    </SimpleForm>
+  </React.Fragment>
+);
+
+export const AccountEdit = (props) => (
   <Edit {...props}>
     <AccountForm />
   </Edit>
@@ -43,6 +65,6 @@ export const AccountEdit = props => (
 
 export const AccountCreate = props => (
   <Create {...props}>
-    <AccountForm />
+    <AccountForm title="Add new account" />
   </Create>
 );

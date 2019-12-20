@@ -14,6 +14,7 @@ import {
   TextField,
   TextInput,
 } from 'react-admin';
+import { StyledDatagrid } from '../partials';
 
 const StrategySelect = props => (
   <SelectInput source="strategy" choices={[
@@ -48,7 +49,7 @@ const RobotFilter = props => (
 
 export const RobotList = props => (
   <List filters={<RobotFilter />} {...props}>
-    <Datagrid rowClick="edit">
+    <StyledDatagrid rowClick="edit">
       <TextField source="id" />
       <TextField source="name" />
       <TextField source="strategy" />
@@ -56,7 +57,7 @@ export const RobotList = props => (
       <TextField source="state" />
       <DateField source="created_at" />
       <DateField source="updated_at" />
-    </Datagrid>
+    </StyledDatagrid>
   </List>
 );
 

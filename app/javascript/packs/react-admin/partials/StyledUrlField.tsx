@@ -11,7 +11,7 @@ const useStyles = makeStyles({
   },
 });
 
-export const UrlField = ({ record = {}, source }: { record?: any, source: string }) => {
+export const StyledUrlField = ({ record = {}, source }: { record?: any, source: string }) => {
   const classes = useStyles({});
 
   return (
