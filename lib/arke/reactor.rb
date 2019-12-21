@@ -58,7 +58,15 @@ module Arke
       strategies_configs.map do |config|
         sources = Array(config["sources"]).map {|config| build_market(config, DEFAULT_SOURCE_FLAGS) }
         target = build_market(config["target"], DEFAULT_TARGET_FLAGS)
-        strategies << Arke::Strategy.create(sources, target, config, self)
+        strategy = Arke::Strategy.create(sources, target, config, self)
+        if config["fx"]
+          type = config["fx"]["type"]
+          raise "missing type in fx configuration for strategy id #{strategy['id']}" if type.to_s.empty?
+
+          fx_klass = Arke::Fx.const_get(type.capitalize)
+          strategy.fx = fx_klass.new(config["fx"])
+        end
+        strategies << strategy
       rescue StandardError => e
         report_fatal(e, config["id"])
       end
@@ -185,6 +193,10 @@ module Arke
       end
       return unless desired_orderbook
 
+      if strategy.fx
+        desired_orderbook, price_levels = strategy.fx.apply(desired_orderbook, price_levels)
+      end
+
       logger.debug { "ID:#{strategy.id} Current Orderbook\n#{strategy.target.open_orders}" }
       logger.debug { "ID:#{strategy.id} Desired Orderbook\n#{desired_orderbook}" }
       return if @dry_run
@@ -197,6 +209,7 @@ module Arke
       scheduler_opts[:limit_asks_base] = strategy.limit_asks_base if strategy.respond_to?(:limit_asks_base)
       scheduler_opts[:limit_bids_base] = strategy.limit_bids_base if strategy.respond_to?(:limit_bids_base)
       scheduler_opts[:limit_bids_quote] = strategy.limit_bids_quote if strategy.respond_to?(:limit_bids_quote)
+
       scheduler = ::Arke::Scheduler::Smart.new(
         strategy.target.open_orders,
         desired_orderbook,

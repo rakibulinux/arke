@@ -36,6 +36,9 @@ strategies:
   debug: true
   enabled: true
   period: 30
+  fx:
+    type: static
+    rate: 1.80
   params:
     spread_bids: 0.003
     spread_asks: 0.003

@@ -4,6 +4,7 @@ module Arke::Strategy
   # Base class for all strategies
   class Base
     attr_accessor :timer
+    attr_accessor :fx
     attr_reader :debug_infos, :period, :period_random_delay, :linked_strategy_id
     attr_reader :sources, :target, :id, :debug, :logger
     attr_reader :max_amount_per_order
