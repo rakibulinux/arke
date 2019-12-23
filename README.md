@@ -111,6 +111,7 @@ strategies:
 | `enabled`             | Flag to enable the strategy, could be: `true` or `false`     |
 | `period`              | Orderbook update period (in seconds), remember about delay in accounts and rate limit in peatio |
 | `period_random_delay` | Random delay which will be added to the static period        |
+| `fx`                  | Forex conversion rate configuration to apply to price, read bellow the documentation of the section |
 
 
 
@@ -221,6 +222,27 @@ List of following configuration statement:
 | ------------ | ------------------------------------------------------- |
 | `account_id` | ID of account which will place order on target exchange |
 | `market_id`  | ID of the market as it is on the source exchange        |
+
+##### Static forex conversion rate configuration
+
+Detail of the `fx` section to configure for a strategy:
+
+| Field        | Value          | Description                                                 |
+| ------------ | -------------- | ----------------------------------------------------------- |
+| `type`       | "static"       | The type of the forex class to use, which is "static" here  |
+| `rate`       | float          | Static value of the rate to apply to prices of the strategy |
+
+##### Dynamic forex conversion rate configuration
+
+Detail of the `fx` section to configure for a strategy:
+
+| Field           | Value   | Description                                                 |
+| --------------- | ------- | ----------------------------------------------------------- |
+| `type`          | "fixer" | The type of the forex class to use, the supported value is "fixer" for dynamic |
+| `api_key`       | string  | Fixer api key |
+| `currency_from` | string  | Currency code |
+| `currency_to`   | string  | Currency code |
+| `period`        | seconds | Refresh period in seconds, default: 3600 |
 
 ### InfluxDB
 

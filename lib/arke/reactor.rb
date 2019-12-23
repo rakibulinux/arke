@@ -99,9 +99,10 @@ module Arke
           EM::Synchrony.add_periodic_timer(23) { update_balances }
         end.resume
 
-        # Initialize executors
+        # Initialize executors & fx classes
         @strategies.each do |strategy|
           strategy.target.account.executor.create_queue(strategy.id)
+          strategy.fx&.start
         end
         @accounts.each_value {|account| account.executor.start } unless @dry_run
 

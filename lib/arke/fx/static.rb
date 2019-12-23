@@ -14,7 +14,11 @@ module Arke::Fx
       raise "invalid rate" if rate <= 0
     end
 
+    def start; end
+
     def apply(ob, price_levels)
+      raise "FX: Rate is not ready" if rate.nil?
+
       fx_ob = ::Arke::Orderbook::Orderbook.new(ob.market)
       fx_price_levels = {}
 
