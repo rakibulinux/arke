@@ -1,18 +1,19 @@
-import * as React from "react";
-import { connect } from "react-redux";
-import { push } from "react-router-redux";
+import * as React from 'react';
+import { connect } from 'react-redux';
+import { push } from 'react-router-redux';
 import {
   List,
   TextField,
   CreateButton,
   ExportButton,
   ReferenceField,
-} from "react-admin";
-import { Route } from "react-router";
-import { Toolbar, Modal } from "@material-ui/core";
+} from 'react-admin';
+import { Route } from 'react-router';
+import { Toolbar, Modal } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { AccountCreate, AccountEdit }  from "./";
-import { StyledDatagrid } from "../partials";
+
+import { AccountCreate, AccountEdit }  from './';
+import { StyledDatagrid as Datagrid } from '../partials';
 
 interface AccountProps {
   basePath: any;
@@ -58,7 +59,7 @@ const AccountActions = ({
           exporter={exporter}
       />
       {/* Add your custom actions */}
-      {/* <Button color="primary" onClick={customAction}>Custom Action</Button> */}
+      {/* <Button color='primary' onClick={customAction}>Custom Action</Button> */}
   </Toolbar>
 );
 
@@ -77,45 +78,45 @@ class AccountList extends React.Component<AccountProps> {
     return (
       <React.Fragment>
       <List {...props} actions={<AccountActions {...props}/>}>
-        <StyledDatagrid rowClick="edit">
-          <TextField source="name" />
-          <ReferenceField source="exchange_id" reference="exchanges" label="Driver">
-            <TextField source="name" />
+        <Datagrid rowClick='edit'>
+          <TextField source='name' />
+          <ReferenceField source='exchange_id' reference='exchanges' label='Driver'>
+            <TextField source='name' />
           </ReferenceField>
-          <TextField source="api_key" />
-          <TextField label="Requests delay" />
-          <TextField label="Status" />
-          {/* <SimpleForm toolbar={null} label="Active"> */}
-            {/* <BooleanInput source="_active" label="" /> */}
+          <TextField source='api_key' />
+          <TextField label='Requests delay' />
+          <TextField label='Status' />
+          {/* <SimpleForm toolbar={null} label='Active'> */}
+            {/* <BooleanInput source='_active' label=' /> */}
           {/* </SimpleForm> */}
-          <TextField label="Actions" />
-        </StyledDatagrid>
+          <TextField label='Actions' />
+        </Datagrid>
       </List>
       <Route
-        path="/accounts/create"
+        path='/accounts/create'
         component={() => (
           <Modal
             open
             onClose={this.handleClose}
-            aria-labelledby="transition-modal-title"
-            aria-describedby="transition-modal-description"
+            aria-labelledby='transition-modal-title'
+            aria-describedby='transition-modal-description'
             className={useModalStyles(props).modal}
           >
             <AccountCreate {...props} />
           </Modal>
         )}
       />
-      <Route path="/accounts/:id"
+      <Route path='/accounts/:id'
         component={({match}) => {
-          const isMatch = match && match.params && match.params.id !== "create";
+          const isMatch = match && match.params && match.params.id !== 'create';
 
           if(isMatch) {
             return (
               <Modal
                 open
                 onClose={this.handleClose}
-                aria-labelledby="transition-modal-title"
-                aria-describedby="transition-modal-description"
+                aria-labelledby='transition-modal-title'
+                aria-describedby='transition-modal-description'
                 className={useModalStyles(props).modal}
               >
                 <AccountEdit

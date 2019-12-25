@@ -22,26 +22,13 @@ const theme = createMuiTheme({
     },
     error: red,
   },
-  overrides: {}
-  //   MuiCard: { // padding for account form
-  //     root: {
-  //       padding: '8px',
-  //       paddingBottom: '18px',
-  //     }
-  //   },
-  //   MuiCardHeader: {
-  //     root: {
-  //       paddingBottom: '0px',
-  //     }
-  //   }
-  // }
 });
 
 const App = () => (
   <Admin dashboard={Dashboard} dataProvider={dataProvider} theme={theme} title={'ArkeAdmin'}>
-    <Resource name="robots" list={RobotList} edit={RobotEdit} create={RobotCreate} />
-    <Resource name="accounts" icon={UserIcon} list={AccountList} />
-    <Resource name="exchanges" />
+    <Resource name='robots' list={RobotList} edit={RobotEdit} create={RobotCreate} />
+    <Resource name='accounts' icon={UserIcon} list={AccountList} />
+    <Resource name='exchanges' />
   </Admin>
 );
 
