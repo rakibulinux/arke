@@ -1,16 +1,11 @@
 import * as React from 'react';
 import {
-  ArrayInput,
   Create,
   DateField,
   Edit,
   Filter,
-  FormDataConsumer,
   List,
-  SimpleForm,
-  SimpleFormIterator,
   TextField,
-  ListActions,
 } from 'react-admin';
 
 import {
@@ -23,16 +18,8 @@ import RobotForm, { StateSelect, StrategySelect } from './RobotForm';
 
 const RobotFilter = props => (
   <Filter {...props}>
-    <SelectInput source='state' choices={[
-      { id: 'disabled', name: 'disabled' },
-      { id: 'enabled', name: 'enabled' },
-    ]} />
-    <SelectInput source='strategy' choices={[
-      { id: 'copy', name: 'copy' },
-      { id: 'orderback', name: 'orderback' },
-      { id: 'fixedprice', name: 'fixedprice' },
-      { id: 'microtrades', name: 'microtrades' },
-    ]} />
+    <StateSelect source='state' />
+    <StrategySelect source='strategy' />
   </Filter>
 );
 
@@ -52,15 +39,16 @@ export const RobotList = props => (
 
 export const RobotEdit = props => {
   return (
-    <Edit {...props} component={props =>(<div {...props}></div>)} >
+    <Edit {...props} component={props =>(<div {...props}></div>)}>
       <RobotForm />
     </Edit>
   );
 };
 
 export const RobotCreate = props => (
-  <Create {...props}>
-    <SimpleForm>
+  <Create {...props} component={props =>(<div {...props}></div>)}>
+    <RobotForm />
+    {/* <SimpleForm>
       <TextInput source='name' />
       <StrategySelect />
       <StateSelect />
@@ -79,6 +67,6 @@ export const RobotCreate = props => (
           </FormDataConsumer>
         </SimpleFormIterator>
       </ArrayInput>
-    </SimpleForm>
+    </SimpleForm> */}
   </Create>
 );

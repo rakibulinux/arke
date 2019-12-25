@@ -15,6 +15,7 @@ import {
   StyledTextInput as TextInput,
   StyledNumberInput as NumberInput,
 } from '../partials';
+import { capitalize } from '../helpers';
 
 
 const useToolbarStyles = makeStyles({
@@ -46,10 +47,10 @@ const AccountToolbar = props => (
 
 const AccountForm = props => (
   <React.Fragment>
-    {props.title &&  <CardHeader title={props.title} />}
+    {props.title && <CardHeader title={props.title} />}
     <SimpleForm {...props} margin='dense' toolbar={<AccountToolbar />}>
 
-      <TextInput source='name' label='Name' />
+      <TextInput source='name' />
       <ReferenceInput source='exchange_id' reference='exchanges' label='Driver'>
         <SelectInput optionText='name' variant='standard' />
       </ReferenceInput>

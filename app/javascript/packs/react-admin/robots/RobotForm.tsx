@@ -11,10 +11,9 @@ import { makeStyles } from '@material-ui/core/styles';
 import {
   StyledSelectInput as SelectInput,
   StyledTextInput as TextInput,
+  StyledNumberInput as NumberInput,
 } from '../partials';
-import { capitalize } from '../helpers';
-
-const formOptions = (...options: string[]) => options.map(o => ({ id: o, name: capitalize(o) }))
+import { formOptions } from '../helpers';
 
 export const StrategySelect = props => (
   <SelectInput
@@ -36,17 +35,17 @@ const useCardStyle = makeStyles({
   card: {
     padding: '24px',
     alignItems: 'center',
-    marginTop: '37px'
+    marginTop: '37px',
   }
 });
 
 const CandleSticks = props => (
   <ArrayInput {...props} source='candlesticks'>
     <SimpleFormIterator>
-        <TextInput source='type' />
-        <TextInput source='period' />
-        <TextInput source='min_amount' />
-        <TextInput source='max_amount' />
+      <TextInput source='type' />
+      <TextInput source='period' />
+      <TextInput source='min_amount' />
+      <TextInput source='max_amount' />
     </SimpleFormIterator>
   </ArrayInput>
 );
@@ -54,17 +53,35 @@ const CandleSticks = props => (
 const RobotForm = props => (
   <React.Fragment>
     {props.title &&  <CardHeader title={props.title} />}
-    <SimpleForm {...props} margin='dense'>
       <Card className={useCardStyle(props).card}>
-        <TextField source='id' />
-        <TextInput source='name' />
-        <StrategySelect />
-        <StateSelect />
-        <TextInput multiline source='params' format={i => JSON.stringify(i)} />
+        <h2>General</h2>
+
+        <SimpleForm {...props} margin='dense'>
+          <TextInput source='account' />
+          <TextInput source='market' />
+        </SimpleForm>
       </Card>
 
-      <CandleSticks />
-    </SimpleForm>
+      {/* <CandleSticks /> */}
+      <Card className={useCardStyle(props).card}>
+        <h2>Orderbook</h2>
+
+        <SimpleForm {...props} margin='dense'>
+          <TextInput source='account_source' />
+          <NumberInput source='period' />
+          <NumberInput source='spread' />
+        </SimpleForm>
+      </Card>
+
+      <Card className={useCardStyle(props).card}>
+        <h2>Candlestick</h2>
+
+        <SimpleForm {...props} margin='dense'>
+          <TextInput source='type' />
+          <NumberInput source='period' />
+          <NumberInput source='min_amount' />
+        </SimpleForm>
+      </Card>
   </React.Fragment>
 );
 
