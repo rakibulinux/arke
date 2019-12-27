@@ -8,6 +8,7 @@ module Arke::Command
 
     def execute
       Arke::Log.level = Logger::Severity.const_get(conf["log_level"].upcase || "INFO")
+      Arke::Vault::auto_renew_token unless Arke::Vault::TOKEN.empty?
       Arke::Reactor.new(strategies_configs, accounts_configs, dry?).run
     end
   end

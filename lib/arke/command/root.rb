@@ -5,6 +5,7 @@ module Arke::Command
     subcommand "start", "Starting the bot", Start
     subcommand "show", "Show accounts informations", Show
     subcommand "order", "Create an order using an account", Order
+    subcommand "secrets", "Manage secrets", Secrets
     subcommand "version", "Print the Arke version", Version
   end
 end

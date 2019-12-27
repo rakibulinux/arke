@@ -36,7 +36,12 @@ module Arke::Helpers
 
     def accounts_configs
       if conf["accounts"]&.is_a?(Array)
-        conf["accounts"]
+        return conf["accounts"].map do |config|
+          config.each do |key, value|
+            config[key] = Arke::Vault::decrypt(value) if value.to_s.start_with?("vault:")
+          end
+          config
+        end
       else
         []
       end

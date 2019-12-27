@@ -294,3 +294,26 @@ Detail of the `fx` section to configure for a strategy:
 | `period`        | seconds | Refresh period in seconds, default: 3600                                       |
 | `https`         | boolean | Enable https communication (default true)                                      |
 
+### Secrets management
+
+Arke supports the ability to use secrets with vault.
+
+#### Setup vault environment
+
+Set vault token, vault URL, and vault app name in environment variables as follow:
+
+```sh
+VAULT_TOKEN=changeme
+VAULT_ADDR=http://localhost:8200
+VAULT_APP_NAME=appname
+```
+
+> *VAULT_APP_NAME will prefix all secrets to be able to define a specific policy for arke to access only those secrets. Arke will uses vault key as "arke_{VAULT_APP_NAME}_secrets"*
+
+#### Secret encryption
+
+Encrypt the secret with following command
+
+```sh
+arke secrets new "Your Secret"
+```
