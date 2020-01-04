@@ -14,6 +14,9 @@ module Arke::Exchange
     end
 
     def create_order(order)
+      raise "ACCOUNT:#{id} amount_s is nil" if order.amount_s.nil?
+      raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
+
       pp order
       response = OpenStruct.new
       response.env = OpenStruct.new

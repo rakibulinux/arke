@@ -19,6 +19,8 @@ describe Arke::Strategy::Microtrades do
   let(:linked_strategy_id) { nil }
   let(:min_price) { 100 }
   let(:max_price) { 100 }
+  let(:min_amount) { 350 }
+  let(:max_amount) { 400 }
 
   let(:account_config) do
     {
@@ -26,16 +28,18 @@ describe Arke::Strategy::Microtrades do
       "driver" => "bitfaker",
     }
   end
+  let(:side) { "both" }
   let(:config) do
     {
       "type"   => "microtrades",
       "params" => {
         "linked_strategy_id" => linked_strategy_id,
-        "min_amount"         => 350,
-        "max_amount"         => 400,
+        "min_amount"         => min_amount,
+        "max_amount"         => max_amount,
         "min_price"          => min_price,
         "max_price"          => max_price,
-        "price_difference"   => 0.05
+        "price_difference"   => 0.05,
+        "side"               => side,
       },
       "target" => {
         "driver"    => "bitfaker",
@@ -69,6 +73,48 @@ describe Arke::Strategy::Microtrades do
 
     it "delays the first execution" do
       expect(strategy.delay_the_first_execute).to eq(true)
+    end
+  end
+
+  context "strategy execution" do
+    let(:source) { Arke::Market.new(config["target"]["market_id"], account, source_mode) }
+    let(:linked_strategy_id) { 12 }
+    let(:linked_strategy) { Arke::Strategy::Base.new([source], target, config, reactor) }
+    let(:min_amount) { 250 }
+    let(:max_amount) { 250 }
+
+    context "on bids side" do
+      let(:side) { "bids" }
+
+      it "creates a buy order on the target" do
+        expect(reactor).to receive(:find_strategy).with(linked_strategy_id).exactly(:twice).and_return(linked_strategy)
+        linked_strategy.target.start
+
+        expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 145.803, 250, :buy, "limit"))
+        expect(target.account).to receive(:stop_order).once
+
+        EM.synchrony do
+          strategy.call
+          EM::Synchrony.add_timer(0.2) { EM.stop }
+        end
+      end
+    end
+
+    context "on asks side" do
+      let(:side) { "asks" }
+
+      it "creates a buy order on the target" do
+        expect(reactor).to receive(:find_strategy).with(linked_strategy_id).exactly(:twice).and_return(linked_strategy)
+        linked_strategy.target.start
+
+        expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 131.841, 171.339326, :sell, "limit"))
+        expect(target.account).to receive(:stop_order).once
+
+        EM.synchrony do
+          strategy.call
+          EM::Synchrony.add_timer(0.2) { EM.stop }
+        end
+      end
     end
   end
 

@@ -71,13 +71,14 @@ module Arke::Strategy
       else
         price = side == :buy ? @max_price : @min_price
       end
-      apply_precision(price, target.price_precision.to_f)
+      price
     end
 
     def call
       Fiber.new do
         side = @sides == "both" ? %i[buy sell].sample : @sides
         order = Arke::Order.new(target.id, get_price(side), get_amount(side), side)
+        order.apply_requirements(target.account)
         logger.warn "ID:#{id} Creating order #{order}"
         order = target.account.create_order(order)
         logger.warn "ID:#{id} Created order #{order}"
