@@ -64,12 +64,15 @@ module Arke::Exchange
     end
 
     def create_order(order)
+      raise "ACCOUNT:#{id} amount_s is nil" if order.amount_s.nil?
+      raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
+
       order = {
         "account-id": @account_id,
         "symbol":     order.market.downcase,
         "type":       "#{order.side}-limit",
-        "amount":     "%f" % order.amount,
-        "price":      "%f" % order.price,
+        "amount":     order.amount_s,
+        "price":      order.price_s,
       }
       authenticated_request("/v1/order/orders/place", "POST", order)
     end
@@ -80,9 +83,9 @@ module Arke::Exchange
         remaining_amount = o["amount"].to_f - o["filled-amount"].to_f
         # The order type, possible values are: buy-market, sell-market, buy-limit, sell-limit, buy-ioc, sell-ioc, buy-limit-maker, sell-limit-maker
         type = o["type"].split("-").first.to_sym
-        next unless o["symbol"].upcase == market.upcase
+        next unless o["symbol"].downcase == market.downcase
 
-        order = Arke::Order.new(o["symbol"].upcase, o["price"].to_f, remaining_amount, type)
+        order = Arke::Order.new(o["symbol"], o["price"].to_f, remaining_amount, type)
         order.id = o["id"]
         order
       end

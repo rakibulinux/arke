@@ -248,10 +248,13 @@ module Arke::Exchange
     end
 
     def create_order(order)
+      raise "ACCOUNT:#{id} amount_s is nil" if order.amount_s.nil?
+      raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
+
       order = {
         symbol: order.market,
-        amount: "%f" % order.amount,
-        price:  "%f" % order.price,
+        amount: order.amount_s,
+        price:  order.price_s,
         side:   order.side,
         type:   "exchange limit",
       }

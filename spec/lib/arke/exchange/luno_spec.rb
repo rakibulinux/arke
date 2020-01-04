@@ -64,6 +64,7 @@ describe Arke::Exchange::Luno do
     let(:order) { Arke::Order.new("XBTZAR", 1180.00, 0.10, :sell) }
 
     it "creates order" do
+      order.apply_requirements(luno)
       expect { luno.create_order(order) }.to_not raise_error(Exception)
     end
   end

@@ -148,11 +148,14 @@ module Arke::Exchange
     # PRIVATE METHODS
     #
     def create_order(order)
+      raise "ACCOUNT:#{id} amount_s is nil" if order.amount_s.nil?
+      raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
+
       params = {
         pair:      order.market,
         type:      order.side.to_s,
-        volume:    "%f" % order.amount,
-        price:     "%f" % order.price,
+        volume:    order.amount_s,
+        price:     order.price_s,
         ordertype: order.type.to_s,
       }
 

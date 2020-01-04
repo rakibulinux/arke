@@ -42,6 +42,8 @@ describe Arke::Order do
       order.apply_requirements(target_account)
       expect(order.price).to eq(1.123456)
       expect(order.amount).to eq(0.1)
+      expect(order.price_s).to eq("1.123456")
+      expect(order.amount_s).to eq("0.100000")
     end
 
     it "doesn't change price and amount if the precision is correct" do
@@ -49,11 +51,15 @@ describe Arke::Order do
       order.apply_requirements(target_account)
       expect(order.price).to eq(1.123456)
       expect(order.amount).to eq(2.456789)
+      expect(order.price_s).to eq("1.123456")
+      expect(order.amount_s).to eq("2.456789")
 
       order = Arke::Order.new("BTCUSD", 2.45, 1.12, :buy)
       order.apply_requirements(target_account)
       expect(order.price).to eq(2.45)
       expect(order.amount).to eq(1.12)
+      expect(order.price_s).to eq("2.450000")
+      expect(order.amount_s).to eq("1.120000")
     end
   end
 end

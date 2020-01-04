@@ -22,7 +22,6 @@ module Arke::Helpers
         n = -1
         while (value /= 10) > 1
           n -= 1
-          pp value
         end
       end
       n

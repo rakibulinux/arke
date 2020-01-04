@@ -15,8 +15,10 @@ describe Arke::Exchange::Rubykube do
   let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
   let(:rubykube) { Arke::Exchange::Rubykube.new(exchange_config) }
 
+
   context "mocked rubykube" do
     include_context "mocked rubykube"
+    before(:each) { order.apply_requirements(rubykube) }
 
     context "rubykube#create_order" do
       it "gets 403 on request with wrong api key" do

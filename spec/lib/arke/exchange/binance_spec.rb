@@ -138,14 +138,17 @@ describe Arke::Exchange::Binance do
     end
 
     it "creates an order on Binance" do
+      order.apply_requirements(binance)
       expect { binance.create_order(order) }.to_not raise_error(Exception)
     end
 
     it "creates an order on Binance" do
+      small_order.apply_requirements(binance)
       expect { binance.create_order(small_order) }.to_not raise_error(Exception)
     end
 
     it "incorrect order on Binance" do
+      very_small_order.apply_requirements(binance)
       expect { binance.create_order(very_small_order) }.to_not raise_error(Exception)
     end
   end
@@ -160,11 +163,11 @@ describe Arke::Exchange::Binance do
     end
 
     it "for normal order" do
-      expect(binance.get_amount(order)).to eq 1
+      expect(binance.get_amount(order)).to eq "1.00000"
     end
 
     it "where order notional more than 20% from min_notional" do
-      expect(binance.get_amount(danger_order)).to eq 3.33334
+      expect(binance.get_amount(danger_order)).to eq "3.33334"
     end
 
     it "amount of order too small" do

@@ -143,7 +143,8 @@ describe Arke::Exchange::Kraken do
     context "create_order" do
       it "creates an order" do
         order = ::Arke::Order.new("XRPUSD", 0.22, 100, :sell, :limit)
-        body = "pair=XRPUSD&type=sell&volume=100.000000&price=0.220000&ordertype=limit&nonce=1576353032322571"
+        order.apply_requirements(kraken)
+        body = "pair=XRPUSD&type=sell&volume=100.00000000&price=0.22000&ordertype=limit&nonce=1576353032322571"
         kraken.create_order(order)
         expect(WebMock).to have_requested(:post, "https://api.kraken.com/0/private/AddOrder")
           .with(body: body).once

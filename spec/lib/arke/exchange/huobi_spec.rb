@@ -29,13 +29,13 @@ describe Arke::Exchange::Huobi do
   end
 
   context "getting snapshot" do
-    let(:snapshot_buy_order_1) { Arke::Order.new("ETHUSDT", 135.84000000, 6.62227000, :buy) }
-    let(:snapshot_buy_order_2) { Arke::Order.new("ETHUSDT", 135.85000000, 0.57176000, :buy) }
-    let(:snapshot_buy_order_3) { Arke::Order.new("ETHUSDT", 135.87000000, 36.43875000, :buy) }
+    let(:snapshot_buy_order_1) { Arke::Order.new("ethusdt", 135.84000000, 6.62227000, :buy) }
+    let(:snapshot_buy_order_2) { Arke::Order.new("ethusdt", 135.85000000, 0.57176000, :buy) }
+    let(:snapshot_buy_order_3) { Arke::Order.new("ethusdt", 135.87000000, 36.43875000, :buy) }
 
-    let(:snapshot_sell_order_1) { Arke::Order.new("ETHUSDT", 135.91000000, 0.00070000, :sell) }
-    let(:snapshot_sell_order_2) { Arke::Order.new("ETHUSDT", 135.93000000, 8.00000000, :sell) }
-    let(:snapshot_sell_order_3) { Arke::Order.new("ETHUSDT", 135.95000000, 1.11699000, :sell) }
+    let(:snapshot_sell_order_1) { Arke::Order.new("ethusdt", 135.91000000, 0.00070000, :sell) }
+    let(:snapshot_sell_order_2) { Arke::Order.new("ethusdt", 135.93000000, 8.00000000, :sell) }
+    let(:snapshot_sell_order_3) { Arke::Order.new("ethusdt", 135.95000000, 1.11699000, :sell) }
 
     context "using default adapter" do
       let(:faraday_adapter) { Faraday.default_adapter }
@@ -129,15 +129,16 @@ describe Arke::Exchange::Huobi do
       market.fetch_openorders
       expect(market.open_orders[:buy].size).to eq(1)
       expect(market.open_orders[:sell].size).to eq(1)
-      expect(market.open_orders[:buy][0.452]).to eq(43 => Arke::Order.new("ETHUSDT", 0.452, 0.3, :buy))
-      expect(market.open_orders[:sell][0.453]).to eq(42 => Arke::Order.new("ETHUSDT", 0.453, 1.0, :sell))
+      expect(market.open_orders[:buy][0.452]).to eq(43 => Arke::Order.new("ethusdt", 0.452, 0.3, :buy))
+      expect(market.open_orders[:sell][0.453]).to eq(42 => Arke::Order.new("ethusdt", 0.453, 1.0, :sell))
     end
   end
 
   context "order_create" do
-    let(:order) { Arke::Order.new("ETHUSDT", 250, 1, :buy) }
+    let(:order) { Arke::Order.new("ethusdt", 250, 1, :buy) }
 
     it "creates an order on Huobi" do
+      order.apply_requirements(huobi)
       expect { huobi.create_order(order) }.to_not raise_error(Exception)
     end
   end

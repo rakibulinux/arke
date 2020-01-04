@@ -104,16 +104,18 @@ module Arke::Exchange
       min_notional = @min_notional[order.market] ||= get_min_notional(order.market)
       amount_precision = @amount_precision[order.market] ||= get_amount_precision(order.market)
       notional = order.price * order.amount
-      if notional > min_notional
-        order.amount
-      else
-        (min_notional / order.price).ceil(amount_precision)
-      end
+      amount = if notional > min_notional
+                 order.amount
+               else
+                 (min_notional / order.price).ceil(amount_precision)
+               end
+      "%0.#{amount_precision.to_i}f" % amount
     end
 
     def create_order(order)
       amount = get_amount(order)
-      return if amount.zero?
+      return if amount.to_f.zero?
+      raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
 
       raw_order = {
         symbol:        order.market.upcase,
@@ -121,7 +123,7 @@ module Arke::Exchange
         type:          "LIMIT",
         time_in_force: "GTC",
         quantity:      "%f" % amount,
-        price:         "%f" % order.price,
+        price:         order.price_s,
       }
       logger.debug { "Binance order: #{raw_order}" }
       @client.create_order!(raw_order)

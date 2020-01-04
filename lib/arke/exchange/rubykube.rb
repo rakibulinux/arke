@@ -15,7 +15,7 @@ module Arke::Exchange
       @ws_url = "#{config['ws']}/api/v2/#{@ranger_route}/private/?stream=order&stream=trade"
       @connection = Faraday.new(url: "#{config['host']}/api/v2") do |builder|
         builder.response :json
-        builder.response :logger if opts["debug"]
+        builder.response :logger if @debug
         builder.adapter(@adapter)
         builder.ssl[:verify] = config["verify_ssl"] unless config["verify_ssl"].nil?
       end
@@ -46,18 +46,21 @@ module Arke::Exchange
     # Takes +order+ (+Arke::Order+ instance)
     # * creates +order+ via RestApi
     def create_order(order)
+      raise "ACCOUNT:#{id} amount_s is nil" if order.amount_s.nil?
+      raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
+
       params = {
         market:   order.market.downcase,
         side:     order.side.to_s,
-        volume:   "%f" % order.amount,
+        volume:   order.amount_s,
+        price:    order.price_s,
         ord_type: order.type,
-        price:    "%f" % order.price,
       }
       params.delete(:price) if order.type == "market"
       response = post("#{@peatio_route}/market/orders", params)
 
       if response.status >= 300
-        Arke::Log.warn "ACCOUNT:#{id} Failed to create order #{order} status:#{response.status}(#{response.reason_phrase}) body:#{response.body}"
+        logger.warn { "ACCOUNT:#{id} Failed to create order #{order} status:#{response.status}(#{response.reason_phrase}) body:#{response.body}" }
       end
 
       if order.type == "limit" && response.env.status == 201 && response.env.body["id"]
@@ -177,6 +180,7 @@ module Arke::Exchange
     # * takes +path+ - request url
     # * takes +params+ - body for +POST+ request
     def post(path, params=nil)
+      logger.info { "ACCOUNT:#{id} POST: #{path} PARAMS: #{params}" } if @debug
       response = @connection.post do |req|
         req.headers = generate_headers
         req.url path

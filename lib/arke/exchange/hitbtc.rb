@@ -55,11 +55,14 @@ module Arke::Exchange
     end
 
     def create_order(order)
+      raise "ACCOUNT:#{id} amount_s is nil" if order.amount_s.nil?
+      raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
+
       ord = {
         symbol:   order.market.upcase,
         side:     order.side,
-        quantity: "%f" % order.amount,
-        price:    "%f" % order.price
+        quantity: order.amount_s,
+        price:    order.price_s,
       }
       @connection.post do |req|
         req.url "/api/2/order"

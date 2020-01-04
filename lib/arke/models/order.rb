@@ -4,7 +4,7 @@ module Arke
   class Order
     include Arke::Helpers::Precision
 
-    attr_reader :market, :price, :side, :type
+    attr_reader :market, :price, :side, :type, :price_s, :amount_s
     attr_accessor :amount, :id
 
     def initialize(market, price, amount, side, type="limit", id=nil)
@@ -38,9 +38,15 @@ module Arke
     # - Minimum amount
     #
     def apply_requirements(target_exchange)
-      config = target_exchange.market_config(@market)
-      @price = apply_precision(@price, config["price_precision"])
-      @amount = apply_precision(@amount, config["amount_precision"], config["min_amount"])
+      market_config = target_exchange.market_config(@market)
+      price_precision = market_config["price_precision"]
+      amount_precision = market_config["amount_precision"]
+      min_amount = market_config["min_amount"]
+
+      @price = apply_precision(@price, price_precision)
+      @amount = apply_precision(@amount, amount_precision, min_amount)
+      @price_s = "%0.#{price_precision.to_i}f" % @price
+      @amount_s = "%0.#{amount_precision.to_i}f" % @amount
     end
   end
 end

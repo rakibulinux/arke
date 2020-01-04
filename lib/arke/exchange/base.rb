@@ -15,6 +15,7 @@ module Arke::Exchange
     def initialize(opts)
       @logger = Arke::Log
       @driver = opts["driver"]
+      @debug = opts["debug"] == true
       @host = opts["host"]
       @api_key = opts["key"]
       @secret = opts["secret"]

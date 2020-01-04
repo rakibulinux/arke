@@ -164,6 +164,7 @@ describe Arke::Exchange::Bitfinex do
     let(:order) { Arke::Order.new("ETHUSD", 135.84, 6.62227, :buy) }
 
     it "successfull" do
+      order.apply_requirements(bitfinex)
       response = bitfinex.create_order(order)
                          .slice("symbol", "price", "side", "original_amount")
 
