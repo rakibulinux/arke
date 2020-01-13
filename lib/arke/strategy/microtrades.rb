@@ -46,7 +46,7 @@ module Arke::Strategy
 
     def get_amount(side)
       side_min_value = side == :sell ? target.min_amount.to_f : target.min_amount.to_f
-      amount = rand(@min_amount..@max_amount)
+      amount = rand(@min_amount.to_f..@max_amount.to_f)
       if @linked_strategy_id
         linked_target = @reactor.find_strategy(@linked_strategy_id).target
         side = side == :sell ? :buy : :sell
