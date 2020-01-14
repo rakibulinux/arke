@@ -9,6 +9,7 @@ module Arke::Fx
       @logger = Arke::Log
       @period = config["period"]&.to_i || DEFAULT_PERIOD
       @api_key = config["api_key"]
+      @https = config["https"] != false
       @currency_from = config["currency_from"]
       @currency_to = config["currency_to"]
       @debug = config["debug"] == true
@@ -17,7 +18,7 @@ module Arke::Fx
     end
 
     def start
-      @cnx = Faraday.new(url: "https://data.fixer.io/api") do |builder|
+      @cnx = Faraday.new(url: "%s://data.fixer.io/api" % [@https ? "https" : "http"]) do |builder|
         builder.response :json
         builder.response :logger if @debug
         builder.adapter(@adapter)

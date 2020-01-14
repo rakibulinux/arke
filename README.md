@@ -235,13 +235,14 @@ Detail of the `fx` section to configure for a strategy:
 
 Detail of the `fx` section to configure for a strategy:
 
-| Field           | Value   | Description                                                 |
-| --------------- | ------- | ----------------------------------------------------------- |
+| Field           | Value   | Description                                                                    |
+| --------------- | ------- | ------------------------------------------------------------------------------ |
 | `type`          | "fixer" | The type of the forex class to use, the supported value is "fixer" for dynamic |
-| `api_key`       | string  | Fixer api key |
-| `currency_from` | string  | Currency code |
-| `currency_to`   | string  | Currency code |
-| `period`        | seconds | Refresh period in seconds, default: 3600 |
+| `api_key`       | string  | Fixer api key                                                                  |
+| `currency_from` | string  | Currency code                                                                  |
+| `currency_to`   | string  | Currency code                                                                  |
+| `period`        | seconds | Refresh period in seconds, default: 3600                                       |
+| `https`         | boolean | Enable https communication (default true)                                      |
 
 ### InfluxDB
 
