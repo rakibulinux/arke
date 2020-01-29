@@ -69,7 +69,15 @@ module Arke::Strategy
     def order_back(trade, order)
       logger.info("ID:#{id} Trade on #{trade.market}, #{order.side} price: #{trade.price} amount: #{trade.volume}")
       spread = order.side == :sell ? @spread_asks : @spread_bids
-      price = remove_spread(order.side, trade.price, spread)
+      price = remove_spread(order.side, order.price, spread)
+      if fx
+        unless fx.rate
+          logger.error "ID:#{id} FX Rate is not ready, delaying the orderback by 1 sec"
+          EM::Synchrony.add_timer(1) { order_back(trade, order) }
+          return
+        end
+        price /= fx.rate
+      end
       type = order.side == :sell ? :buy : :sell
 
       logger.info("ID:#{id} Buffering order back #{trade.market}, #{type} price: #{price} amount: #{trade.volume}")

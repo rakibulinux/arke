@@ -14,6 +14,7 @@ describe Arke::Strategy::Orderback do
   let(:limit_bids_base) { 1.5 }
   let(:orderback_grace_time) { nil }
   let(:enable_orderback) { "true" }
+  let(:fx_config) { nil }
 
   let(:config) do
     {
@@ -31,6 +32,7 @@ describe Arke::Strategy::Orderback do
         "orderback_grace_time"  => orderback_grace_time,
         "enable_orderback"      => enable_orderback,
       },
+      "fx"      => fx_config,
       "target"  => {
         "account_id" => 1,
         "market_id"  => "BTCUSD",
@@ -190,13 +192,30 @@ describe Arke::Strategy::Orderback do
   context "notify_private_trade" do
     let(:orderback_grace_time) { 0.002 }
 
-    it "triggers an order back to the source market" do
+    it "triggers a buy back to the source market" do
       order = ::Arke::Order.new("BTCUSD", 139.45, 1, :sell, "limit", 14)
       target.add_order(order)
       trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 139.45, 69.725, 14)
       source.account.executor = double(:executor)
 
       orderb = ::Arke::Order.new("BTCUSD", 138.069306, 0.5, :buy, "limit")
+      actions = [
+        ::Arke::Action.new(:order_create, source, order: orderb)
+      ]
+      expect(source.account.executor).to receive(:push).with(actions)
+      EM.synchrony do
+        strategy.notify_private_trade(trade)
+        EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
+      end
+    end
+
+    it "triggers a sell back to the source market" do
+      order = ::Arke::Order.new("BTCUSD", 98, 1, :buy, "limit", 14)
+      target.add_order(order)
+      trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 98, 49, 14)
+      source.account.executor = double(:executor)
+
+      orderb = ::Arke::Order.new("BTCUSD", 100, 0.5, :sell, "limit")
       actions = [
         ::Arke::Action.new(:order_create, source, order: orderb)
       ]
@@ -289,5 +308,225 @@ describe Arke::Strategy::Orderback do
         EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
       end
     end
+  end
+
+  context "fx rate applied from the source prices" do
+    let(:fx_config) do
+      {
+        "type" => "static",
+        "rate" => 0.5,
+      }
+    end
+
+    before(:each) do
+      if config["fx"]
+        type = config["fx"]["type"]
+        fx_klass = Arke::Fx.const_get(type.capitalize)
+        strategy.fx = fx_klass.new(config["fx"])
+      end
+    end
+
+    context "notify_private_trade" do
+      let(:orderback_grace_time) { 0.002 }
+
+      it "triggers a buy back to the source market" do
+        order = ::Arke::Order.new("BTCUSD", 101, 1, :sell, "limit", 14)
+        target.add_order(order)
+        trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 101, 50.50, 14)
+        source.account.executor = double(:executor)
+
+        orderb = ::Arke::Order.new("BTCUSD", 200, 0.5, :buy, "limit")
+        actions = [
+          ::Arke::Action.new(:order_create, source, order: orderb)
+        ]
+        expect(source.account.executor).to receive(:push).with(actions)
+        EM.synchrony do
+          strategy.notify_private_trade(trade)
+          EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
+        end
+      end
+
+      it "triggers a sell back to the source market" do
+        order = ::Arke::Order.new("BTCUSD", 98, 1, :buy, "limit", 14)
+        target.add_order(order)
+        trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 98, 49, 14)
+        source.account.executor = double(:executor)
+
+        orderb = ::Arke::Order.new("BTCUSD", 200, 0.5, :sell, "limit")
+        actions = [
+          ::Arke::Action.new(:order_create, source, order: orderb)
+        ]
+        expect(source.account.executor).to receive(:push).with(actions)
+        EM.synchrony do
+          strategy.notify_private_trade(trade)
+          EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
+        end
+      end
+    end
+
+    context "notify_private_trade with a different price from the order" do
+      let(:orderback_grace_time) { 0.002 }
+
+      it "triggers a buy back to the source market" do
+        order = ::Arke::Order.new("BTCUSD", 101, 1, :sell, "limit", 14)
+        target.add_order(order)
+        trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 102, 51, 14)
+        source.account.executor = double(:executor)
+
+        orderb = ::Arke::Order.new("BTCUSD", 200, 0.5, :buy, "limit")
+        actions = [
+          ::Arke::Action.new(:order_create, source, order: orderb)
+        ]
+        expect(source.account.executor).to receive(:push).with(actions)
+        EM.synchrony do
+          strategy.notify_private_trade(trade)
+          EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
+        end
+      end
+    end
+
+    context "notify_private_trade called several times with trades of the same price" do
+      let(:orderback_grace_time) { 0.002 }
+
+      it "triggers one order back to the source market" do
+        order = ::Arke::Order.new("BTCUSD", 101, 1, :sell, "limit", 14)
+        target.add_order(order)
+        trade1 = ::Arke::Trade.new(42, "BTCUSD", nil, 0.1, 101, nil, 14)
+        trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 101, nil, 14)
+        trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 101, nil, 14)
+
+        orderb = ::Arke::Order.new("BTCUSD", 200, 0.6, :buy, "limit")
+        actions = [
+          ::Arke::Action.new(:order_create, source, order: orderb)
+        ]
+        source.account.executor = double(:executor)
+        expect(source.account.executor).to receive(:push).with(actions)
+        EM.synchrony do
+          strategy.notify_private_trade(trade1)
+          strategy.notify_private_trade(trade2)
+          strategy.notify_private_trade(trade3)
+          EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
+        end
+      end
+    end
+
+    context "notify_private_trade called several times with trades of different prices" do
+      let(:orderback_grace_time) { 0.01 }
+
+      it "triggers several orders back to the source" do
+        order1 = ::Arke::Order.new("BTCUSD", 101, 1, :sell, "limit", 14)
+        order2 = ::Arke::Order.new("BTCUSD", 106.05, 1, :sell, "limit", 15)
+        target.add_order(order1)
+        target.add_order(order2)
+
+        trade1 = ::Arke::Trade.new(42, "BTCUSD", nil, 0.1, 101, nil, 14)
+        trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 101, nil, 14)
+        trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 106.05, nil, 15)
+
+        orderb1 = ::Arke::Order.new("BTCUSD", 200, 0.3, :buy, "limit")
+        orderb2 = ::Arke::Order.new("BTCUSD", 210, 0.3, :buy, "limit")
+        actions = [
+          ::Arke::Action.new(:order_create, source, order: orderb1),
+          ::Arke::Action.new(:order_create, source, order: orderb2)
+        ]
+        source.account.executor = double(:executor)
+        expect(source.account.executor).to receive(:push).with(actions)
+        EM.synchrony do
+          strategy.notify_private_trade(trade1)
+          strategy.notify_private_trade(trade2)
+          strategy.notify_private_trade(trade3)
+          EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
+        end
+      end
+    end
+
+    context "notify_private_trade called several times with trades of same price but different orders" do
+      let(:orderback_grace_time) { 0.01 }
+
+      it "triggers several orders back to the source" do
+        order1 = ::Arke::Order.new("BTCUSD", 101, 1, :sell, "limit", 14)
+        order2 = ::Arke::Order.new("BTCUSD", 101, 1, :sell, "limit", 15)
+        target.add_order(order1)
+        target.add_order(order2)
+
+        trade1 = ::Arke::Trade.new(42, "BTCUSD", nil, 0.1, 101, nil, 14)
+        trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 101, nil, 14)
+        trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 101, nil, 15)
+
+        orderb = ::Arke::Order.new("BTCUSD", 200, 0.6, :buy, "limit")
+        actions = [
+          ::Arke::Action.new(:order_create, source, order: orderb)
+        ]
+        source.account.executor = double(:executor)
+        expect(source.account.executor).to receive(:push).with(actions)
+        EM.synchrony do
+          strategy.notify_private_trade(trade1)
+          strategy.notify_private_trade(trade2)
+          strategy.notify_private_trade(trade3)
+          EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
+        end
+      end
+    end
+
+    context "notify_private_trade called several times with trades of same order price but different orders" do
+      let(:orderback_grace_time) { 0.01 }
+
+      it "triggers several orders back to the source" do
+        order1 = ::Arke::Order.new("BTCUSD", 101, 1, :sell, "limit", 14)
+        order2 = ::Arke::Order.new("BTCUSD", 101, 1, :sell, "limit", 15)
+        target.add_order(order1)
+        target.add_order(order2)
+
+        trade1 = ::Arke::Trade.new(42, "BTCUSD", nil, 0.1, 101, nil, 14)
+        trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 102, nil, 14)
+        trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 101, nil, 15)
+
+        orderb = ::Arke::Order.new("BTCUSD", 200, 0.6, :buy, "limit")
+        actions = [
+          ::Arke::Action.new(:order_create, source, order: orderb)
+        ]
+        source.account.executor = double(:executor)
+        expect(source.account.executor).to receive(:push).with(actions)
+        EM.synchrony do
+          strategy.notify_private_trade(trade1)
+          strategy.notify_private_trade(trade2)
+          strategy.notify_private_trade(trade3)
+          EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
+        end
+      end
+    end
+
+    context "notify_private_trade called while the fx rate is not ready yet" do
+      let(:orderback_grace_time) { 0.01 }
+
+      it "triggers several orders back to the source" do
+        order1 = ::Arke::Order.new("BTCUSD", 101, 1, :sell, "limit", 14)
+        order2 = ::Arke::Order.new("BTCUSD", 101, 1, :sell, "limit", 15)
+        target.add_order(order1)
+        target.add_order(order2)
+
+        trade1 = ::Arke::Trade.new(42, "BTCUSD", nil, 0.1, 101, nil, 14)
+        trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 102, nil, 14)
+        trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 101, nil, 15)
+
+        orderb = ::Arke::Order.new("BTCUSD", 2000, 0.6, :buy, "limit")
+        actions = [
+          ::Arke::Action.new(:order_create, source, order: orderb)
+        ]
+        source.account.executor = double(:executor)
+        expect(source.account.executor).to receive(:push).with(actions)
+
+        EM.synchrony do
+          strategy.fx.instance_variable_set(:@rate, nil)
+
+          strategy.notify_private_trade(trade1)
+          strategy.notify_private_trade(trade2)
+          strategy.notify_private_trade(trade3)
+          EM::Synchrony.add_timer(0.5) { strategy.fx.instance_variable_set(:@rate, 0.05) }
+          EM::Synchrony.add_timer(1.1) { EM.stop }
+        end
+      end
+    end
+
   end
 end
