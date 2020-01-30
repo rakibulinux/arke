@@ -11,7 +11,6 @@ describe Arke::Exchange::Rubykube do
   end
   let(:market_id) { "ethusd" }
   let(:market) { Arke::Market.new(market_id, rubykube) }
-  let(:strategy) { Arke::Strategy::Copy.new({}) }
   let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
   let(:rubykube) { Arke::Exchange::Rubykube.new(exchange_config) }
 
@@ -61,19 +60,74 @@ describe Arke::Exchange::Rubykube do
     context "rubykube#stop_order" do
       let(:order) { Arke::Order.new("ethusd", 1, 1, :buy, "limit", 42) }
 
-      it "sets proper url when stop order" do
-        market.add_order(order)
-        response = market.stop_order(order)
+      it "cancels an open order and doesn't notify when the cancel is pending" do
+        stub_request(:post, %r{peatio/market/orders/\d+/cancel})
+        .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
+        .to_return(
+          status: 201,
+          body: {
+            "id" => 51384,
+            "side" => "sell",
+            "ord_type" => "limit",
+            "price" => "178.92",
+            "avg_price" => "0.0",
+            "state" => "wait",
+            "market" => "ethusd",
+            "created_at" => "2020-01-30T14:08:55+01:00",
+            "updated_at" => "2020-01-30T14:08:55+01:00",
+            "origin_volume" => "1.0",
+            "remaining_volume" => "1.0",
+            "executed_volume" => "0.0",
+            "trades_count" => 0
+          }.to_json,
+          headers: {})
 
-        expect(response.env.url.to_s).to match(%r{peatio/market/orders/\d+/cancel})
+        cb = double("on_deleted_order callback", call: true)
+        rubykube.register_on_deleted_order(&cb.method(:call))
+        expect(cb).to_not receive(:call)
+        market.stop_order(order)
       end
 
-      it "sets proper header when stop order" do
-        market.add_order(order)
-        response = market.stop_order(order)
+      it "cancels an order already closed and notifies because we may have missed the confirmation from the websocket" do
+        stub_request(:post, %r{peatio/market/orders/\d+/cancel})
+        .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
+        .to_return(
+          status: 201,
+          body: {
+            "id" => 51384,
+            "side" => "sell",
+            "ord_type" => "limit",
+            "price" => "178.92",
+            "avg_price" => "0.0",
+            "state" => "cancel",
+            "market" => "ethusd",
+            "created_at" => "2020-01-30T14:08:55+01:00",
+            "updated_at" => "2020-01-30T14:08:55+01:00",
+            "origin_volume" => "1.0",
+            "remaining_volume" => "1.0",
+            "executed_volume" => "0.0",
+            "trades_count" => 0
+          }.to_json,
+          headers: {})
 
-        expect(response.env.request_headers.keys).to include("X-Auth-Apikey", "X-Auth-Nonce", "X-Auth-Signature", "Content-Type")
-        expect(response.env.request_headers).to include("X-Auth-Apikey" => @authorized_api_key)
+        cb = double("on_deleted_order callback", call: true)
+        rubykube.register_on_deleted_order(&cb.method(:call))
+        expect(cb).to receive(:call).once.with(order)
+        market.stop_order(order)
+      end
+
+      it "raises if we try to cancel a non existing order" do
+        stub_request(:post, %r{peatio/market/orders/\d+/cancel})
+        .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
+        .to_return(
+          status: 201,
+          body: {
+            "errors": [
+                "record.not_found"
+            ]
+        }.to_json,
+          headers: {})
+        expect { market.stop_order(order) }.to raise_error(StandardError)
       end
     end
 
