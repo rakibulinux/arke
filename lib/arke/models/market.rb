@@ -78,7 +78,8 @@ class Arke::Market
   end
 
   def stop_order(order)
-    account.stop_order(order) if order.market.upcase == id.upcase
+    return account.stop_order(order) if order.market.upcase == id.upcase
+    nil
   end
 
   def cancel_all_orders
