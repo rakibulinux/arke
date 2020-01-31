@@ -139,16 +139,16 @@ module Arke
     end
 
     def tick(strategy)
-      unless strategy.target.account.ws
-        logger.warn { "ID:#{strategy.id} Skipping strategy execution since the websocket is not connected" }
-        return
-      end
+      # unless strategy.target.account.ws
+      #   logger.warn { "ID:#{strategy.id} Skipping strategy execution since the websocket is not connected" }
+      #   return
+      # end
 
-      linked_strategy = find_strategy(strategy.linked_strategy_id)
-      if linked_strategy && linked_strategy.target.account.ws.nil?
-        logger.warn { "ID:#{strategy.id} Skipping strategy execution since linked strategy websocket is not connected" }
-        return
-      end
+      # linked_strategy = find_strategy(strategy.linked_strategy_id)
+      # if linked_strategy && linked_strategy.target.account.ws.nil?
+      #   logger.warn { "ID:#{strategy.id} Skipping strategy execution since linked strategy websocket is not connected" }
+      #   return
+      # end
 
       update_orderbooks(strategy)
       execute_strategy(strategy)

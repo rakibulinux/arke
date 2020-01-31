@@ -23,6 +23,7 @@ module Arke::Exchange
     end
 
     def ws_connect_private
+      return
       ws_connect(:private)
       Fiber.new do
         EM::Synchrony.add_periodic_timer(290) do
