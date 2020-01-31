@@ -73,11 +73,12 @@ module Arke::Exchange
     # * cancels +order+ via RestApi
     def stop_order(order)
       response = post("#{@peatio_route}/market/orders/#{order.id}/cancel")
-      if response.body && response.body.is_a?(Hash)
-        raise response.body["errors"].to_s if response.body["errors"]
+      return unless response.body&.is_a?(Hash)
+      raise response.body["errors"].to_s if response.body["errors"]
+      return unless %w[cancel rejected done].include?(response.body["state"])
 
-        notify_deleted_order(order) if response.body["state"] == "cancel"
-      end
+      logger.warn { "ACCOUNT:#{id} order #{order.id} was #{response.body['state']}" }
+      notify_deleted_order(order)
     end
 
     def get_balances
