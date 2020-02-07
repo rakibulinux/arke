@@ -18,6 +18,7 @@ describe Arke::Strategy::Orderback do
 
   let(:config) do
     {
+      "id"      => "orderback-BTCUSD",
       "type"    => "orderback",
       "params"  => {
         "spread_bids"           => spread_bids,
@@ -39,7 +40,7 @@ describe Arke::Strategy::Orderback do
       },
       "sources" => [
         "account_id" => 1,
-        "market_id"  => "BTCUSD",
+        "market_id"  => "xbtusd",
       ],
     }
   end
@@ -198,11 +199,11 @@ describe Arke::Strategy::Orderback do
       trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 139.45, 69.725, 14)
       source.account.executor = double(:executor)
 
-      orderb = ::Arke::Order.new("BTCUSD", 138.069306, 0.5, :buy, "limit")
+      orderb = ::Arke::Order.new("xbtusd", 138.069306, 0.5, :buy, "limit")
       actions = [
         ::Arke::Action.new(:order_create, source, order: orderb)
       ]
-      expect(source.account.executor).to receive(:push).with(actions)
+      expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
       EM.synchrony do
         strategy.notify_private_trade(trade)
         EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
@@ -215,11 +216,11 @@ describe Arke::Strategy::Orderback do
       trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 98, 49, 14)
       source.account.executor = double(:executor)
 
-      orderb = ::Arke::Order.new("BTCUSD", 100, 0.5, :sell, "limit")
+      orderb = ::Arke::Order.new("xbtusd", 100, 0.5, :sell, "limit")
       actions = [
         ::Arke::Action.new(:order_create, source, order: orderb)
       ]
-      expect(source.account.executor).to receive(:push).with(actions)
+      expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
       EM.synchrony do
         strategy.notify_private_trade(trade)
         EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
@@ -237,12 +238,12 @@ describe Arke::Strategy::Orderback do
       trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 139.45, nil, 14)
       trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 139.45, nil, 14)
 
-      orderb = ::Arke::Order.new("BTCUSD", 138.069306, 0.6, :buy, "limit")
+      orderb = ::Arke::Order.new("xbtusd", 138.069306, 0.6, :buy, "limit")
       actions = [
         ::Arke::Action.new(:order_create, source, order: orderb)
       ]
       source.account.executor = double(:executor)
-      expect(source.account.executor).to receive(:push).with(actions)
+      expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
       EM.synchrony do
         strategy.notify_private_trade(trade1)
         strategy.notify_private_trade(trade2)
@@ -265,14 +266,14 @@ describe Arke::Strategy::Orderback do
       trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 139.45, nil, 14)
       trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 140.00, nil, 15)
 
-      orderb1 = ::Arke::Order.new("BTCUSD", 138.069306, 0.3, :buy, "limit")
-      orderb2 = ::Arke::Order.new("BTCUSD", 138.613861, 0.3, :buy, "limit")
+      orderb1 = ::Arke::Order.new("xbtusd", 138.069306, 0.3, :buy, "limit")
+      orderb2 = ::Arke::Order.new("xbtusd", 138.613861, 0.3, :buy, "limit")
       actions = [
         ::Arke::Action.new(:order_create, source, order: orderb1),
         ::Arke::Action.new(:order_create, source, order: orderb2)
       ]
       source.account.executor = double(:executor)
-      expect(source.account.executor).to receive(:push).with(actions)
+      expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
       EM.synchrony do
         strategy.notify_private_trade(trade1)
         strategy.notify_private_trade(trade2)
@@ -295,12 +296,12 @@ describe Arke::Strategy::Orderback do
       trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 139.45, nil, 14)
       trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 139.45, nil, 15)
 
-      orderb = ::Arke::Order.new("BTCUSD", 138.069306, 0.6, :buy, "limit")
+      orderb = ::Arke::Order.new("xbtusd", 138.069306, 0.6, :buy, "limit")
       actions = [
         ::Arke::Action.new(:order_create, source, order: orderb)
       ]
       source.account.executor = double(:executor)
-      expect(source.account.executor).to receive(:push).with(actions)
+      expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
       EM.synchrony do
         strategy.notify_private_trade(trade1)
         strategy.notify_private_trade(trade2)
@@ -335,11 +336,11 @@ describe Arke::Strategy::Orderback do
         trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 101, 50.50, 14)
         source.account.executor = double(:executor)
 
-        orderb = ::Arke::Order.new("BTCUSD", 200, 0.5, :buy, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 200, 0.5, :buy, "limit")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
-        expect(source.account.executor).to receive(:push).with(actions)
+        expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
         EM.synchrony do
           strategy.notify_private_trade(trade)
           EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
@@ -352,11 +353,11 @@ describe Arke::Strategy::Orderback do
         trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 98, 49, 14)
         source.account.executor = double(:executor)
 
-        orderb = ::Arke::Order.new("BTCUSD", 200, 0.5, :sell, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 200, 0.5, :sell, "limit")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
-        expect(source.account.executor).to receive(:push).with(actions)
+        expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
         EM.synchrony do
           strategy.notify_private_trade(trade)
           EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
@@ -373,11 +374,11 @@ describe Arke::Strategy::Orderback do
         trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 102, 51, 14)
         source.account.executor = double(:executor)
 
-        orderb = ::Arke::Order.new("BTCUSD", 200, 0.5, :buy, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 200, 0.5, :buy, "limit")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
-        expect(source.account.executor).to receive(:push).with(actions)
+        expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
         EM.synchrony do
           strategy.notify_private_trade(trade)
           EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
@@ -395,12 +396,12 @@ describe Arke::Strategy::Orderback do
         trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 101, nil, 14)
         trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 101, nil, 14)
 
-        orderb = ::Arke::Order.new("BTCUSD", 200, 0.6, :buy, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 200, 0.6, :buy, "limit")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
         source.account.executor = double(:executor)
-        expect(source.account.executor).to receive(:push).with(actions)
+        expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
         EM.synchrony do
           strategy.notify_private_trade(trade1)
           strategy.notify_private_trade(trade2)
@@ -423,14 +424,14 @@ describe Arke::Strategy::Orderback do
         trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 101, nil, 14)
         trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 106.05, nil, 15)
 
-        orderb1 = ::Arke::Order.new("BTCUSD", 200, 0.3, :buy, "limit")
-        orderb2 = ::Arke::Order.new("BTCUSD", 210, 0.3, :buy, "limit")
+        orderb1 = ::Arke::Order.new("xbtusd", 200, 0.3, :buy, "limit")
+        orderb2 = ::Arke::Order.new("xbtusd", 210, 0.3, :buy, "limit")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb1),
           ::Arke::Action.new(:order_create, source, order: orderb2)
         ]
         source.account.executor = double(:executor)
-        expect(source.account.executor).to receive(:push).with(actions)
+        expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
         EM.synchrony do
           strategy.notify_private_trade(trade1)
           strategy.notify_private_trade(trade2)
@@ -453,12 +454,12 @@ describe Arke::Strategy::Orderback do
         trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 101, nil, 14)
         trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 101, nil, 15)
 
-        orderb = ::Arke::Order.new("BTCUSD", 200, 0.6, :buy, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 200, 0.6, :buy, "limit")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
         source.account.executor = double(:executor)
-        expect(source.account.executor).to receive(:push).with(actions)
+        expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
         EM.synchrony do
           strategy.notify_private_trade(trade1)
           strategy.notify_private_trade(trade2)
@@ -481,12 +482,12 @@ describe Arke::Strategy::Orderback do
         trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 102, nil, 14)
         trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 101, nil, 15)
 
-        orderb = ::Arke::Order.new("BTCUSD", 200, 0.6, :buy, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 200, 0.6, :buy, "limit")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
         source.account.executor = double(:executor)
-        expect(source.account.executor).to receive(:push).with(actions)
+        expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
         EM.synchrony do
           strategy.notify_private_trade(trade1)
           strategy.notify_private_trade(trade2)
@@ -509,12 +510,12 @@ describe Arke::Strategy::Orderback do
         trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 102, nil, 14)
         trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 101, nil, 15)
 
-        orderb = ::Arke::Order.new("BTCUSD", 2000, 0.6, :buy, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 2000, 0.6, :buy, "limit")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
         source.account.executor = double(:executor)
-        expect(source.account.executor).to receive(:push).with(actions)
+        expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
 
         EM.synchrony do
           strategy.fx.instance_variable_set(:@rate, nil)
@@ -527,6 +528,5 @@ describe Arke::Strategy::Orderback do
         end
       end
     end
-
   end
 end

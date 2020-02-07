@@ -56,7 +56,7 @@ describe Arke::Exchange::Binance do
     it "notifies trade when the market id match" do
       allow(strategy).to receive(:orderback)
       base.register_on_private_trade_cb(&strategy.method(:orderback))
-      expect(strategy).to receive(:orderback).once.with(trade)
+      expect(strategy).to receive(:orderback).once.with(trade, false)
       base.notify_private_trade(trade)
     end
 

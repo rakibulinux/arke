@@ -13,7 +13,7 @@ module Arke::Strategy
     attr_reader :limit_asks_base
     attr_reader :limit_bids_base
 
-    DEFAULT_ORDERBACK_GRACE_TIME = 0.01
+    DEFAULT_ORDERBACK_GRACE_TIME = 1.0
 
     def initialize(sources, target, config, reactor)
       super
@@ -30,8 +30,9 @@ module Arke::Strategy
       @enable_orderback = params["enable_orderback"] ? true : false
       @min_order_back_amount = params["min_order_back_amount"].to_f
       @orderback_grace_time = params["orderback_grace_time"]&.to_f || DEFAULT_ORDERBACK_GRACE_TIME
-      logger.info "min order back amount: #{@min_order_back_amount}"
       logger.info "Initializing #{self.class} strategy with order_back #{@enable_orderback ? 'enabled' : 'disabled'}"
+      logger.info "- min order back amount: #{@min_order_back_amount}"
+      logger.info "- orderback_grace_time: #{@orderback_grace_time}"
       sources.each {|s| s.apply_flags(FETCH_PRIVATE_BALANCE) }
       register_callbacks
       check_config
@@ -52,8 +53,31 @@ module Arke::Strategy
       target.account.register_on_private_trade_cb(&method(:notify_private_trade))
     end
 
-    def notify_private_trade(trade)
-      return if @enable_orderback == false || trade.market.upcase != target.id.upcase
+    def notify_private_trade(trade, trust_trade_info=false)
+      if trust_trade_info
+        notify_private_trade_with_trust(trade)
+      else
+        notify_private_trade_without_trust(trade)
+      end
+    end
+
+    def notify_private_trade_with_trust(trade)
+      order = Arke::Order.new(trade.market, trade.price, trade.volume, trade.type)
+      order_back(trade, order)
+    end
+
+    def notify_private_trade_without_trust(trade)
+      if @enable_orderback == false
+        logger.info { "ID:#{id} orderback not triggered because it's not enabled in configuration" }
+        return
+      end
+
+      if trade.market.upcase != target.id.upcase
+        logger.info { "ID:#{id} orderback not triggered because #{trade.market.upcase} != #{target.id.upcase}" }
+        return
+      end
+
+      logger.info { "ID:#{id} trade received: #{trade}" }
 
       order_buy = target.open_orders.get_by_id(:buy, trade.order_id)
       order_sell = target.open_orders.get_by_id(:sell, trade.order_id)
@@ -64,10 +88,11 @@ module Arke::Strategy
       end
       order_back(trade, order_buy) if order_buy
       order_back(trade, order_sell) if order_sell
+      logger.error { "ID:#{id} order not found for trade: #{trade}" } if !order_buy && !order_sell
     end
 
     def order_back(trade, order)
-      logger.info("ID:#{id} Trade on #{trade.market}, #{order.side} price: #{trade.price} amount: #{trade.volume}")
+      logger.info("ID:#{id} order_back called with trade: #{trade}")
       spread = order.side == :sell ? @spread_asks : @spread_bids
       price = remove_spread(order.side, order.price, spread)
       if fx
@@ -84,28 +109,36 @@ module Arke::Strategy
       @trades[trade.id] ||= {}
       @trades[trade.id][trade.order_id] = [trade.market, price, trade.volume, type]
 
-      @timer ||= EM::Synchrony.add_timer(@orderback_grace_time) do
+      return if @orderback_scheduled
+
+      EM::Synchrony.add_timer(@orderback_grace_time) do
+        logger.info { "ID:#{id} ordering back..." }
         grouped_trades = group_trades(@trades)
         orders = []
         actions = []
         grouped_trades.each do |k, v|
-          order = Arke::Order.new(target.id, k[0].to_f, v, k[1].to_sym)
+          order = Arke::Order.new(source.id, k[0].to_f, v, k[1].to_sym)
           order.apply_requirements(source.account)
           if order.amount > @min_order_back_amount
-            logger.info("ID:#{id} Pushing order back #{order} (min order back amount: #{@min_order_back_amount})")
+            logger.info { "ID:#{id} Pushing order back #{order} (min order back amount: #{@min_order_back_amount})".magenta }
             orders << order
           else
-            logger.info("ID:#{id} Discard order back #{order} (min order back amount: #{@min_order_back_amount})")
+            logger.info { "ID:#{id} Discard order back #{order} (min order back amount: #{@min_order_back_amount})".cyan }
           end
         end
 
         orders.each do |order|
           actions << Arke::Action.new(:order_create, source, order: order)
         end
-        source.account.executor.push(actions)
-        @timer = nil
+        source.account.executor.push(id, actions)
+      rescue StandardError => e
+        logger.error "ID:#{id} Error in orderback trigger: #{e}\n#{e.backtrace.join("\n")}"
+      ensure
+        @orderback_scheduled = false
         @trades = {}
       end
+      @orderback_scheduled = true
+      logger.info("ID:#{id} orderback scheduled")
     end
 
     def group_trades(trades)

@@ -102,6 +102,9 @@ module Arke
         # Initialize executors & fx classes
         @strategies.each do |strategy|
           strategy.target.account.executor.create_queue(strategy.id)
+          strategy.sources.each do |source|
+            source.account.executor.create_queue(strategy.id)
+          end
           strategy.fx&.start
         end
         @accounts.each_value {|account| account.executor.start } unless @dry_run

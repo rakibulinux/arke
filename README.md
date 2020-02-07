@@ -153,8 +153,7 @@ An soon as an order is matched, the strategy creates an order on the source exch
 | `side`                  | Side where orders will be created (valid: `asks`, `bids`, `both`) |
 | `enable_orderback`      | Flag for enabling orderback, could be: `true` or `false`     |
 | `min_order_back_amount` | The amount of the trade must be higher than this value for the order back to be created, otherwise the trade will be ignored. |
-
-
+| `orderback_grace_time`  | The time to wait incoming trades before triggering the order back, default 1 sec |
 
 
 ##### Fixedprice strategy
