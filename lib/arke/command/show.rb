@@ -63,7 +63,7 @@ module Arke
           logger = ::Arke::Log
           logger.level = Logger::DEBUG
           acc_config = accounts_configs.find {|a| a["id"].to_s == account_id.to_s }
-          raise "market #{market_id} not found" unless acc_config
+          raise "account not found for #{account_id}" unless acc_config
 
           ex = Arke::Exchange.create(acc_config)
           config = ex.market_config(market_id)
