@@ -118,8 +118,8 @@ module Arke::Strategy
         actions = []
         grouped_trades.each do |k, v|
           order = Arke::Order.new(source.id, k[0].to_f, v, k[1].to_sym)
-          order.apply_requirements(source.account)
           if order.amount > @min_order_back_amount
+            order.apply_requirements(source.account)
             logger.info { "ID:#{id} Pushing order back #{order} (min order back amount: #{@min_order_back_amount})".magenta }
             orders << order
           else
