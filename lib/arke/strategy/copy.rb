@@ -9,8 +9,8 @@ module Arke::Strategy
   class Copy < Base
     include ::Arke::Helpers::Splitter
     include ::Arke::Helpers::Spread
-    attr_reader :limit_asks_base
-    attr_reader :limit_bids_base
+    attr_reader :limit_asks_base, :limit_asks_percent
+    attr_reader :limit_bids_base, :limit_bids_percent
 
     def initialize(sources, target, config, reactor)
       super
@@ -19,8 +19,10 @@ module Arke::Strategy
       @levels_count = params["levels_count"].to_i
       @spread_bids = params["spread_bids"].to_d
       @spread_asks = params["spread_asks"].to_d
-      @limit_asks_base = params["limit_asks_base"].to_d
-      @limit_bids_base = params["limit_bids_base"].to_d
+      @limit_asks_base = params["limit_asks_base"]&.to_d
+      @limit_bids_base = params["limit_bids_base"]&.to_d
+      @limit_asks_percent = params["limit_asks_percent"]&.to_d
+      @limit_bids_percent = params["limit_bids_percent"]&.to_d
       @side_asks = %w[asks both].include?(@side)
       @side_bids = %w[bids both].include?(@side)
       check_config
@@ -31,9 +33,31 @@ module Arke::Strategy
       raise "levels_count must be minimum 1" if @levels_count <= 1
       raise "spread_bids must be higher than zero" if @spread_bids.negative?
       raise "spread_asks must be higher than zero" if @spread_asks.negative?
-      raise "limit_asks_base must be higher than zero" if limit_asks_base <= 0
-      raise "limit_bids_base must be higher than zero" if limit_bids_base <= 0
+      raise "limit_asks_base must be higher than zero" if limit_asks_base && limit_asks_base <= 0
+      raise "limit_bids_base must be higher than zero" if limit_bids_base && limit_bids_base <= 0
+      raise "limit_asks_percent must be between 0 and 1" if limit_asks_percent && (limit_asks_percent <= 0 || limit_asks_percent > 1)
+      raise "limit_bids_percent must be between 0 and 1" if limit_bids_percent && (limit_bids_percent <= 0 || limit_bids_percent > 1)
+      raise "limit_asks_base or limit_asks_percent must be set" if limit_asks_base.nil? && limit_asks_percent.nil?
+      raise "limit_bids_base or limit_bids_percent must be set" if limit_bids_base.nil? && limit_bids_percent.nil?
       raise "side must be asks, bids or both" if !@side_asks && !@side_bids
+    end
+
+    def compute_limits
+      if limit_asks_percent
+        balance_target = target.account.balance(target.base)
+        raise "Balance of #{target.base} on target undefined" unless balance_target
+
+        @limit_asks_base = balance_target.to_d * limit_asks_percent
+        logger.info "ID:#{id} limit_asks_base set to #{@limit_asks_base} #{target.base}"
+      end
+
+      if limit_bids_percent
+        balance_target = target.account.balance(target.quote)
+        raise "Balance of #{target.quote} on target undefined" unless balance_target
+
+        @limit_bids_quote = balance_target.to_d * limit_bids_percent
+        logger.info "ID:#{id} limit_bids_quote set to #{@limit_bids_quote} #{target.quote}"
+      end
     end
 
     def call

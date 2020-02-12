@@ -50,7 +50,7 @@ module Arke::Command
           ex = Arke::Exchange.create(acc_config)
           order = Struct.new(:id).new(order_id)
           response = ex.stop_order(order)
-          logger.info { "Response: #{response.body}" }
+          logger.info { "Response: #{response}" }
           EM.stop
         end
       end
@@ -67,6 +67,7 @@ module Arke::Command
         logger.level = Logger::DEBUG
         acc_config = accounts_configs.find {|a| a["id"] == account_id }
         raise "account #{account_id} not found" unless acc_config
+        raise "market is mandatory" unless market
 
         EM.synchrony do
           ex = Arke::Exchange.create(acc_config)

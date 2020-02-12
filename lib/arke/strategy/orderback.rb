@@ -49,6 +49,32 @@ module Arke::Strategy
       raise "side must be asks, bids or both" if !@side_asks && !@side_bids
     end
 
+    def compute_limits
+      if limit_asks_percent
+        balance_source = source.account.balance(source.base)
+        balance_target = target.account.balance(target.base)
+        raise "Balance of #{source.base} on source undefined" unless balance_source
+        raise "Balance of #{target.base} on target undefined" unless balance_target
+
+        min_balance = [balance_source["total"].to_d, balance_target["total"].to_d].min
+
+        @limit_asks_base = min_balance * limit_asks_percent
+        logger.info "ID:#{id} limit_asks_base set to #{@limit_asks_base} #{target.base}"
+      end
+
+      if limit_bids_percent
+        balance_source = source.account.balance(source.quote)
+        balance_target = target.account.balance(target.quote)
+        raise "Balance of #{source.base} on source undefined" unless balance_source
+        raise "Balance of #{target.quote} on target undefined" unless balance_target
+
+        min_balance = [balance_source["total"].to_d, balance_target["total"].to_d].min
+
+        @limit_bids_quote = min_balance * limit_bids_percent
+        logger.info "ID:#{id} limit_bids_quote set to #{@limit_bids_quote} #{target.quote}"
+      end
+    end
+
     def register_callbacks
       target.account.register_on_private_trade_cb(&method(:notify_private_trade))
     end

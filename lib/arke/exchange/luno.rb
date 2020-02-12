@@ -92,7 +92,7 @@ module Arke::Exchange
 
     def market_config(market)
       info = symbols_details[market.upcase]
-      raise "Pair #{market} not found" unless info
+      raise "Unsupported market #{market}, should be one of the list: #{symbols_details.keys.join(', ')}" unless info
 
       {
         "id"               => market,
