@@ -6,7 +6,7 @@ describe Arke::Exchange::Rubykube do
       "driver" => "rubykube",
       "host"   => "http://www.devkube.com",
       "key"    => @authorized_api_key,
-      "secret" => SecureRandom.hex
+      "secret" => SecureRandom.hex,
     }
   end
   let(:market_id) { "ethusd" }
@@ -61,7 +61,7 @@ describe Arke::Exchange::Rubykube do
 
       it "cancels an open order and doesn't notify when the cancel is pending" do
         stub_request(:post, %r{peatio/market/orders/\d+/cancel})
-          .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
+          .with(headers: {"X-Auth-Apikey" => @authorized_api_key})
           .to_return(
             status:  201,
             body:    {
@@ -77,7 +77,7 @@ describe Arke::Exchange::Rubykube do
               "origin_volume"    => "1.0",
               "remaining_volume" => "1.0",
               "executed_volume"  => "0.0",
-              "trades_count"     => 0
+              "trades_count"     => 0,
             }.to_json,
             headers: {}
           )
@@ -90,7 +90,7 @@ describe Arke::Exchange::Rubykube do
 
       it "cancels an order already closed and notifies because we may have missed the confirmation from the websocket" do
         stub_request(:post, %r{peatio/market/orders/\d+/cancel})
-          .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
+          .with(headers: {"X-Auth-Apikey" => @authorized_api_key})
           .to_return(
             status:  201,
             body:    {
@@ -106,7 +106,7 @@ describe Arke::Exchange::Rubykube do
               "origin_volume"    => "1.0",
               "remaining_volume" => "1.0",
               "executed_volume"  => "0.0",
-              "trades_count"     => 0
+              "trades_count"     => 0,
             }.to_json,
             headers: {}
           )
@@ -119,13 +119,13 @@ describe Arke::Exchange::Rubykube do
 
       it "raises if we try to cancel a non existing order" do
         stub_request(:post, %r{peatio/market/orders/\d+/cancel})
-          .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
+          .with(headers: {"X-Auth-Apikey" => @authorized_api_key})
           .to_return(
             status:  201,
             body:    {
               "errors": [
-                "record.not_found"
-              ]
+                "record.not_found",
+              ],
             }.to_json,
             headers: {}
           )
@@ -154,8 +154,8 @@ describe Arke::Exchange::Rubykube do
               "at"               => 1_570_537_877,
               "created_at"       => 1_570_537_877,
               "updated_at"       => 1_570_538_020,
-              "trades_count"     => 0
-            }
+              "trades_count"     => 0,
+            },
           }.to_json
         )
       end
@@ -240,8 +240,8 @@ describe Arke::Exchange::Rubykube do
               "min_ask_amount" => "0.0005",
               "min_bid_amount" => "0.0005",
               "ask_precision"  => 6,
-              "bid_precision"  => 2
-            }
+              "bid_precision"  => 2,
+            },
           ].to_json,
           headers: {}
         )
@@ -270,8 +270,8 @@ describe Arke::Exchange::Rubykube do
               "quote_unit"       => "usd",
               "amount_precision" => 6,
               "price_precision"  => 2,
-              "state"            => "enabled"
-            }
+              "state"            => "enabled",
+            },
           ].to_json,
           headers: {}
         )
@@ -296,8 +296,8 @@ describe Arke::Exchange::Rubykube do
               "base_unit"        => "btc",
               "quote_unit"       => "usd",
               "amount_precision" => 6,
-              "price_precision"  => 2
-            }
+              "price_precision"  => 2,
+            },
           ].to_json,
           headers: {}
         )
@@ -314,8 +314,8 @@ describe Arke::Exchange::Rubykube do
               "quote_unit"       => "usd",
               "amount_precision" => 6,
               "price_precision"  => 2,
-              "state"            => "enabled"
-            }
+              "state"            => "enabled",
+            },
           ].to_json,
           headers: {}
         )
@@ -332,8 +332,8 @@ describe Arke::Exchange::Rubykube do
               "base_unit"        => "btc",
               "amount_precision" => 6,
               "price_precision"  => 2,
-              "state"            => "enabled"
-            }
+              "state"            => "enabled",
+            },
           ].to_json,
           headers: {}
         )
@@ -350,8 +350,8 @@ describe Arke::Exchange::Rubykube do
               "base_unit"       => "btc",
               "quote_unit"      => "usd",
               "price_precision" => 2,
-              "state"           => "enabled"
-            }
+              "state"           => "enabled",
+            },
           ].to_json,
           headers: {}
         )
@@ -368,8 +368,8 @@ describe Arke::Exchange::Rubykube do
               "base_unit"        => "btc",
               "quote_unit"       => "usd",
               "amount_precision" => 6,
-              "state"            => "enabled"
-            }
+              "state"            => "enabled",
+            },
           ].to_json,
           headers: {}
         )
@@ -404,6 +404,77 @@ describe Arke::Exchange::Rubykube do
       rubykube.register_on_deleted_order(&cb.method(:call))
       expect(cb).to_not receive(:call)
       market.stop_order(o)
+    end
+  end
+
+  context "maintain market public orderbook incrementally" do
+    let(:snapshot) do
+      {
+        "ethusd.ob-snap" => {
+          "asks"     => [
+            ["252.32", "0.2"],
+            ["252.92", "0.90403"],
+            ["253.08", "0.73563"],
+          ],
+          "bids"     => [
+            ["249.16", "0.20603"],
+            ["248.69", "0.09944"],
+            ["248.66", "0.05057"],
+          ],
+          "sequence" => 6111,
+        },
+      }
+    end
+
+    it "updates an existing price point" do
+      rubykube.send(:ws_read_private_message, snapshot)
+      rubykube.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => ["252.32", "0.1"], "sequence" => 6112})
+      expect(rubykube.update_orderbook("ethusd")[:buy].to_hash).to eq(
+        249.16.to_d => 0.20603.to_d,
+        248.69.to_d => 0.09944.to_d,
+        248.66.to_d => 0.05057.to_d
+      )
+      expect(rubykube.update_orderbook("ethusd")[:sell].to_hash).to eq(
+        252.32.to_d => 0.1.to_d,
+        252.92.to_d => 0.90403.to_d,
+        253.08.to_d => 0.73563.to_d
+      )
+    end
+
+    it "deletes an existing price point" do
+      rubykube.send(:ws_read_private_message, snapshot)
+      rubykube.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => ["252.32", "0.0"], "sequence" => 6112})
+      rubykube.send(:ws_read_private_message, "ethusd.ob-inc" => {"bids" => ["248.69", "0.0"], "sequence" => 6113})
+      expect(rubykube.update_orderbook("ethusd")[:buy].to_hash).to eq(
+        249.16.to_d => 0.20603.to_d,
+        248.66.to_d => 0.05057.to_d
+      )
+      expect(rubykube.update_orderbook("ethusd")[:sell].to_hash).to eq(
+        252.92.to_d => 0.90403.to_d,
+        253.08.to_d => 0.73563.to_d
+      )
+    end
+
+    it "deletes an existing price point (again)" do
+      rubykube.send(:ws_read_private_message, snapshot)
+      rubykube.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => ["252.32", ""], "sequence" => 6112})
+      rubykube.send(:ws_read_private_message, "ethusd.ob-inc" => {"bids" => ["248.69", ""], "sequence" => 6113})
+      expect(rubykube.update_orderbook("ethusd")[:buy].to_hash).to eq(
+        249.16.to_d => 0.20603.to_d,
+        248.66.to_d => 0.05057.to_d
+      )
+      expect(rubykube.update_orderbook("ethusd")[:sell].to_hash).to eq(
+        252.92.to_d => 0.90403.to_d,
+        253.08.to_d => 0.73563.to_d
+      )
+    end
+
+    it "disconnects websocket if it detects a sequence out of order" do
+      rubykube.send(:ws_read_private_message, snapshot)
+      ws = double(close: true)
+      rubykube.instance_variable_set(:@ws, ws)
+      expect(ws).to receive(:close)
+      rubykube.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => ["252.32", ""], "sequence" => 6113})
     end
   end
 end

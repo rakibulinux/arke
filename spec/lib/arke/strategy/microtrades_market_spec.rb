@@ -2,9 +2,9 @@
 
 require "rails_helper"
 
-describe Arke::Strategy::Microtrades do
+describe Arke::Strategy::MicrotradesMarket do
   let(:reactor) { double(:reactor) }
-  let(:strategy) { Arke::Strategy::Microtrades.new([], target, config, reactor) }
+  let(:strategy) { Arke::Strategy::MicrotradesMarket.new([], target, config, reactor) }
   let(:account) { Arke::Exchange.create(account_config) }
   let(:target_mode) { Arke::Helpers::Flags::DEFAULT_TARGET_FLAGS }
   let(:source_mode) { Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS }
@@ -31,7 +31,7 @@ describe Arke::Strategy::Microtrades do
   let(:side) { "both" }
   let(:config) do
     {
-      "type"   => "microtrades",
+      "type"   => "microtrades-market",
       "params" => {
         "linked_strategy_id" => linked_strategy_id,
         "min_amount"         => min_amount,
@@ -157,8 +157,8 @@ describe Arke::Strategy::Microtrades do
 
     it "raise an error if the orderbook is empty" do
       expect(reactor).to receive(:find_strategy).with(linked_strategy_id).exactly(:twice).and_return(linked_strategy)
-      expect { strategy.get_price(:buy) }.to raise_error(Arke::Strategy::Microtrades::EmptyOrderBook)
-      expect { strategy.get_price(:sell) }.to raise_error(Arke::Strategy::Microtrades::EmptyOrderBook)
+      expect { strategy.get_price(:buy) }.to raise_error(Arke::Strategy::MicrotradesMarket::EmptyOrderBook)
+      expect { strategy.get_price(:sell) }.to raise_error(Arke::Strategy::MicrotradesMarket::EmptyOrderBook)
     end
   end
 end

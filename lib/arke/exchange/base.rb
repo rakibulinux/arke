@@ -21,6 +21,7 @@ module Arke::Exchange
       @secret = opts["secret"]
       @id = opts["id"]
       @delay = (opts["delay"] || DEFAULT_DELAY).to_f
+      @markets_to_listen = opts["markets"] || []
       @adapter = opts[:faraday_adapter] || :em_synchrony
       @opts = opts
       @balances = nil
@@ -34,12 +35,12 @@ module Arke::Exchange
         public:  EM::Queue.new,
         private: EM::Queue.new,
       }
-      @ws_status = {
-        public:  false,
-        private: false,
-      }
       load_platform_markets(opts["driver"]) if opts[:load_platform_markets]
       update_forced_balance(opts["balances"]) if opts["balances"]
+    end
+
+    def add_market_to_listen(market)
+      @markets_to_listen << market unless @markets_to_listen.include?(market)
     end
 
     def ws_connect(ws_id)
@@ -55,11 +56,11 @@ module Arke::Exchange
       @ws = Faye::WebSocket::Client.new(@ws_url, [], headers: headers)
 
       @ws.on(:open) do |_e|
-        @ws_status[ws_id] = true
+        @ws_connected = true
         @ws_queues[ws_id].pop do |msg|
           ws_write_message(ws_id, msg)
         end
-        logger.info { "ACCOUNT:#{id} Websocket connected" }
+        logger.info { "ACCOUNT:#{id} Websocket #{ws_id} connected" }
       end
 
       @ws.on(:message) do |msg|
@@ -68,7 +69,7 @@ module Arke::Exchange
 
       @ws.on(:close) do |e|
         @ws = nil
-        @ws_status[ws_id] = false
+        @ws_connected = false
         logger.error "ACCOUNT:#{id} Websocket disconnected: #{e.code} Reason: #{e.reason}"
         Fiber.new do
           EM::Synchrony.sleep(WEBSOCKET_CONNECTION_RETRY_DELAY)
@@ -86,8 +87,9 @@ module Arke::Exchange
     end
 
     def ws_write_message(ws_id, msg)
-      unless @ws_status[ws_id]
-        @ws_public_messages_out.push(msg)
+      unless @ws_connected
+        logger.debug { "ACCOUNT:#{id} websocket #{ws_id} is not connected, message delayed: #{msg}" }
+        @ws_queues[ws_id].push(msg)
         return
       end
       logger.debug { "ACCOUNT:#{id} pushing websocket message: #{msg}" }

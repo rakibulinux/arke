@@ -85,13 +85,13 @@ module Arke
     def run
       EM.synchrony do
         trap("INT") { stop }
-        # Connect private web-sockets
+        # Fetch open orders if needed
+        @markets.each(&:start)
+
+        # Connect Private Web Sockets
         @accounts.each do |_id, account|
           account.ws_connect_private if account.flag?(WS_PRIVATE)
         end
-
-        # Fetch open orders if needed
-        @markets.each(&:start)
 
         # Setup fetching balance
         update_balances
@@ -108,6 +108,14 @@ module Arke
           strategy.fx&.start
         end
         @accounts.each_value {|account| account.executor.start } unless @dry_run
+
+        # Connect Public Web Sockets
+        @accounts.each do |_id, account|
+          next if !account.flag?(WS_PUBLIC) || account.flag?(WS_PRIVATE)
+
+          account.ws_connect_public
+          account.listen_trades if account.flag?(LISTEN_PUBLIC_TRADES) && account.respond_to?(:listen_trades)
+        end
 
         # Start strategies
         @strategies.each do |strategy|

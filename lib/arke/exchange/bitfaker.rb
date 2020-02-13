@@ -6,7 +6,19 @@ module Arke::Exchange
 
     def initialize(opts)
       super
-      @path = opts["orderbook"] || File.join("./spec/fixtures/files/bitfinex.yaml")
+
+      @orders = if opts["orderbook"].is_a?(Array)
+                  opts["orderbook"][1]
+                elsif opts["orderbook"].is_a?(String)
+                  YAML.load_file(opts["orderbook"])[1]
+                else
+                  YAML.load_file("./spec/fixtures/files/bitfinex.yaml")[1]
+                   end
+    end
+
+    def ws_connect(ws_id)
+      logger.info { "ACCOUNT:#{id} Websocket faking connection to #{ws_id}" }
+      @ws = true
     end
 
     def cancel_all_orders(_market)
@@ -62,9 +74,8 @@ module Arke::Exchange
     end
 
     def update_orderbook(market)
-      orders = YAML.load_file(@path)[1]
       orderbook = Arke::Orderbook::Orderbook.new(market)
-      orders.each do |o|
+      @orders.each do |o|
         ord = build_order(o, market)
         orderbook.update(ord)
       end
@@ -84,7 +95,7 @@ module Arke::Exchange
 
     def fetch_openorders(market)
       orders = []
-      YAML.load_file(@path)[1].each do |o|
+      @orders.each do |o|
         ord = build_order(o, market)
         ord.id = o[0]
         orders << ord

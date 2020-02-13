@@ -131,6 +131,7 @@ module Arke::Exchange
     end
 
     def listen_trades(markets_list=nil)
+      markets_list ||= @markets_to_listen
       @ws = Faye::WebSocket::Client.new(@ws_url)
 
       @ws.on(:open) do |_e|

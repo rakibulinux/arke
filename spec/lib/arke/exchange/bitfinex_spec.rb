@@ -176,4 +176,23 @@ describe Arke::Exchange::Bitfinex do
       )
     end
   end
+
+  context "public trade event" do
+    let(:trade) do
+      Arke::PublicTrade.new(418_288_902, "ETHUSD", "bitfinex", "sell", 0.1, 262.69, 26.269, 1_582_036_305_000)
+    end
+    let(:trade_event) do
+      OpenStruct.new(
+        "type": "message",
+        "data": '[207,"tu","34624926-ETHUSD",418288902,1582036305,262.69,-0.1]'
+      )
+    end
+
+    it "notifies public trade to registered callbacks" do
+      callback = double(:callback)
+      expect(callback).to receive(:call).with(trade)
+      bitfinex.register_on_public_trade_cb(&callback.method(:call))
+      bitfinex.ws_read_message(:public, trade_event)
+    end
+  end
 end

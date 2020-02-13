@@ -6,14 +6,11 @@ module Arke::Exchange
 
     def initialize(opts)
       super
-      if opts[:enable_ws]
-        ws_url = "wss://ws-beta.kraken.com"
-        @ws = Faye::WebSocket::Client.new(ws_url)
-      end
       @api_secret = opts["secret"]
       @api_key = opts["key"]
       opts["host"] ||= "api.kraken.com"
       rest_url = "https://#{opts['host']}"
+      @ws_url = "wss://ws.kraken.com"
       @rest_conn = Faraday.new(rest_url) do |builder|
         builder.response :logger, logger if opts["debug"]
         builder.use FaradayMiddleware::ParseJson, content_type: /\bjson$/
@@ -129,6 +126,7 @@ module Arke::Exchange
 
     def listen_trades(markets_list=nil)
       info "Connecting to websocket: #{@ws_url}"
+      markets_list ||= @markets_to_listen
 
       @ws.on(:open) do |_e|
         on_open_trades(markets_list)

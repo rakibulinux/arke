@@ -24,6 +24,10 @@ module Arke::Orderbook
       @book[order.side][order.price] = order.amount
     end
 
+    def update_amount(side, price, amount)
+      @book[side][price] = amount
+    end
+
     def clone
       ob = Orderbook.new(@market)
       ob.merge!(self)

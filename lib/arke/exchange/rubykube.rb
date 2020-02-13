@@ -14,23 +14,35 @@ module Arke::Exchange
       @ranger_route = config["ranger_route"] || "ranger"
       @finex_route = config["finex_route"] || "finex"
       @finex = config["finex"] == true
-      @ws_url = "#{config['ws']}/api/v2/#{@ranger_route}/private/?stream=order&stream=trade"
-      @connection = Faraday.new(url: "#{config['host']}/api/v2") do |builder|
+      @ws_base_url = config["ws"] ||= "wss://%s" % [URI.parse(config["host"]).hostname]
+
+      @connection = Faraday.new(url: "#{config["host"]}/api/v2") do |builder|
         builder.response :json
         builder.response :logger if @debug
         builder.adapter(@adapter)
         builder.ssl[:verify] = config["verify_ssl"] unless config["verify_ssl"].nil?
       end
       apply_flags(FORCE_MARKET_LOWERCASE)
+      @books = {}
     end
 
-    def ws_connect_private
-      ws_connect(:private)
+    def ws_connect(ws_id)
+      @ws_url = case ws_id
+        when :public then "%s/api/v2/%s/public/?stream=global.tickers" % [@ws_base_url, @ranger_route]
+        when :private then "%s/api/v2/%s/private/?stream=order&stream=trade" % [@ws_base_url, @ranger_route]
+        end
+
+      if flag?(LISTEN_PUBLIC_ORDERBOOK) && !@markets_to_listen.empty?
+        @ws_url += "&" + @markets_to_listen.map { |id| "#{id}.ob-inc" }.join("&")
+      end
+
       Fiber.new do
         EM::Synchrony.add_periodic_timer(290) do
-          ws_write_message(:private, "ping")
+          ws_write_message(ws_id, "ping")
         end
       end.resume
+
+      super(ws_id)
     end
 
     # Ping the api
@@ -41,7 +53,7 @@ module Arke::Exchange
     def cancel_all_orders(market)
       post(
         "#{@peatio_route}/market/orders/cancel",
-        market: market.downcase
+        market: market.downcase,
       )
     end
 
@@ -79,7 +91,7 @@ module Arke::Exchange
       raise response.body["errors"].to_s if response.body["errors"]
       return unless %w[cancel rejected done].include?(response.body["state"])
 
-      logger.warn { "ACCOUNT:#{id} order #{order.id} was #{response.body['state']}" }
+      logger.warn { "ACCOUNT:#{id} order #{order.id} was #{response.body["state"]}" }
       notify_deleted_order(order)
     end
 
@@ -119,35 +131,36 @@ module Arke::Exchange
       orders
     end
 
-    def build_order(data, side, market)
-      Arke::Order.new(
-        market,
-        data[0].to_f,
-        data[1].to_f,
-        side
-      )
-    end
-
-    def update_orderbook(market)
-      orderbook = Arke::Orderbook::Orderbook.new(market)
-      limit = @opts["limit"] || 1000
-      snapshot = @connection.get("#{@peatio_route}/public/markets/#{market.downcase}/depth", limit: limit).body
-      Array(snapshot["bids"]).each do |order|
-        orderbook.update(
-          build_order(order, :buy, market)
-        )
+    def create_or_update_orderbook(orderbook, snapshot)
+      (snapshot["bids"] || []).each do |price, amount|
+        amount = amount.to_d
+        if amount == 0
+          orderbook[:buy].delete(price.to_d)
+        else
+          orderbook.update_amount(:buy, price.to_d, amount)
+        end
       end
-      Array(snapshot["asks"]).each do |order|
-        orderbook.update(
-          build_order(order, :sell, market)
-        )
+      (snapshot["asks"] || []).each do |price, amount|
+        amount = amount.to_d
+        if amount == 0
+          orderbook[:sell].delete(price.to_d)
+        else
+          orderbook.update_amount(:sell, price.to_d, amount)
+        end
       end
       orderbook
     end
 
+    def update_orderbook(market)
+      return @books[market][:book] if @books[market]
+      limit = @opts["limit"] || 1000
+      snapshot = @connection.get("#{@peatio_route}/public/markets/#{market.downcase}/depth", limit: limit).body
+      create_or_update_orderbook(Arke::Orderbook::Orderbook.new(market), snapshot)
+    end
+
     def get_market_infos(market)
       @market_infos ||= @connection.get("#{@peatio_route}/public/markets").body
-      infos = @market_infos.select {|m| m["id"]&.downcase == market.downcase }.first
+      infos = @market_infos.select { |m| m["id"]&.downcase == market.downcase }.first
       raise "Market #{market} not found" unless infos
 
       infos
@@ -187,7 +200,7 @@ module Arke::Exchange
     # * takes +conn+ - faraday connection
     # * takes +path+ - request url
     # * takes +params+ - body for +POST+ request
-    def post(path, params=nil)
+    def post(path, params = nil)
       logger.info { "ACCOUNT:#{id} POST: #{path} PARAMS: #{params}" } if @debug
       response = @connection.post do |req|
         req.headers = generate_headers
@@ -197,7 +210,7 @@ module Arke::Exchange
       response
     end
 
-    def get(path, params=nil)
+    def get(path, params = nil)
       response = @connection.get do |req|
         req.headers = generate_headers
         req.url path, params
@@ -209,6 +222,29 @@ module Arke::Exchange
 
     def side_from_kind(kind)
       kind == "bid" ? :buy : :sell
+    end
+
+    def ws_read_public_message(msg)
+      msg.each do |key, content|
+        case key
+        when /([^\.]+)\.ob-snap/
+          @books[$1] = {
+            book: create_or_update_orderbook(Arke::Orderbook::Orderbook.new($1), content),
+            sequence: content["sequence"],
+          }
+        when /([^\.]+)\.ob-inc/
+          return logger.error { "Received a book increment before snapshot on market #{$1}" } if @books[$1].nil?
+          if content["sequence"] != @books[$1][:sequence] + 1
+            logger.error { "Sequence out of order (previous: #{@books[$1][:sequence]} current:#{content["sequence"]}, reconnecting websocket..." }
+            return @ws.close
+          end
+          bids = content["bids"]
+          asks = content["asks"]
+          create_or_update_orderbook(@books[$1][:book], { "bids" => [bids] }) if bids && !bids.empty?
+          create_or_update_orderbook(@books[$1][:book], { "asks" => [asks] }) if asks && !asks.empty?
+          @books[$1][:sequence] = content["sequence"]
+        end
+      end
     end
 
     def ws_read_private_message(msg)
@@ -225,6 +261,7 @@ module Arke::Exchange
           notify_private_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :buy, amount, trd["price"].to_f, trd["total"], trd["bid_id"]), false)
           notify_private_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :sell, amount, trd["price"].to_f, trd["total"], trd["ask_id"]), false)
         end
+        return
       end
 
       if msg["order"]
@@ -238,7 +275,10 @@ module Arke::Exchange
         when "cancel", "done"
           notify_deleted_order(order)
         end
+        return
       end
+
+      ws_read_public_message(msg)
     end
   end
 end

@@ -15,7 +15,11 @@ module Arke
     # Takes +type+ - +String+
     # * Resolves correct Strategy class by it's type
     def self.strategy_class(type)
-      Arke::Strategy.const_get(type.capitalize)
+      begin
+        Arke::Strategy.const_get(type.split(/[-_ ]/).map(&:capitalize).join)
+      rescue NameError => e
+        raise "Unknown strategy type #{type}"
+      end
     end
   end
 end

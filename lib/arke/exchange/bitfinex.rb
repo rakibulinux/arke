@@ -7,11 +7,50 @@ module Arke::Exchange
     def initialize(opts)
       super
       opts["host"] ||= "api.bitfinex.com"
-      @ws_url = "wss://%s/ws/2" % opts["host"]
+      @ws_url = "wss://%s/ws/1" % opts["host"]
       @connection = Faraday.new(url: "https://#{opts['host']}") do |builder|
         builder.response :json
         builder.response :logger if opts["debug"]
         builder.adapter(@adapter)
+      end
+      @markets = opts["markets"]
+    end
+
+    def ws_connect(ws_id)
+      @markets_to_listen.each do |market|
+        @ws_queues[ws_id].push(
+          JSON.dump(
+            event:   "subscribe",
+            channel: "trades",
+            symbol:  "t#{market.upcase}"
+          )
+        )
+      end
+      Fiber.new do
+        EM::Synchrony.add_periodic_timer(80) do
+          ws_write_message(ws_id, '{"event":"ping"}')
+        end
+      end.resume
+      super(ws_id)
+    end
+
+    def ws_read_public_message(msg)
+      return unless msg.is_a?(Array)
+
+      if msg[1] == "tu"
+        market = msg[2].split("-").last
+        amount = msg[6].to_d
+        trade = ::Arke::PublicTrade.new(
+          msg[3],
+          market,
+          "bitfinex",
+          amount.positive? ? "buy" : "sell",
+          amount.abs,
+          msg[5],
+          (msg[5].to_d * amount).abs,
+          msg[4].to_i * 1000
+        )
+        notify_public_trade(trade)
       end
     end
 
@@ -208,6 +247,7 @@ module Arke::Exchange
 
     def listen_trades(markets_list=nil)
       @connections = {}
+      markets_list ||= @markets_to_listen
 
       markets_list.each do |market|
         ws = Faye::WebSocket::Client.new(@ws_url)

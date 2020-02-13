@@ -12,11 +12,10 @@ module Arke::Exchange
       @min_notional = {}
       @min_quantity = {}
       @amount_precision = {}
-      @markets = opts["markets"]
     end
 
     def ws_connect_public
-      streams = markets.map {|market| "#{market.downcase}@aggTrade.b10" }.join("/")
+      streams = @markets_to_listen.map {|market| "#{market.downcase}@aggTrade.b10" }.join("/")
       @ws_url = "wss://stream.binance.com:9443/stream?streams=#{streams}"
       ws_connect(:public)
     end
@@ -32,8 +31,8 @@ module Arke::Exchange
         trade.market = d["s"]
         trade.exchange = "binance"
         trade.taker_type = d["m"] ? "sell" : "buy"
-        trade.amount = d["q"]
-        trade.price = d["p"]
+        trade.amount = d["q"].to_d
+        trade.price = d["p"].to_d
         trade.total = trade.total
         trade.created_at = d["T"]
       when "trade"
@@ -42,8 +41,8 @@ module Arke::Exchange
         trade.market = d["s"]
         trade.exchange = "binance"
         trade.taker_type = d["m"] ? "sell" : "buy"
-        trade.amount = d["q"]
-        trade.price = d["p"]
+        trade.amount = d["q"].to_d
+        trade.price = d["p"].to_d
         trade.total = trade.total
         trade.created_at = d["T"]
       else

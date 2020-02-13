@@ -174,9 +174,19 @@ It creates an order arround the reference *price* with a random value *random_de
 | `price`           | Reference price for the strategy to create orderbook         |
 | `random_delta`    | Random value for deviation of the reference price (maximum deviation = random_delta / 2) |
 
+##### Microtrades-Copy strategy
 
+This strategy creates random trades on a market with random amounts following the price of one or several sources.
+It is commonly used to create candles on a market with low activity.
 
-##### Microtrades strategy
+| Field                | Description                                                  |
+| -------------------- | ------------------------------------------------------------ |
+| `min_amount`         | Minimum amount of order (defaults to market minimum order amount)|
+| `max_amount`         | Maximum amount of order (defaults to 10 times the market minimum order amount) |
+| `maker_taker_orders_delay`   | Time between maker and taker orders (defaults 0.02 sec) |
+| `matching_timeout` | Time in seconds to wait before canceling microtrades orders (defaults 1 sec) |
+
+##### Microtrades-Market strategy
 
 This strategy creates random trades on a market with random amounts.
 It is commonly used to create candles on a market with low activity.
