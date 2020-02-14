@@ -1,5 +1,44 @@
 # frozen_string_literal: true
 
+markets = [
+  {
+    "id"               => "ethbtc",
+    "name"             => "ETH/BTC",
+    "base_unit"        => "eth",
+    "quote_unit"       => "btc",
+    "min_price"        => "0.001",
+    "max_price"        => "0.3",
+    "min_amount"       => "0.025",
+    "amount_precision" => 4,
+    "price_precision"  => 6,
+    "state"            => "enabled"
+  },
+  {
+    "id"               => "btcusd",
+    "name"             => "BTC/USD",
+    "base_unit"        => "btc",
+    "quote_unit"       => "usd",
+    "min_price"        => "100.0",
+    "max_price"        => "100000.0",
+    "min_amount"       => "0.0005",
+    "amount_precision" => 6,
+    "price_precision"  => 2,
+    "state"            => "enabled"
+  },
+  {
+    "id"               => "ethusd",
+    "name"             => "ETH/USD",
+    "base_unit"        => "eth",
+    "quote_unit"       => "usd",
+    "min_price"        => "100.0",
+    "max_price"        => "100000.0",
+    "min_amount"       => "0.0005",
+    "amount_precision" => 4,
+    "price_precision"  => 2,
+    "state"            => "enabled"
+  }
+]
+
 shared_context "mocked rubykube" do
   before(:each) do
     # TODO: find better way to store it (let is not accassible inside before)
@@ -8,26 +47,30 @@ shared_context "mocked rubykube" do
 
     # non-authorized requests
 
-    stub_request(:post, %r{peatio/market/orders})
+    stub_request(:post, %r{peatio/market/orders$})
       .to_return(status: 403, body: "", headers: {})
 
     stub_request(:get, %r{peatio/market/orders})
       .to_return(status: 403, body: "", headers: {})
 
-    stub_request(:get, %r{peatio/account/balances})
+    stub_request(:get, %r{peatio/account/balances$})
       .to_return(status: 403, body: "", headers: {})
 
     # authorized requests
 
-    stub_request(:get, %r{peatio/public/timestamp})
+    stub_request(:get, %r{peatio/public/timestamp$})
       .with(headers: authorized_header)
       .to_return(status: 200, body: "", headers: {})
 
-    stub_request(:post, %r{peatio/market/orders})
+    stub_request(:post, %r{peatio/market/orders$})
       .with(headers: authorized_header)
       .to_return(status: 201, body: {id: Random.rand(1...1000)}.to_json, headers: {})
 
-    stub_request(:post, %r{peatio/market/orders/\d+/cancel})
+    stub_request(:post, %r{peatio/market/orders/cancel$})
+      .with(headers: authorized_header)
+      .to_return(status: 201, body: "", headers: {})
+
+    stub_request(:post, %r{peatio/market/orders/\d+/cancel$})
       .with(headers: authorized_header)
       .to_return(status: 201, body: "", headers: {})
 
@@ -44,7 +87,7 @@ shared_context "mocked rubykube" do
         headers: {Total: 4}
       )
 
-    stub_request(:get, %r{peatio/account/balances})
+    stub_request(:get, %r{peatio/account/balances$})
       .with(headers: authorized_header)
       .to_return(
         status:  200,
@@ -57,47 +100,36 @@ shared_context "mocked rubykube" do
         headers: {}
       )
 
-    stub_request(:get, %r{peatio/public/markets})
+    stub_request(:get, %r{peatio/public/markets$})
       .to_return(
         status:  200,
-        body:    [
-          {
-            "id"               => "ethbtc",
-            "name"             => "ETH/BTC",
-            "base_unit"        => "eth",
-            "quote_unit"       => "btc",
-            "min_price"        => "0.001",
-            "max_price"        => "0.3",
-            "min_amount"       => "0.025",
-            "amount_precision" => 4,
-            "price_precision"  => 6,
-            "state"            => "enabled"
-          },
-          {
-            "id"               => "btcusd",
-            "name"             => "BTC/USD",
-            "base_unit"        => "btc",
-            "quote_unit"       => "usd",
-            "min_price"        => "100.0",
-            "max_price"        => "100000.0",
-            "min_amount"       => "0.0005",
-            "amount_precision" => 6,
-            "price_precision"  => 2,
-            "state"            => "enabled"
-          },
-          {
-            "id"               => "ethusd",
-            "name"             => "ETH/USD",
-            "base_unit"        => "eth",
-            "quote_unit"       => "usd",
-            "min_price"        => "100.0",
-            "max_price"        => "100000.0",
-            "min_amount"       => "0.0005",
-            "amount_precision" => 4,
-            "price_precision"  => 2,
-            "state"            => "enabled"
-          }
-        ].to_json,
+        body:    markets.to_json,
+        headers: {}
+      )
+  end
+end
+
+shared_context "mocked finex" do
+  before(:each) do
+    @authorized_api_key = "3107c98eb442e4135541d434410aaaa6"
+    authorized_header = {"X-Auth-Apikey"=> @authorized_api_key}
+
+    stub_request(:post, %r{finex/market/orders$})
+      .with(headers: authorized_header)
+      .to_return(status: 201, body: {}.to_json, headers: {})
+
+    stub_request(:get, %r{peatio/public/markets$})
+      .to_return(
+        status:  200,
+        body:    markets.to_json,
+        headers: {}
+      )
+
+    stub_request(:post, %r{finex/market/orders/\d+/cancel$})
+      .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
+      .to_return(
+        status:  201,
+        body:    {}.to_json,
         headers: {}
       )
   end

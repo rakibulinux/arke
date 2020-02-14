@@ -12,6 +12,8 @@ module Arke::Exchange
       @peatio_route = config["peatio_route"] || "peatio"
       @barong_route = config["barong_route"] || "barong"
       @ranger_route = config["ranger_route"] || "ranger"
+      @finex_route = config["finex_route"] || "finex"
+      @finex = config["finex"] == true
       @ws_url = "#{config['ws']}/api/v2/#{@ranger_route}/private/?stream=order&stream=trade"
       @connection = Faraday.new(url: "#{config['host']}/api/v2") do |builder|
         builder.response :json
@@ -57,7 +59,7 @@ module Arke::Exchange
         ord_type: order.type,
       }
       params.delete(:price) if order.type == "market"
-      response = post("#{@peatio_route}/market/orders", params)
+      response = post("#{@finex ? @finex_route : @peatio_route}/market/orders", params)
 
       if response.status >= 300
         logger.warn { "ACCOUNT:#{id} Failed to create order #{order} status:#{response.status}(#{response.reason_phrase}) body:#{response.body}" }
@@ -72,7 +74,7 @@ module Arke::Exchange
     # Takes +order+ (+Arke::Order+ instance)
     # * cancels +order+ via RestApi
     def stop_order(order)
-      response = post("#{@peatio_route}/market/orders/#{order.id}/cancel")
+      response = post("#{@finex ? @finex_route : @peatio_route}/market/orders/#{order.id}/cancel")
       return unless response.body&.is_a?(Hash)
       raise response.body["errors"].to_s if response.body["errors"]
       return unless %w[cancel rejected done].include?(response.body["state"])

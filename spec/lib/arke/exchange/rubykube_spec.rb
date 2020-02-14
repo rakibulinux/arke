@@ -14,7 +14,6 @@ describe Arke::Exchange::Rubykube do
   let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
   let(:rubykube) { Arke::Exchange::Rubykube.new(exchange_config) }
 
-
   context "mocked rubykube" do
     include_context "mocked rubykube"
     before(:each) { order.apply_requirements(rubykube) }
@@ -62,25 +61,26 @@ describe Arke::Exchange::Rubykube do
 
       it "cancels an open order and doesn't notify when the cancel is pending" do
         stub_request(:post, %r{peatio/market/orders/\d+/cancel})
-        .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
-        .to_return(
-          status: 201,
-          body: {
-            "id" => 51384,
-            "side" => "sell",
-            "ord_type" => "limit",
-            "price" => "178.92",
-            "avg_price" => "0.0",
-            "state" => "wait",
-            "market" => "ethusd",
-            "created_at" => "2020-01-30T14:08:55+01:00",
-            "updated_at" => "2020-01-30T14:08:55+01:00",
-            "origin_volume" => "1.0",
-            "remaining_volume" => "1.0",
-            "executed_volume" => "0.0",
-            "trades_count" => 0
-          }.to_json,
-          headers: {})
+          .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
+          .to_return(
+            status:  201,
+            body:    {
+              "id"               => 51_384,
+              "side"             => "sell",
+              "ord_type"         => "limit",
+              "price"            => "178.92",
+              "avg_price"        => "0.0",
+              "state"            => "wait",
+              "market"           => "ethusd",
+              "created_at"       => "2020-01-30T14:08:55+01:00",
+              "updated_at"       => "2020-01-30T14:08:55+01:00",
+              "origin_volume"    => "1.0",
+              "remaining_volume" => "1.0",
+              "executed_volume"  => "0.0",
+              "trades_count"     => 0
+            }.to_json,
+            headers: {}
+          )
 
         cb = double("on_deleted_order callback", call: true)
         rubykube.register_on_deleted_order(&cb.method(:call))
@@ -90,25 +90,26 @@ describe Arke::Exchange::Rubykube do
 
       it "cancels an order already closed and notifies because we may have missed the confirmation from the websocket" do
         stub_request(:post, %r{peatio/market/orders/\d+/cancel})
-        .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
-        .to_return(
-          status: 201,
-          body: {
-            "id" => 51384,
-            "side" => "sell",
-            "ord_type" => "limit",
-            "price" => "178.92",
-            "avg_price" => "0.0",
-            "state" => "cancel",
-            "market" => "ethusd",
-            "created_at" => "2020-01-30T14:08:55+01:00",
-            "updated_at" => "2020-01-30T14:08:55+01:00",
-            "origin_volume" => "1.0",
-            "remaining_volume" => "1.0",
-            "executed_volume" => "0.0",
-            "trades_count" => 0
-          }.to_json,
-          headers: {})
+          .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
+          .to_return(
+            status:  201,
+            body:    {
+              "id"               => 51_384,
+              "side"             => "sell",
+              "ord_type"         => "limit",
+              "price"            => "178.92",
+              "avg_price"        => "0.0",
+              "state"            => "cancel",
+              "market"           => "ethusd",
+              "created_at"       => "2020-01-30T14:08:55+01:00",
+              "updated_at"       => "2020-01-30T14:08:55+01:00",
+              "origin_volume"    => "1.0",
+              "remaining_volume" => "1.0",
+              "executed_volume"  => "0.0",
+              "trades_count"     => 0
+            }.to_json,
+            headers: {}
+          )
 
         cb = double("on_deleted_order callback", call: true)
         rubykube.register_on_deleted_order(&cb.method(:call))
@@ -118,15 +119,16 @@ describe Arke::Exchange::Rubykube do
 
       it "raises if we try to cancel a non existing order" do
         stub_request(:post, %r{peatio/market/orders/\d+/cancel})
-        .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
-        .to_return(
-          status: 201,
-          body: {
-            "errors": [
+          .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
+          .to_return(
+            status:  201,
+            body:    {
+              "errors": [
                 "record.not_found"
-            ]
-        }.to_json,
-          headers: {})
+              ]
+            }.to_json,
+            headers: {}
+          )
         expect { market.stop_order(order) }.to raise_error(StandardError)
       end
     end
@@ -372,6 +374,36 @@ describe Arke::Exchange::Rubykube do
           headers: {}
         )
       expect { rubykube.market_config("btcusd") }.to raise_error(/price_precision/)
+    end
+  end
+
+  context "finex enabled" do
+    include_context "mocked finex"
+
+    let(:exchange_config) do
+      {
+        "driver" => "rubykube",
+        "host"   => "http://www.devkube.com",
+        "key"    => @authorized_api_key,
+        "secret" => SecureRandom.hex,
+        "finex"  => true
+      }
+    end
+    let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
+    before(:each) { order.apply_requirements(rubykube) }
+
+    it "doesn't updates open_orders after create" do
+      ord = rubykube.create_order(order)
+      expect(ord.id).to be_nil
+      expect(market.open_orders.contains?(order.side, order.price)).to eq(false)
+    end
+
+    it "cancels an open order and doesn't notify when the cancel is pending" do
+      o = Arke::Order.new("ethusd", 1, 1, :buy, "limit", 42)
+      cb = double("on_deleted_order callback", call: true)
+      rubykube.register_on_deleted_order(&cb.method(:call))
+      expect(cb).to_not receive(:call)
+      market.stop_order(o)
     end
   end
 end
