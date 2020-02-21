@@ -42,7 +42,7 @@ describe Arke::Strategy::MicrotradesCopy do
       "sources"             => [
         {
           "driver"    => "bitfaker",
-          "market_id" => "BTCUSD",
+          "market_id" => "XBTUSDT",
         }
       ],
     }
@@ -187,6 +187,33 @@ describe Arke::Strategy::MicrotradesCopy do
       it "creates a sell order and take it with a buy order on the target" do
         expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 9980.000001, 10, :sell, "limit")).ordered
         expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 9980.000001, 10, :buy, "limit")).ordered
+        strategy.instance_variable_set(:@expiration, Time.now.to_i - 10)
+
+        EM.synchrony do
+          strategy.on_trade(source.id, public_trade)
+          EM::Synchrony.add_timer(0.011) { EM.stop }
+        end
+      end
+    end
+
+    context "trade market is not the one configured" do
+      let(:public_trade) { ::Arke::PublicTrade.new(42, "XBTETH", "kraken", "buy", 0.1, 139, 13.9) }
+      it "does not create any order" do
+        expect(target.account).to_not receive(:create_order)
+        strategy.instance_variable_set(:@expiration, Time.now.to_i - 10)
+
+        EM.synchrony do
+          strategy.on_trade(source.id, public_trade)
+          EM::Synchrony.add_timer(0.011) { EM.stop }
+        end
+      end
+    end
+
+    context "trade market case is different that the one configured" do
+      let(:public_trade) { ::Arke::PublicTrade.new(42, "xbtusdt", "kraken", "buy", 0.1, 9985, nil) }
+      it "does not create any order" do
+        expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 9985, 10, :sell, "limit")).ordered
+        expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 9985, 10, :buy, "limit")).ordered
         strategy.instance_variable_set(:@expiration, Time.now.to_i - 10)
 
         EM.synchrony do

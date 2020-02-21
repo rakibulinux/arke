@@ -17,7 +17,6 @@ module Arke::Strategy
       @period_random_delay = nil
 
       params = @config["params"] || {}
-
       @matching_timeout = (params["matching_timeout"]&.to_f || 1.0)
       @maker_taker_orders_delay = (params["maker_taker_orders_delay"]&.to_f || 0.02)
       @min_amount = (params["min_amount"] || target.min_amount).to_f
@@ -37,7 +36,7 @@ module Arke::Strategy
       sources.each do |s|
         s.apply_flags(::Arke::Helpers::Flags::LISTEN_PUBLIC_TRADES)
         s.account.add_market_to_listen(s.id)
-        cb = proc {|trade| on_trade(s.account.id, trade) }
+        cb = proc {|trade| on_trade(s.id, trade) }
         s.account.register_on_public_trade_cb(&cb)
       end
       target.apply_flags(::Arke::Helpers::Flags::LISTEN_PUBLIC_ORDERBOOK)
@@ -117,12 +116,16 @@ module Arke::Strategy
       orders_f.resume
     end
 
-    def on_trade(account_id, trade)
-      logger.debug { "ID:#{id} Trade on #{account_id}: #{trade}" }
+    def on_trade(account_market_id, trade)
+      if account_market_id.downcase != trade.market.downcase
+        logger.debug { "ID:#{id} Trade skipped #{account_market_id}: #{trade}" }
+        return
+      end
+      logger.debug { "ID:#{id} Trade on #{account_market_id}: #{trade}" }
 
       return unless Time.now.to_i >= @expiration
 
-      logger.info "ID:#{id} Trade on #{account_id}: #{trade}"
+      logger.info "ID:#{id} Trade on #{account_market_id}: #{trade}"
       trigger_microtrade(trade)
       set_current_expiration
     rescue StandardError => e
