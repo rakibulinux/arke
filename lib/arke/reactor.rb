@@ -114,7 +114,6 @@ module Arke
           next if !account.flag?(WS_PUBLIC) || account.flag?(WS_PRIVATE)
 
           account.ws_connect_public
-          account.listen_trades if account.flag?(LISTEN_PUBLIC_TRADES) && account.respond_to?(:listen_trades)
         end
 
         # Start strategies

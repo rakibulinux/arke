@@ -17,26 +17,45 @@ module Arke::Exchange
     end
 
     def ws_connect(ws_id)
-      @markets_to_listen.each do |market|
-        @ws_queues[ws_id].push(
-          JSON.dump(
-            event:   "subscribe",
-            channel: "trades",
-            symbol:  "t#{market.upcase}"
-          )
-        )
-      end
-      Fiber.new do
-        EM::Synchrony.add_periodic_timer(80) do
-          ws_write_message(ws_id, '{"event":"ping"}')
-        end
-      end.resume
       super(ws_id)
+
+      @ws.on(:open) do |_e|
+        if flag?(LISTEN_PUBLIC_TRADES)
+          @markets_to_listen.each do |market|
+            subscribe_trades(market, ws)
+          end
+        end
+
+        Fiber.new do
+          EM::Synchrony.add_periodic_timer(80) do
+            ws_write_message(ws_id, '{"event":"ping"}')
+          end
+        end.resume
+      end
+    end
+
+    def subscribe_trades(market, ws)
+      sub = {
+        event:   "subscribe",
+        channel: "trades",
+        symbol:  market.upcase,
+      }
+
+      Arke::Log.info "Open event" + sub.to_s
+      EM.next_tick {
+        ws.send(JSON.generate(sub))
+      }
     end
 
     def ws_read_public_message(msg)
-      return unless msg.is_a?(Array)
+      if msg.is_a?(Array)
+        detect_trade(msg)
+      elsif msg.is_a?(Hash)
+        message_event(msg)
+      end
+    end
 
+    def detect_trade(msg)
       if msg[1] == "tu"
         market = msg[2].split("-").last
         amount = msg[6].to_d
@@ -51,6 +70,19 @@ module Arke::Exchange
           msg[4].to_i * 1000
         )
         notify_public_trade(trade)
+      end
+    end
+
+    def message_event(msg)
+      case msg["event"]
+      # when "auth"
+      when "subscribed"
+        Arke::Log.info "Event: #{msg}"
+      # when "unsubscribed"
+      # when "info"
+      # when "conf"
+      when "error"
+        Arke::Log.info "Event: #{msg} ignored"
       end
     end
 
@@ -106,30 +138,6 @@ module Arke::Exchange
       when "error"
         Arke::Log.info "Event: #{msg['event']} ignored"
       end
-    end
-
-    def on_open(_)
-      # sub = {
-      #   event:   "subscribe",
-      #   channel: "book",
-      #   symbol:  @market,
-      #   prec:    "P0",
-      #   freq:    "F0",
-      # }
-
-      # Arke::Log.info "Open event" + sub.to_s
-      # EM.next_tick {
-      #   @ws.send(JSON.generate(sub))
-      # }
-    end
-
-    def on_message(e)
-      msg = JSON.parse(e.data)
-      process_message(msg)
-    end
-
-    def on_close(e)
-      Arke::Log.info "Closing code: #{e.code} Reason: #{e.reason}"
     end
 
     def build_order(data, side)
@@ -193,84 +201,6 @@ module Arke::Exchange
       }
     end
 
-    def new_trade(data, market)
-      amount = data[2]
-      pm_id = @platform_markets[market]
-
-      taker_type = :buy
-      if amount.negative?
-        taker_type = :sell
-        amount *= -1
-      end
-
-      trade = Trade.new(
-        price:              data[3],
-        amount:             amount,
-        platform_market_id: pm_id,
-        taker_type:         taker_type
-      )
-      @opts[:on_trade]&.call(trade, market)
-    end
-
-    def on_open_trades(market, ws)
-      sub = {
-        event:   "subscribe",
-        channel: "trades",
-        symbol:  market.upcase,
-      }
-
-      Arke::Log.info "Open event" + sub.to_s
-      EM.next_tick {
-        ws.send(JSON.generate(sub))
-      }
-    end
-
-    def detect_trade(msg)
-      market = @connections[msg.first]
-
-      new_trade(msg[2], market) if msg.length == 3 && msg[1] == "te"
-    end
-
-    def message_event(msg, market)
-      case msg["event"]
-      # when "auth"
-      when "subscribed"
-        @connections[msg["chanId"]] = market
-        Arke::Log.info "Event: #{msg['event']}"
-      # when "unsubscribed"
-      # when "info"
-      # when "conf"
-      when "error"
-        Arke::Log.info "Event: #{msg['event']} ignored"
-      end
-    end
-
-    def listen_trades(markets_list=nil)
-      @connections = {}
-      markets_list ||= @markets_to_listen
-
-      markets_list.each do |market|
-        ws = Faye::WebSocket::Client.new(@ws_url)
-
-        ws.on(:open) do |_e|
-          on_open_trades(market, ws)
-        end
-
-        ws.on(:message) do |e|
-          msg = JSON.parse(e.data)
-          if msg.is_a?(Array)
-            detect_trade(msg)
-          elsif msg.is_a?(Hash)
-            message_event(msg, market)
-          end
-        end
-
-        ws.on(:close) do |e|
-          on_close(e)
-        end
-      end
-    end
-
     def get_balances
       response = authenticated_post("/v1/balances")
       if response.status == 200
@@ -307,22 +237,6 @@ module Arke::Exchange
         order = Arke::Order.new(o["symbol"].upcase, o["price"].to_f, o["remaining_amount"].to_f, o["side"].to_sym)
         order.id = o["id"]
         order
-      end
-    end
-
-    def start
-      @ws = Faye::WebSocket::Client.new(@ws_url)
-
-      @ws.on(:open) do |e|
-        on_open(e)
-      end
-
-      @ws.on(:message) do |e|
-        on_message(e)
-      end
-
-      @ws.on(:close) do |e|
-        on_close(e)
       end
     end
 

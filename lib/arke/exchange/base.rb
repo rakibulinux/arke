@@ -105,7 +105,7 @@ module Arke::Exchange
     end
 
     def ws_read_message(ws_id, msg)
-      logger.debug { "ACCOUNT:#{id} received websocket message: #{msg.data}" }
+      logger.debug { "ACCOUNT:#{id} received #{ws_id} websocket message: #{msg.data}" }
 
       object = JSON.parse(msg.data)
       case ws_id
