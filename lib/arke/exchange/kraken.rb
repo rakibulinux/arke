@@ -19,8 +19,6 @@ module Arke::Exchange
       symbols
     end
 
-    def start; end
-
     def build_order(data, side)
       Arke::Order.new(
         @market,
@@ -81,14 +79,34 @@ module Arke::Exchange
       }
     end
 
+    def ws_connect(ws_id)
+      super(ws_id)
+
+      @ws.on(:open) do |_e|
+        subscribe_trades(@markets_to_listen, ws) if flag?(LISTEN_PUBLIC_TRADES)
+
+        Fiber.new do
+          EM::Synchrony.add_periodic_timer(60) do
+            ws_write_message(ws_id, '{"event":"ping"}')
+          end
+        end.resume
+      end
+    end
+
     def markets_ws_map
       @markets_ws_map ||= symbols.values.each_with_object({}) do |p, h|
         h[p["altname"].downcase] = p["wsname"]
       end
     end
 
-    def on_open_trades(markets_list)
-      ws_markets = markets_list.map {|market| markets_ws_map[market] }
+    def markets_ws_mapr
+      @markets_ws_mapr ||= markets_ws_map.each_with_object({}) do |(name, altname), h|
+        h[altname] = name
+      end
+    end
+
+    def subscribe_trades(markets_list, ws)
+      ws_markets = markets_list.map {|market| markets_ws_map[market.downcase] }
       sub = {
         "event":        "subscribe",
         "pair":         ws_markets,
@@ -99,46 +117,37 @@ module Arke::Exchange
 
       info "Open event #{sub}"
       EM.next_tick {
-        @ws.send(JSON.generate(sub))
+        ws.send(JSON.generate(sub))
       }
     end
 
-    def new_trade(msg)
+    def parse_trade(msg)
+      return if msg[2] != "trade"
+
       data = msg[1]
       market = msg.last
-      pm_id = @platform_markets[market]
       data.each do |t|
         taker_type = t[3] == "b" ? :buy : :sell
-        trade = Trade.new(
-          price:              t[0],
-          amount:             t[1],
-          platform_market_id: pm_id,
-          taker_type:         taker_type,
-          created_at:         t[2]
+        trade = ::Arke::PublicTrade.new(
+          t[2],
+          markets_ws_mapr[market],
+          "kraken",
+          taker_type,
+          t[1].to_d,
+          t[0].to_d,
+          t[0].to_d * t[1].to_d,
+          t[2].to_d
         )
-        @opts[:on_trade]&.call(trade, market)
+        notify_public_trade(trade)
       end
     end
 
-    def on_close(e)
-      info "Closing code: #{e.code}: #{e}"
-    end
+    def ws_read_public_message(msg)
+      return unless msg.is_a?(Array)
 
-    def listen_trades(markets_list=nil)
-      info "Connecting to websocket: #{@ws_url}"
-      markets_list ||= @markets_to_listen
-
-      @ws.on(:open) do |_e|
-        on_open_trades(markets_list)
-      end
-
-      @ws.on(:message) do |e|
-        msg = JSON.parse(e.data)
-        new_trade(msg) if msg.is_a?(Array)
-      end
-
-      @ws.on(:close) do |e|
-        on_close(e)
+      case msg[2]
+      when "trade"
+        parse_trade(msg)
       end
     end
 

@@ -172,5 +172,37 @@ describe Arke::Exchange::Kraken do
           .with(body: body).once
       end
     end
+
+    context "handle ws trade event" do
+      let(:trade_event) do
+        OpenStruct.new(
+          "type": "message",
+          "data": [
+            181,
+            [
+              ["271.69000", "0.03490924", "1582445053.916545", "s", "m", ""],
+              ["271.69000", "0.00009052", "1582445053.923872", "s", "m", ""],
+              ["271.69000", "0.00000024", "1582445053.925416", "s", "m", ""]
+            ],
+            "trade",
+            "ETH/USD"
+          ].to_json
+        )
+      end
+
+      it "builds markets_ws_map and markets_ws_mapr" do
+        expect(kraken.markets_ws_map["ethusd"]).to eq("ETH/USD")
+        expect(kraken.markets_ws_mapr["ETH/USD"]).to eq("ethusd")
+      end
+
+      it "notifies public trade to registered callbacks" do
+        callback = double(:callback)
+        expect(callback).to receive(:call).with(Arke::PublicTrade.new("1582445053.916545", "ethusd", "kraken", :sell, 0.03490924.to_d, 271.69.to_d, 9.4844914156.to_d, 1_582_445_053_916_545.to_d / 1e6))
+        expect(callback).to receive(:call).with(Arke::PublicTrade.new("1582445053.923872", "ethusd", "kraken", :sell, 0.00009052.to_d, 271.69.to_d, 0.0245933788.to_d, 1_582_445_053_923_872.to_d / 1e6))
+        expect(callback).to receive(:call).with(Arke::PublicTrade.new("1582445053.925416", "ethusd", "kraken", :sell, 0.00000024.to_d, 271.69.to_d, 0.0000652056.to_d, 1_582_445_053_925_416.to_d / 1e6))
+        kraken.register_on_public_trade_cb(&callback.method(:call))
+        kraken.ws_read_message(:public, trade_event)
+      end
+    end
   end
 end
