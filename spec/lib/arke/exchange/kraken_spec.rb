@@ -173,7 +173,7 @@ describe Arke::Exchange::Kraken do
       end
     end
 
-    context "handle ws trade event" do
+    context "public trade event received on websocket" do
       let(:trade_event) do
         OpenStruct.new(
           "type": "message",

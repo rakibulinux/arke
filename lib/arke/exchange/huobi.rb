@@ -7,16 +7,17 @@ module Arke::Exchange
     def initialize(opts)
       super
 
-      @ts_pattern = opts['ts_pattern'] || "%Y-%m-%dT%H:%M:%S"
-      @connection = Faraday.new(url: "https://#{opts['host']}") do |builder|
+      @ts_pattern = opts["ts_pattern"] || "%Y-%m-%dT%H:%M:%S"
+      @host = opts["host"] || "api.huobi.pro"
+      @ws_url = "wss://#{@host}/ws"
+      @connection = Faraday.new(url: "https://#{@host}") do |builder|
         builder.response :logger if opts["debug"]
         builder.use FaradayMiddleware::ParseJson, content_type: /\bjson$/
         builder.adapter(@adapter)
       end
+      apply_flags(FORCE_MARKET_LOWERCASE)
       set_account unless @secret.to_s.empty?
     end
-
-    def start; end
 
     def update_orderbook(market)
       orderbook = Arke::Orderbook::Orderbook.new(market)
@@ -112,7 +113,69 @@ module Arke::Exchange
       }
     end
 
-    private
+    def ws_connect(ws_id)
+      super(ws_id)
+
+      @ws.on(:open) do |_e|
+        if flag?(LISTEN_PUBLIC_TRADES)
+          @markets_to_listen.each do |market|
+            subscribe_trades(market, ws_id)
+          end
+        end
+
+        Fiber.new do
+          EM::Synchrony.add_periodic_timer(5) do
+            ws_write_message(ws_id, JSON.dump("ping" => Time.now.to_i))
+          end
+        end.resume
+      end
+    end
+
+    def subscribe_trades(market, ws_id)
+      sub = {
+        "sub" => "market.#{market}.trade.detail",
+      }
+      EM.next_tick { ws_write_message(ws_id, JSON.generate(sub)) }
+    end
+
+    def ws_read_message(ws_id, msg)
+      data = Zlib::GzipReader.new(StringIO.new(msg.data.map(&:chr).join)).read
+      object = JSON.parse(data)
+      case ws_id
+      when :public
+        ws_read_public_message(object)
+      when :private
+        ws_read_private_message(object)
+      end
+    end
+
+    def ws_read_public_message(msg)
+      case msg["op"]
+      when "ping"
+        ws_write_message(:public, JSON.dump("op" => "pong", "ts" => msg["ts"]))
+        return
+      end
+
+      case msg["ch"]
+      when /market\.([^.]+)\.trade\.detail/
+        parse_trade(msg, $1)
+      end
+    end
+
+    def parse_trade(msg, market)
+      msg["tick"]["data"].each do |trd|
+        notify_public_trade ::Arke::PublicTrade.new(
+          trd["tradeId"],
+          market,
+          "huobi",
+          trd["direction"].to_sym,
+          trd["amount"].to_d,
+          trd["price"].to_d,
+          trd["amount"].to_d * trd["price"].to_d,
+          trd["ts"]
+        )
+      end
+    end
 
     def build_order(data, side)
       Arke::Order.new(
@@ -131,9 +194,9 @@ module Arke::Exchange
         Timestamp:        Time.now.getutc.strftime(ts_pattern)
       }
       h = h.merge(params) if method == "GET"
-      data = "#{method}\napi.huobi.pro\n#{path}\n#{Rack::Utils.build_query(hash_sort(h))}"
+      data = "#{method}\n#{@host}\n#{path}\n#{Rack::Utils.build_query(hash_sort(h))}"
       h["Signature"] = sign(data)
-      url = "https://api.huobi.pro#{path}?#{Rack::Utils.build_query(h)}"
+      url = "https://#{@host}#{path}?#{Rack::Utils.build_query(h)}"
 
       method == "GET" ? get(url) : post(url, params)
     end
