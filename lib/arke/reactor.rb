@@ -67,8 +67,6 @@ module Arke
           strategy.fx = fx_klass.new(config["fx"])
         end
         strategies << strategy
-      rescue StandardError => e
-        report_fatal(e, config["id"])
       end
       @strategies = strategies
     end
