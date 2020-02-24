@@ -27,6 +27,15 @@ describe Arke::Exchange::Rubykube do
 
       it "doesn't updates open_orders after create" do
         ord = rubykube.create_order(order)
+        assert_requested(:post, "http://www.devkube.com/api/v2/peatio/market/orders", times: 1) do |req|
+          expect(JSON.parse(req.body)).to eq(
+            "market"   => "ethusd",
+            "volume"   => "1.0000",
+            "price"    => "1.00",
+            "side"     => "buy",
+            "ord_type" => "limit"
+          )
+        end
         expect(ord.id).to be_between(1, 1000)
         expect(market.open_orders.contains?(order.side, order.price)).to eq(false)
       end
@@ -389,13 +398,22 @@ describe Arke::Exchange::Rubykube do
         "finex"  => true
       }
     end
-    let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
+    let(:order) { Arke::Order.new("ethusd", 1, 2, :buy) }
     before(:each) { order.apply_requirements(rubykube) }
 
     it "doesn't updates open_orders after create" do
       ord = rubykube.create_order(order)
       expect(ord.id).to be_nil
       expect(market.open_orders.contains?(order.side, order.price)).to eq(false)
+      assert_requested(:post, "http://www.devkube.com/api/v2/finex/market/orders", times: 1) do |req|
+        expect(JSON.parse(req.body)).to eq(
+          "market" => "ethusd",
+          "amount" => "2.0000",
+          "price"  => "1.00",
+          "side"   => "buy",
+          "type"   => "limit"
+        )
+      end
     end
 
     it "cancels an open order and doesn't notify when the cancel is pending" do

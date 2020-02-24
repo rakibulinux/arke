@@ -63,7 +63,13 @@ module Arke::Exchange
       raise "ACCOUNT:#{id} amount_s is nil" if order.amount_s.nil?
       raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
 
-      params = {
+      params = @finex ? {
+        market:   order.market.downcase,
+        side:     order.side.to_s,
+        amount:   order.amount_s,
+        price:    order.price_s,
+        type: order.type,
+      } : {
         market:   order.market.downcase,
         side:     order.side.to_s,
         volume:   order.amount_s,
