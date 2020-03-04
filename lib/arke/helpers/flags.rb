@@ -23,4 +23,9 @@ module Arke::Helpers::Flags
     @mode ||= 0
     @mode |= flags
   end
+
+  def remove_flags(flags)
+    @mode ||= 0
+    @mode = @mode & ~flags
+  end
 end

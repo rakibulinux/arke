@@ -16,7 +16,7 @@ module Arke::Exchange
       @finex = config["finex"] == true
       @ws_base_url = config["ws"] ||= "wss://%s" % [URI.parse(config["host"]).hostname]
 
-      @connection = Faraday.new(url: "#{config["host"]}/api/v2") do |builder|
+      @connection = Faraday.new(url: "#{config['host']}/api/v2") do |builder|
         builder.response :json
         builder.response :logger if @debug
         builder.adapter(@adapter)
@@ -27,20 +27,32 @@ module Arke::Exchange
     end
 
     def ws_connect(ws_id)
-      @ws_url = case ws_id
-        when :public then "%s/api/v2/%s/public/?stream=global.tickers" % [@ws_base_url, @ranger_route]
-        when :private then "%s/api/v2/%s/private/?stream=order&stream=trade" % [@ws_base_url, @ranger_route]
-        end
+      streams = []
 
-      if flag?(LISTEN_PUBLIC_ORDERBOOK) && !@markets_to_listen.empty?
-        @ws_url += "&" + @markets_to_listen.map { |id| "#{id}.ob-inc" }.join("&")
+      case ws_id
+      when :public
+        streams = ["global.tickers"]
+      when :private
+        streams = %w[order trade]
+        streams << "balances" if @finex
       end
 
-      Fiber.new do
-        EM::Synchrony.add_periodic_timer(53) do
-          ws_write_message(ws_id, "ping")
+      if flag?(LISTEN_PUBLIC_ORDERBOOK) && !@markets_to_listen.empty?
+        @markets_to_listen.each do |id|
+          streams << "#{id}.ob-inc"
         end
-      end.resume
+      end
+
+      @ws_url = "%s/api/v2/%s/%s/?%s" % [@ws_base_url, @ranger_route, ws_id.to_s, streams.map {|s| "stream=#{s}" }.join("&")]
+
+      unless @ping_fiber
+        @ping_fiber = Fiber.new do
+          EM::Synchrony.add_periodic_timer(53) do
+            ws_write_message(ws_id, "ping")
+          end
+        end
+        @ping_fiber.resume
+      end
 
       super(ws_id)
     end
@@ -53,7 +65,7 @@ module Arke::Exchange
     def cancel_all_orders(market)
       post(
         "#{@peatio_route}/market/orders/cancel",
-        market: market.downcase,
+        market: market.downcase
       )
     end
 
@@ -64,11 +76,11 @@ module Arke::Exchange
       raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
 
       params = @finex ? {
-        market:   order.market.downcase,
-        side:     order.side.to_s,
-        amount:   order.amount_s,
-        price:    order.price_s,
-        type: order.type,
+        market: order.market.downcase,
+        side:   order.side.to_s,
+        amount: order.amount_s,
+        price:  order.price_s,
+        type:   order.type,
       } : {
         market:   order.market.downcase,
         side:     order.side.to_s,
@@ -97,7 +109,7 @@ module Arke::Exchange
       raise response.body["errors"].to_s if response.body["errors"]
       return unless %w[cancel rejected done].include?(response.body["state"])
 
-      logger.warn { "ACCOUNT:#{id} order #{order.id} was #{response.body["state"]}" }
+      logger.warn { "ACCOUNT:#{id} order #{order.id} was #{response.body['state']}" }
       notify_deleted_order(order)
     end
 
@@ -159,6 +171,7 @@ module Arke::Exchange
 
     def update_orderbook(market)
       return @books[market][:book] if @books[market]
+
       limit = @opts["limit"] || 1000
       snapshot = @connection.get("#{@peatio_route}/public/markets/#{market.downcase}/depth", limit: limit).body
       create_or_update_orderbook(Arke::Orderbook::Orderbook.new(market), snapshot)
@@ -166,7 +179,7 @@ module Arke::Exchange
 
     def get_market_infos(market)
       @market_infos ||= @connection.get("#{@peatio_route}/public/markets").body
-      infos = @market_infos.select { |m| m["id"]&.downcase == market.downcase }.first
+      infos = @market_infos.select {|m| m["id"]&.downcase == market.downcase }.first
       raise "Market #{market} not found" unless infos
 
       infos
@@ -206,7 +219,7 @@ module Arke::Exchange
     # * takes +conn+ - faraday connection
     # * takes +path+ - request url
     # * takes +params+ - body for +POST+ request
-    def post(path, params = nil)
+    def post(path, params=nil)
       logger.info { "ACCOUNT:#{id} POST: #{path} PARAMS: #{params}" } if @debug
       response = @connection.post do |req|
         req.headers = generate_headers
@@ -216,7 +229,7 @@ module Arke::Exchange
       response
     end
 
-    def get(path, params = nil)
+    def get(path, params=nil)
       response = @connection.get do |req|
         req.headers = generate_headers
         req.url path, params
@@ -234,21 +247,24 @@ module Arke::Exchange
       msg.each do |key, content|
         case key
         when /([^\.]+)\.ob-snap/
-          @books[$1] = {
-            book: create_or_update_orderbook(Arke::Orderbook::Orderbook.new($1), content),
+          @books[Regexp.last_match(1)] = {
+            book:     create_or_update_orderbook(Arke::Orderbook::Orderbook.new(Regexp.last_match(1)), content),
             sequence: content["sequence"],
           }
         when /([^\.]+)\.ob-inc/
-          return logger.error { "Received a book increment before snapshot on market #{$1}" } if @books[$1].nil?
-          if content["sequence"] != @books[$1][:sequence] + 1
-            logger.error { "Sequence out of order (previous: #{@books[$1][:sequence]} current:#{content["sequence"]}, reconnecting websocket..." }
+          if @books[Regexp.last_match(1)].nil?
+            return logger.error { "Received a book increment before snapshot on market #{Regexp.last_match(1)}" }
+          end
+
+          if content["sequence"] != @books[Regexp.last_match(1)][:sequence] + 1
+            logger.error { "Sequence out of order (previous: #{@books[Regexp.last_match(1)][:sequence]} current:#{content['sequence']}, reconnecting websocket..." }
             return @ws.close
           end
           bids = content["bids"]
           asks = content["asks"]
-          create_or_update_orderbook(@books[$1][:book], { "bids" => [bids] }) if bids && !bids.empty?
-          create_or_update_orderbook(@books[$1][:book], { "asks" => [asks] }) if asks && !asks.empty?
-          @books[$1][:sequence] = content["sequence"]
+          create_or_update_orderbook(@books[Regexp.last_match(1)][:book], {"bids" => [bids]}) if bids && !bids.empty?
+          create_or_update_orderbook(@books[Regexp.last_match(1)][:book], {"asks" => [asks]}) if asks && !asks.empty?
+          @books[Regexp.last_match(1)][:sequence] = content["sequence"]
         end
       end
     end
@@ -281,6 +297,20 @@ module Arke::Exchange
         when "cancel", "done"
           notify_deleted_order(order)
         end
+        return
+      end
+
+      if msg["balances"]
+        update_balances(msg["balances"].map {|currency, (free, locked)|
+          free = free.to_d
+          locked = locked.to_d
+          {
+            "currency" => currency,
+            "free"     => free,
+            "locked"   => locked,
+            "total"    => free + locked,
+          }
+        })
         return
       end
 

@@ -173,7 +173,6 @@ module Arke
         end
 
         begin
-          logger.info { "ACCOUNT:#{ex.id} Fetching balances on #{ex.driver}" }
           ex.fetch_balances
         rescue StandardError => e
           logger.error { "ACCOUNT:#{ex.id} Fetching balances on #{ex.driver} failed: #{e}\n#{e.backtrace.join("\n")}" }

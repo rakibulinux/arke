@@ -495,4 +495,50 @@ describe Arke::Exchange::Rubykube do
       rubykube.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => ["252.32", ""], "sequence" => 6113})
     end
   end
+
+  context "update balances on ranger messages" do
+    include_context "mocked rubykube"
+
+    let(:balances_event) do
+      {
+        "balances" => {
+          "btc" => %w[0.998 0.002],
+          "eth" => %w[1000000000 0],
+        }
+      }
+    end
+
+    it "updates an existing price point" do
+      rubykube.send(:ws_read_private_message, balances_event)
+      expect(rubykube.fetch_balances).to eq(
+        [
+          {
+            "currency" => "btc",
+            "free"     => 0.998,
+            "locked"   => 0.002,
+            "total"    => 1,
+          },
+          {
+            "currency" => "eth",
+            "free"     => 1_000_000_000,
+            "locked"   => 0,
+            "total"    => 1_000_000_000,
+          },
+        ]
+      )
+      expect(rubykube.balance("btc")).to eq(
+        "currency" => "btc",
+        "free"     => 0.998,
+        "locked"   => 0.002,
+        "total"    => 1,
+      )
+      expect(rubykube.balance("eth")).to eq(
+        "currency" => "eth",
+        "free"     => 1_000_000_000,
+        "locked"   => 0,
+        "total"    => 1_000_000_000,
+      )
+      expect(rubykube.balance("trst")).to be_nil
+    end
+  end
 end

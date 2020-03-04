@@ -36,7 +36,7 @@ module Arke::Exchange
         private: EM::Queue.new,
       }
       load_platform_markets(opts["driver"]) if opts[:load_platform_markets]
-      update_forced_balance(opts["balances"]) if opts["balances"]
+      update_forced_balances(opts["balances"]) if opts["balances"]
     end
 
     def add_market_to_listen(market)
@@ -172,7 +172,7 @@ module Arke::Exchange
       raise "fetch_openorders not implemented"
     end
 
-    def update_forced_balance(balances)
+    def update_forced_balances(balances)
       @forced_balances = balances.map do |key, value|
         {
           "currency" => key,
@@ -183,8 +183,13 @@ module Arke::Exchange
       end
     end
 
+    def update_balances(balances)
+      @balances = @forced_balances = balances
+    end
+
     def fetch_balances
       if @forced_balances.empty?
+        logger.info { "ACCOUNT:#{id} Fetching balances on #{driver}" }
         balances = get_balances()
         @balances = balances
       else
