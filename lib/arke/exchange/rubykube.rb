@@ -37,7 +37,7 @@ module Arke::Exchange
       end
 
       Fiber.new do
-        EM::Synchrony.add_periodic_timer(290) do
+        EM::Synchrony.add_periodic_timer(53) do
           ws_write_message(ws_id, "ping")
         end
       end.resume
