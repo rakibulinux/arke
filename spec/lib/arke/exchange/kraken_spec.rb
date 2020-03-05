@@ -109,22 +109,22 @@ describe Arke::Exchange::Kraken do
       it "returns the list of account assets balances" do
         expect(kraken.get_balances).to eq(
           [
-            {"currency" => "ZUSD", "free" => 0, "locked" => 0, "total" => 100.0000.to_d},
-            {"currency" => "ZEUR", "free" => 0, "locked" => 0, "total" => 0.0000.to_d},
-            {"currency" => "XXBT", "free" => 0, "locked" => 0, "total" => 10.3341681147.to_d},
-            {"currency" => "XXRP", "free" => 0, "locked" => 0, "total" => 69.94654290.to_d},
-            {"currency" => "XLTC", "free" => 0, "locked" => 0, "total" => 4.2315050300.to_d},
-            {"currency" => "XNMC", "free" => 0, "locked" => 0, "total" => 0.0000000000.to_d},
-            {"currency" => "XXDG", "free" => 0, "locked" => 0, "total" => 605.00000000.to_d},
-            {"currency" => "XXLM", "free" => 0, "locked" => 0, "total" => 0.00000262.to_d},
-            {"currency" => "XETH", "free" => 0, "locked" => 0, "total" => 0.0000000100.to_d},
-            {"currency" => "XETC", "free" => 0, "locked" => 0, "total" => 0.0000000000.to_d},
-            {"currency" => "XZEC", "free" => 0, "locked" => 0, "total" => 1.0000000000.to_d},
-            {"currency" => "XXMR", "free" => 0, "locked" => 0, "total" => 21.4354237300.to_d},
-            {"currency" => "USDT", "free" => 0, "locked" => 0, "total" => 0.00007280.to_d},
-            {"currency" => "DASH", "free" => 0, "locked" => 0, "total" => 0.1324000000.to_d},
-            {"currency" => "BCH", "free" => 0, "locked" => 0, "total" => 0.1032644153.to_d},
-            {"currency" => "BSV", "free" => 0, "locked" => 0, "total" => 0.0000000000.to_d}
+            {"currency" => "ZUSD", "free" => 100.0000.to_d, "locked" => 0, "total" => 100.0000.to_d},
+            {"currency" => "ZEUR", "free" => 0.0000.to_d, "locked" => 0, "total" => 0.0000.to_d},
+            {"currency" => "XXBT", "free" => 10.3341681147.to_d, "locked" => 0, "total" => 10.3341681147.to_d},
+            {"currency" => "XXRP", "free" => 69.94654290.to_d, "locked" => 0, "total" => 69.94654290.to_d},
+            {"currency" => "XLTC", "free" => 4.2315050300.to_d, "locked" => 0, "total" => 4.2315050300.to_d},
+            {"currency" => "XNMC", "free" => 0.0000000000.to_d, "locked" => 0, "total" => 0.0000000000.to_d},
+            {"currency" => "XXDG", "free" => 605.00000000.to_d, "locked" => 0, "total" => 605.00000000.to_d},
+            {"currency" => "XXLM", "free" => 0.00000262.to_d, "locked" => 0, "total" => 0.00000262.to_d},
+            {"currency" => "XETH", "free" => 0.0000000100.to_d, "locked" => 0, "total" => 0.0000000100.to_d},
+            {"currency" => "XETC", "free" => 0.0000000000.to_d, "locked" => 0, "total" => 0.0000000000.to_d},
+            {"currency" => "XZEC", "free" => 1.0000000000.to_d, "locked" => 0, "total" => 1.0000000000.to_d},
+            {"currency" => "XXMR", "free" => 21.4354237300.to_d, "locked" => 0, "total" => 21.4354237300.to_d},
+            {"currency" => "USDT", "free" => 0.00007280.to_d, "locked" => 0, "total" => 0.00007280.to_d},
+            {"currency" => "DASH", "free" => 0.1324000000.to_d, "locked" => 0, "total" => 0.1324000000.to_d},
+            {"currency" => "BCH", "free" => 0.1032644153.to_d, "locked" => 0, "total" => 0.1032644153.to_d},
+            {"currency" => "BSV", "free" => 0.0000000000.to_d, "locked" => 0, "total" => 0.0000000000.to_d}
           ]
         )
       end

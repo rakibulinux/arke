@@ -177,7 +177,7 @@ module Arke::Exchange
       post_private("Balance").body["result"].map do |b|
         {
           "currency" => b.first,
-          "free"     => 0,
+          "free"     => b.last.to_d,
           "locked"   => 0,
           "total"    => b.last.to_d,
         }
