@@ -1,0 +1,11 @@
+#!/bin/ruby
+# frozen_string_literal: true
+
+require "em-synchrony"
+
+EM.synchrony do
+  loop do
+    puts "Hello #{Time.now.to_i}"
+    EM::Synchrony.sleep(2)
+  end
+end
