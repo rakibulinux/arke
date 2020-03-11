@@ -8,7 +8,7 @@ module Arke::Command
   module_function :run!
 
   def load_configuration
-    strategy_file = File.join(::Rails.root, "config/strategies.yml")
+    strategy_file = File.join(__dir__, "../../config/strategies.yml")
     raise "File #{strategy_file} not found" unless File.exist?(strategy_file)
 
     config = YAML.load_file(strategy_file)

@@ -3,21 +3,11 @@ kind: pipeline
 name: default
 
 steps:
-  - name: Wait for services to be ready
-    image: jwilder/dockerize
-    commands:
-      - dockerize -wait tcp://database:3306 -wait http://vault:8200 -timeout 30s
-
   - name: Run rspec
     image: ruby:2.6.5
-    environment:
-      DATABASE_HOST: database
-      RAILS_ENV: test
-      VAULT_ADDR: http://vault:8200
     commands:
       - gem update bundler
       - bundle --jobs $(nproc)
-      - rake db:create db:migrate
       - rspec spec
     volumes:
       - name: gem-cache
@@ -39,7 +29,8 @@ steps:
       - BUNDLE_GEMFILE=/sdk/Gemfile bundle exec rake --rakefile=/sdk/Rakefile ci:prebuild
     when:
       branch:
-        - master
+        - "master"
+        - "*-stable"
 
   - name: Publish to Gitolite
     image: alpine/git
@@ -53,23 +44,6 @@ steps:
       - git remote add gitolite git@git.openware.com:arke
       - GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git push -f gitolite HEAD:master
 
-
-  - name: "GCR Docker build and push"
-    image: plugins/gcr
-    settings:
-      repo:
-        from_secret: gcr_repo_first
-      json_key:
-        from_secret: gcr_creds_base64_first
-    when:
-      branch:
-        - master
-    volumes:
-      - name: gem-cache
-        path: /root/.gem
-      - name: bundler-cache
-        path: /usr/local/bundle
-
   - name: "Push to Openware Registry"
     image: plugins/docker
     settings:
@@ -81,7 +55,8 @@ steps:
       registry: reg.openware.work
     when:
       branch:
-        - master
+        - "master"
+        - "*-stable"
     volumes:
       - name: gem-cache
         path: /root/.gem
@@ -99,7 +74,8 @@ steps:
       registry: quay.io
     when:
       branch:
-        - master
+        - "master"
+        - "*-stable"
 
   - name: Push and Notify
     image: quay.io/openware/sdk-citools:2.3.1
@@ -124,25 +100,8 @@ steps:
       - BUNDLE_GEMFILE=/sdk/Gemfile bundle exec rake --rakefile=/sdk/Rakefile ci:postbuild[/drone/src]
     when:
       branch:
-        - master
-
-services:
-- name: database
-  image: mariadb
-  ports:
-    - 3306
-  environment:
-    MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
-
-- name: vault
-  image: vault:0.11.4
-  ports:
-    - 8200
-  environment:
-    SKIP_SETCAP: 1
-    VAULT_TOKEN: changeme
-    VAULT_DEV_ROOT_TOKEN_ID: changeme
-    VAULT_ADDR: http://vault:8200
+        - "master"
+        - "*-stable"
 
 volumes:
   - name: gem-cache

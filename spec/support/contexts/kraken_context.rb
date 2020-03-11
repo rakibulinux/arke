@@ -5,7 +5,7 @@ shared_context "kraken public" do
     stub_request(:get, "https://api.kraken.com/0/public/AssetPairs")
       .to_return(
         status:  200,
-        body:    file_fixture("kraken/assetpairs.json").read,
+        body:    file_fixture("kraken/assetpairs.json"),
         headers: {
           "content-type" => "application/json; charset=utf-8"
         }
@@ -14,7 +14,7 @@ shared_context "kraken public" do
     stub_request(:get, "https://api.kraken.com/0/public/Assets")
       .to_return(
         status:  200,
-        body:    file_fixture("kraken/assets.json").read,
+        body:    file_fixture("kraken/assets.json"),
         headers: {
           "content-type" => "application/json; charset=utf-8"
         }
@@ -23,7 +23,7 @@ shared_context "kraken public" do
     stub_request(:get, "https://api.kraken.com/0/public/Depth?pair=XBTUSD")
       .to_return(
         status:  200,
-        body:    file_fixture("kraken/depth-XBTUSD.json").read,
+        body:    file_fixture("kraken/depth-XBTUSD.json"),
         headers: {
           "content-type" => "application/json; charset=utf-8"
         }
@@ -44,7 +44,7 @@ shared_context "kraken private" do
       .with(headers: auth_headers)
       .to_return(
         status:  200,
-        body:    file_fixture("kraken/balances.json").read,
+        body:    file_fixture("kraken/balances.json"),
         headers: {
           "content-type" => "application/json; charset=utf-8"
         }
@@ -74,7 +74,7 @@ shared_context "kraken private" do
       .with(headers: auth_headers)
       .to_return(
         status:  200,
-        body:    file_fixture("kraken/openorders.json").read,
+        body:    file_fixture("kraken/openorders.json"),
         headers: {
           "content-type" => "application/json; charset=utf-8"
         }

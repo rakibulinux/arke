@@ -1,4 +1,3 @@
-require 'rails_helper'
 
 describe Arke::Action do
   let(:type)   { :create_order }

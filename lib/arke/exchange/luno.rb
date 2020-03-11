@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "bitx"
 module BitX
   class Configuration
     attr_accessor :api_key_id, :api_key_secret, :api_key_pin, :adapter, :debug

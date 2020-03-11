@@ -1,6 +1,5 @@
-require "rails_helper"
 describe Arke::Command do
-  let(:config) { YAML.load_file(File.join(Rails.root, 'config/strategies.yml'))['strategy'] }
+  let(:config) { YAML.load_file(File.join(__dir__, '../../../config/strategies.yml'))['strategy'] }
 
   it 'loads configuration' do
     Arke::Command.load_configuration

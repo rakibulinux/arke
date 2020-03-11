@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require "arke/strategy/base"
-require "arke/strategy/copy"
-
 module Arke
   # Strategy module, contains Strategy types implementation
   module Strategy

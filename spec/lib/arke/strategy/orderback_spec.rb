@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "rails_helper"
 
 describe Arke::Strategy::Orderback do
   let!(:strategy) { Arke::Strategy::Orderback.new([source], target, config, nil) }
