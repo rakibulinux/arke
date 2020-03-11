@@ -1,0 +1,190 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "fileutils"
+require "optparse"
+require "open3"
+require "octokit"
+require "mime/types"
+
+BIN_PATH = File.expand_path(__dir__)
+
+options = {
+  ruby_portable: "2.6-1",
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: packer [options]"
+
+  opts.on("--publish", "Publish packages to github") do
+    options[:publish] = true
+  end
+
+  opts.on("-a", "--all", "Build package for every platform") do
+    options[:all] = true
+  end
+
+  opts.on("--ruby-portable=VERSION", "Specify the ruby portable version to use") do |v|
+    options[:ruby_portable] = v
+  end
+
+  opts.on("-pPLATFORM", "--platform=PLATFORM", "Specify the platform: win,mac,linux") do |p|
+    options[:platform] = p
+  end
+end.parse!
+
+class Packer
+  Packages = {
+    win:   "windows-x86_64",
+    mac:   "macos-mavericks",
+    linux: "linux-x86_64",
+  }.freeze
+
+  def initialize(platform:, ruby_portable:, publish: false)
+    @ruby_portable = ruby_portable
+    @pack = Packages[platform.to_sym]
+    raise "Unsupported platform #{platform}" unless @pack
+
+    @publish = publish
+    @github_token = ENV["GITHUB_TOKEN"]
+    @github = Octokit::Client.new(access_token: @github_token)
+    puts "Connected on github as #{@github.user.login}"
+  end
+
+  def run(command)
+    puts "Running #{command}"
+    Open3.popen3(command) do |stdin, stdout, stderr, wait_thr|
+      unless stdin.closed?
+        stdin.write(@stdin) if @stdin
+        stdin.close
+      end
+      until [stdout, stderr].all?(&:eof?)
+        readable = IO.select([stdout, stderr])
+        next unless readable&.first
+
+        readable.first.each do |stream|
+          data = ""
+          begin
+            data = stream.read_nonblock(1024)
+          rescue EOFError
+            # Ignore
+          end
+          next if data.empty?
+
+          print data
+        end
+      end
+      status = wait_thr.value.exitstatus
+      raise "Command #{command} exited with status #{status}" if status != 0
+    end
+  end
+
+  def in_dir(path, mkdir=true)
+    if mkdir
+      FileUtils.mkdir_p(path)
+    else
+      raise "Dir #{path} doesn't exist" unless Dir.exist?(path)
+    end
+
+    puts "Changing dir to #{path}"
+    Dir.chdir(path) do
+      yield
+    end
+  end
+
+  def extract(file)
+    case file
+    when /\.tar\.gz$/
+      puts "Extracting #{file}"
+      run "tar -xvf #{file}"
+    else
+      raise "Unsupported file format #{file}"
+    end
+  end
+
+  def mktar(name)
+    output = "#{name}.tar.gz"
+    run "tar cvzf #{output} #{name}"
+    output
+  end
+
+  def version
+    @version ||= File.read(File.join(__dir__, "..", "VERSION")).strip + "-bin"
+  end
+
+  def find_release(repo, tag)
+    @github.list_releases(repo).find {|r| r[:tag_name] == tag }
+  end
+
+  def release(file)
+    puts "Releasing file #{file} in tag #{version}"
+    repo = "openware/arke"
+    @release ||= find_release(repo, version)
+    @release ||= @github.create_release(repo, version)
+    @github.upload_asset(@release[:url], file)
+  end
+
+  def find_and_download_asset(repo, tag)
+    release = @github.list_releases(repo).find {|r| r[:tag_name] == tag }
+    raise "Release #{tag} not found in #{repo}" unless release
+
+    asset_id = nil
+    asset_filename = nil
+    release[:assets].each do |a|
+      platform, arch = @pack.split("-")
+      next unless a[:name].include?(platform) && a[:name].include?(arch)
+
+      asset_id = a[:id]
+      asset_filename = a[:name]
+      break
+    end
+
+    raise "Asset #{@pack} not found in release #{tag} of #{repo}" unless asset_id
+    raise "No asset filename" unless asset_filename
+
+    download_url = "https://api.github.com/repos/openware/ruby-portable/releases/assets/#{asset_id}"
+    redirect_url = `curl --silent --show-error \
+    --header 'Authorization: token #{@github_token}' \
+    --header 'Accept: application/octet-stream' \
+    --request GET --write-out '%{redirect_url}' \
+    '#{download_url}'`
+
+    run "curl '#{redirect_url}' -o #{asset_filename}"
+    asset_filename
+  end
+
+  def execute
+    in_dir("tmp") do
+      output = "arke-#{@pack}"
+      in_dir(output) do
+        filename = find_and_download_asset("openware/ruby-portable", @ruby_portable)
+        dirname = filename.gsub(/\.tar\.gz/, "")
+        extract(filename)
+        FileUtils.mv(dirname, "ruby")
+        FileUtils.rm(filename)
+        FileUtils.cp(File.join(BIN_PATH, "arke-bin"), ".")
+        FileUtils.cp(File.join(BIN_PATH, "arke.bin"), ".")
+        FileUtils.cp(File.join(BIN_PATH, "../VERSION"), ".")
+        FileUtils.cp(File.join(BIN_PATH, "../Gemfile"), ".")
+        FileUtils.cp(File.join(BIN_PATH, "../Gemfile.lock"), ".")
+        gem_path = Dir["ruby/lib/ruby/gems/2.*/"].first
+        raise "Could not determine GEM_HOME" unless gem_path
+
+        Dir[File.join(BIN_PATH, "../gems/ruby/2.*/*")].each do |src|
+          puts "Copying #{src} to #{gem_path}"
+          FileUtils.cp_r(src, gem_path)
+        end
+      end
+      tar = mktar(output)
+      release(tar)
+    end
+  end
+end
+
+if options[:all]
+  Packer::Packages.keys.each do |p|
+    Packer.new(options.merge(platform: p).slice(:platform, :ruby_portable, :publish)).execute
+  end
+else
+  Packer.new(options.slice(:platform, :ruby_portable, :publish)).execute
+end

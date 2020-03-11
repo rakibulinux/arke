@@ -3,7 +3,7 @@
 describe Arke::Exchange::Bitfinex do
   include_context "mocked bitfinex"
 
-  let(:config) { YAML.safe_load(file_fixture("test_config.yaml").read) }
+  let(:config) { YAML.safe_load(file_fixture("test_config.yaml")) }
   let(:market_id) { "ETHUSD" }
 
   let(:bitfinex_config) do
@@ -169,10 +169,10 @@ describe Arke::Exchange::Bitfinex do
                          .slice("symbol", "price", "side", "original_amount")
 
       expect(response).to eq(
-        "symbol"          => order.market.downcase.to_s,
-        "price"           => order.price.to_s,
-        "side"            => order.side.to_s,
-        "original_amount" => order.amount.to_s
+        "symbol"          => "ethusd",
+        "price"           => "135.84",
+        "side"            => "buy",
+        "original_amount" => "6.62227"
       )
     end
   end

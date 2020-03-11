@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "clamp"
+require "rbtree"
+require "json"
+require "openssl"
+require "ostruct"
+require "yaml"
+require "colorize"
+require "em/pure_ruby"
+require "em-synchrony"
+require "em-synchrony/em-http"
+require "faraday"
+require "faraday_middleware"
+require "faye/websocket"
+require "bigdecimal"
+require "bigdecimal/util"
+
+require "binance"
+require "bitx"
+
+module Arke; end
+
+executable_binary_code = File.open(File.join(__dir__, "arke.bin"), "r").readlines.join("")
+compiled_instruction_sequence = RubyVM::InstructionSequence.load_from_binary(executable_binary_code)
+compiled_instruction_sequence.eval
+
+Arke::Command::Root.run

@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+ARKE_LIB = File.expand_path(File.join(__dir__, "..", "lib"))
+
+code = ""
+File.read(File.join(ARKE_LIB, "arke.rb")).each_line do |line|
+  next unless line =~ %r{"(arke/[^"]*)}
+
+  code += File.read(File.join(ARKE_LIB, "#{Regexp.last_match(1)}.rb"))
+  code += "\n"
+end
+
+binary_code = RubyVM::InstructionSequence.compile(code).to_binary
+File.write(File.join(__dir__, "arke.bin"), binary_code)

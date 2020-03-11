@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "rails_helper"
 
 describe Arke::Strategy::Copy do
   include_context "mocked binance"

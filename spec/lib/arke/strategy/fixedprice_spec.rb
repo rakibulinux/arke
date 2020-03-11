@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "rails_helper"
 
 describe Arke::Strategy::Fixedprice do
   let(:strategy) { Arke::Strategy::Fixedprice.new([], target, config, nil) }

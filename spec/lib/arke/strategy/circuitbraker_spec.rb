@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "rails_helper"
 
 describe Arke::Strategy::Circuitbraker do
   let(:reactor) { double(:reactor) }

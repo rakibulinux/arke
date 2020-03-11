@@ -41,7 +41,7 @@ describe Arke::Exchange::Kraken do
 
     context "markets" do
       it "returns the list of markets" do
-        expect(kraken.markets).to eq(JSON.parse(file_fixture("kraken/markets.json").read))
+        expect(kraken.markets).to eq(JSON.parse(file_fixture("kraken/markets.json")))
       end
     end
 

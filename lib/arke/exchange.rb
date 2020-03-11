@@ -1,16 +1,5 @@
 # frozen_string_literal: true
 
-require "arke/exchange/base"
-require "arke/exchange/bitfinex"
-require "arke/exchange/rubykube"
-require "arke/exchange/bitfaker"
-require "arke/exchange/binance"
-require "arke/exchange/kraken"
-require "arke/exchange/hitbtc"
-require "arke/exchange/okex"
-require "arke/exchange/luno"
-require "arke/exchange/huobi"
-
 module Arke
   # Exchange module, contains Exchanges drivers implementation
   module Exchange
