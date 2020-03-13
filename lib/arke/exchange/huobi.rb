@@ -9,7 +9,7 @@ module Arke::Exchange
 
       @connection = Faraday.new(url: "https://#{opts['host']}") do |builder|
         builder.response :logger if opts["debug"]
-        builder.use FaradayMiddleware::ParseJson, content_type: /\bjson$/
+        builder.response :json
         builder.adapter(@adapter)
       end
       set_account unless @secret.to_s.empty?
@@ -19,7 +19,7 @@ module Arke::Exchange
 
     def update_orderbook(market)
       orderbook = Arke::Orderbook::Orderbook.new(market)
-      snapshot = JSON.parse(@connection.get("/market/depth?symbol=#{market.downcase}&type=step0").body)
+      snapshot = @connection.get("/market/depth?symbol=#{market.downcase}&type=step0").body
       Array(snapshot["tick"]["bids"]).each do |order|
         orderbook.update(
           build_order(order, :buy)
