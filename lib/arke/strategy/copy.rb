@@ -28,7 +28,7 @@ module Arke::Strategy
 
     def check_config
       raise "levels_size must be higher than zero" if @levels_size <= 0
-      raise "levels_count must be minimum 1" if @levels_count <= 1
+      raise "levels_count must be minimum 1" if @levels_count < 1
       raise "spread_bids must be higher than zero" if @spread_bids.negative?
       raise "spread_asks must be higher than zero" if @spread_asks.negative?
       raise "limit_asks_base must be higher than zero" if limit_asks_base <= 0

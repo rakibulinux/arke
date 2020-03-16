@@ -184,14 +184,14 @@ module Arke::Exchange
     end
 
     def update_balances(balances)
+      logger.debug { "Updating balances: #{balances}" }
       @balances = @forced_balances = balances
     end
 
     def fetch_balances
       if @forced_balances.empty?
         logger.info { "ACCOUNT:#{id} Fetching balances on #{driver}" }
-        balances = get_balances()
-        @balances = balances
+        @balances = get_balances()
       else
         @balances = @forced_balances
       end
