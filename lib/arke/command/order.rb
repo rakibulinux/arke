@@ -70,9 +70,11 @@ module Arke::Command
 
         EM.synchrony do
           ex = Arke::Exchange.create(acc_config)
-          ex.fetch_openorders(market).each do |o|
+          orders = ex.fetch_openorders(market)
+          orders.each do |o|
             pp o
           end
+          puts "#{orders.size} orders"
           EM.stop
         end
       end

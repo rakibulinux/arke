@@ -137,18 +137,25 @@ module Arke::Exchange
 
     def fetch_openorders(market)
       orders = []
-      max_limit = 1000
-      total = get("#{@peatio_route}/market/orders", market: market.downcase.to_s, limit: 1, page: 1, state: "wait").headers["Total"]
-      if total.nil?
-        logger.warn "Missing Total header in peatio response"
-        total = max_limit
-      end
-      (total.to_f / max_limit).ceil.times do |page|
-        get("#{@peatio_route}/market/orders", market: market.downcase.to_s, limit: max_limit, page: page + 1, state: "wait").body&.each do |o|
+      limit = 1000
+      page = 1
+      loop do
+        resp = get("#{@peatio_route}/market/orders", market: market.downcase.to_s, limit: limit, page: page, state: "wait")
+        if resp.body.is_a?(Hash) && resp.body["errors"]
+          raise resp.body["errors"].to_s
+        end
+        resp.body&.each do |o|
           order = Arke::Order.new(o["market"].upcase, o["price"].to_f, o["remaining_volume"].to_f, o["side"].to_sym)
           order.id = o["id"]
           orders << order
         end
+
+        break if resp.body.size < limit
+        if page == 10
+          logger.warn "More than #{orders.size} orders in result, stopping"
+          break
+        end
+        page += 1
       end
       orders
     end
