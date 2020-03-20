@@ -104,6 +104,8 @@ module Arke::Exchange
     # Takes +order+ (+Arke::Order+ instance)
     # * cancels +order+ via RestApi
     def stop_order(order)
+      raise "Trying to cancel an order without id #{order}" if order.id.nil? || order.id == 0
+
       response = post("#{@finex ? @finex_route : @peatio_route}/market/orders/#{order.id}/cancel")
       return unless response.body&.is_a?(Hash)
       raise response.body["errors"].to_s if response.body["errors"]
