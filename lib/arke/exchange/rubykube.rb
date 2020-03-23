@@ -64,7 +64,7 @@ module Arke::Exchange
 
     def cancel_all_orders(market)
       post(
-        "#{@peatio_route}/market/orders/cancel",
+        "#{@finex ? @finex_route : @peatio_route}/market/orders/cancel",
         market: market.downcase
       )
     end
@@ -104,7 +104,10 @@ module Arke::Exchange
     # Takes +order+ (+Arke::Order+ instance)
     # * cancels +order+ via RestApi
     def stop_order(order)
-      response = post("#{@finex ? @finex_route : @peatio_route}/market/orders/#{order.id}/cancel")
+      req = "#{@peatio_route}/market/orders/#{order.id}/cancel"
+      req = "#{@finex_route}/market/orders/cancel/#{order.id}" if @finex
+
+      response = post(req)
       return unless response.body&.is_a?(Hash)
       raise response.body["errors"].to_s if response.body["errors"]
       return unless %w[cancel rejected done].include?(response.body["state"])

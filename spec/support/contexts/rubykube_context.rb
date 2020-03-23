@@ -125,7 +125,7 @@ shared_context "mocked finex" do
         headers: {}
       )
 
-    stub_request(:post, %r{finex/market/orders/\d+/cancel$})
+    stub_request(:post, %r{finex/market/orders/cancel/\d+$})
       .with(headers: {"X-Auth-Apikey"=> @authorized_api_key})
       .to_return(
         status:  201,
