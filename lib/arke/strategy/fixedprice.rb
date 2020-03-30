@@ -96,7 +96,7 @@ module Arke::Strategy
 
       if target_base_total < @limit_asks_base
         limit_asks_base = target_base_total
-        logger.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower then the limit set to #{@limit_asks_base}")
+        logger.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower than the limit set to #{@limit_asks_base}")
       else
         limit_asks_base = @limit_asks_base
       end

@@ -186,14 +186,14 @@ module Arke::Strategy
 
       if source_base_free < limit_bids_base
         limit_bids_base_applied = source_base_free
-        logger.warn("#{source.base} balance on #{source.account.driver} is #{source_base_free} lower then the limit set to #{@limit_bids_base}")
+        logger.warn("#{source.base} balance on #{source.account.driver} is #{source_base_free} lower than the limit set to #{@limit_bids_base}")
       else
         limit_bids_base_applied = limit_bids_base
       end
 
       if target_base_total < limit_asks_base
         limit_asks_base_applied = target_base_total
-        logger.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower then the limit set to #{@limit_asks_base}")
+        logger.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower than the limit set to #{@limit_asks_base}")
       else
         limit_asks_base_applied = limit_asks_base
       end
