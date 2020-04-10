@@ -259,6 +259,12 @@ module Arke::Exchange
       kind == "bid" ? :buy : :sell
     end
 
+    def ws_read_message(ws_id, msg)
+      return if msg.data == "pong"
+
+      super
+    end
+
     def ws_read_public_message(msg)
       msg.each do |key, content|
         case key
