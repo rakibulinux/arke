@@ -4,10 +4,15 @@
 
 Configure your trading strategies the file *config/strategies.yml*
 
+Install dependencies
+```bash
+bundle install
+```
+
 Run Arke with this command
 
 ```bash
-./bin/arke start
+bundle exec ./bin/arke start
 ```
 
 
@@ -254,24 +259,3 @@ Detail of the `fx` section to configure for a strategy:
 | `period`        | seconds | Refresh period in seconds, default: 3600                                       |
 | `https`         | boolean | Enable https communication (default true)                                      |
 
-### InfluxDB
-
-Example converting CSV to influx:
-```
-./bin/convert.awk tmp/ltcusdt_ohlvc_1m.csv | gzip > tmp/ltcusdt_1m.txt.gz
-```
-
-Create the schema and CQ:
-```
-cat db/influxdb.sql | influx
-```
-
-How to import data
-```
-influx -import -compressed -path tmp/ethusdt_1m.txt.gz -precision=ns
-```
-
-Build the other candles
-```
-cat bin/build_candles.sql| influx -database arke_development
-```
