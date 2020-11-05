@@ -1,0 +1,82 @@
+[{
+        "symbol": "BTCZAR",
+        "baseCurrency": {
+            "symbol": "BTC",
+            "decimalPlaces": 8,
+            "isActive": true,
+            "shortName": "BTC",
+            "longName": "Bitcoin",
+            "supportedWithdrawDecimalPlaces": 8
+        },
+        "quoteCurrency": {
+            "symbol": "R",
+            "decimalPlaces": 2,
+            "isActive": true,
+            "shortName": "ZAR",
+            "longName": "Rand",
+            "supportedWithdrawDecimalPlaces": 2
+        },
+        "shortName": "BTC/ZAR",
+        "active": true,
+        "minBaseAmount": 0.0001,
+        "maxBaseAmount": 4,
+        "minQuoteAmount": 10,
+        "maxQuoteAmount": 1000000,
+        "tickSize": "1",
+        "baseDecimalPlaces": "8"
+    },
+    {
+        "symbol": "ETHZAR",
+        "baseCurrency": {
+            "symbol": "ETH",
+            "decimalPlaces": 18,
+            "isActive": true,
+            "shortName": "ETH",
+            "longName": "Ethereum",
+            "supportedWithdrawDecimalPlaces": 8
+        },
+        "quoteCurrency": {
+            "symbol": "R",
+            "decimalPlaces": 2,
+            "isActive": true,
+            "shortName": "ZAR",
+            "longName": "Rand",
+            "supportedWithdrawDecimalPlaces": 2
+        },
+        "shortName": "ETH/ZAR",
+        "active": true,
+        "minBaseAmount": 0.01,
+        "maxBaseAmount": 100,
+        "minQuoteAmount": 10,
+        "maxQuoteAmount": 1000000,
+        "tickSize": "1",
+        "baseDecimalPlaces": "8"
+    },
+    {
+        "symbol": "ZECBTC",
+        "baseCurrency": {
+            "symbol": "ZEC",
+            "decimalPlaces": 8,
+            "isActive": true,
+            "shortName": "ZEC",
+            "longName": "Zcash",
+            "supportedWithdrawDecimalPlaces": 8
+        },
+        "quoteCurrency": {
+            "symbol": "BTC",
+            "decimalPlaces": 8,
+            "isActive": true,
+            "shortName": "BTC",
+            "longName": "Bitcoin",
+            "supportedWithdrawDecimalPlaces": 8
+        },
+        "shortName": "ZEC/BTC",
+        "active": true,
+        "minBaseAmount": 0.0521,
+        "maxBaseAmount": 69,
+        "minQuoteAmount": 0.0008,
+        "maxQuoteAmount": 1,
+        "tickSize": "0.00000001",
+        "baseDecimalPlaces": "8"
+    }
+]

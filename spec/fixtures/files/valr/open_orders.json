@@ -1,0 +1,23 @@
+[{
+        "orderId": "da99bd40-41a2-42dd-8601-bc99edc31df2",
+        "side": "sell",
+        "price": "100000",
+        "currencyPair": "BTCZAR",
+        "createdAt": "2019-05-09T20:20:30.573Z",
+        "remainingQuantity": "0.1",
+        "originalQuantity": "0.1",
+        "filledPercentage": "0.00",
+        "customerOrderId": "1"
+    },
+    {
+        "orderId": "b53f4f12-f156-4623-81fe-98425760d417",
+        "side": "sell",
+        "price": "150000",
+        "currencyPair": "ETHZAR",
+        "createdAt": "2019-05-09T20:26:02.813Z",
+        "remainingQuantity": "0.07465",
+        "originalQuantity": "0.1",
+        "filledPercentage": "25.35",
+        "customerOrderId": "3"
+    }
+]

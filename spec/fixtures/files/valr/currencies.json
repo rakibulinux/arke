@@ -1,0 +1,19 @@
+[{
+        "symbol": "R",
+        "isActive": true,
+        "shortName": "ZAR",
+        "longName": "Rand"
+    },
+    {
+        "symbol": "BTC",
+        "isActive": true,
+        "shortName": "BTC",
+        "longName": "Bitcoin"
+    },
+    {
+        "symbol": "ETH",
+        "isActive": true,
+        "shortName": "ETH",
+        "longName": "Ethereum"
+    }
+]

@@ -295,9 +295,5 @@ module Arke::Exchange
     def new_nonce
       (Time.now.to_f * 1000).floor.to_s
     end
-
-    def valid_key?
-      !!(@api_key && @secret)
-    end
   end
 end

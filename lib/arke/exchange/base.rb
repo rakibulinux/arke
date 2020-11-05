@@ -229,5 +229,9 @@ module Arke::Exchange
     def load_platform_markets(platform)
       @platform_markets = PlatformMarket.where(platform: platform).each_with_object({}) {|p, h| h[p.market] = p.id }
     end
+
+    def valid_key?
+      !!(@api_key && @secret)
+    end
   end
 end

@@ -72,6 +72,7 @@ require "arke/exchange/okex"
 require "arke/exchange/opendax"
 require "arke/exchange/finex"
 require "arke/exchange/rubykube"
+require "arke/exchange/valr"
 
 require "arke/command"
 require "arke/command/order"

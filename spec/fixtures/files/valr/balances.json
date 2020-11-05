@@ -1,0 +1,14 @@
+[{
+        "currency": "ETH",
+        "available": "0.01626594758",
+        "reserved": "0.49",
+        "total": "0.50626594758",
+        "updatedAt": "2020-05-31T05:10:16.522Z"
+    },
+    {
+        "currency": "XEM",
+        "available": "0",
+        "reserved": "0",
+        "total": "0"
+    }
+]

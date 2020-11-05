@@ -1,0 +1,144 @@
+{
+    "Asks": [{
+            "side": "sell",
+            "quantity": "0.101",
+            "price": "9000",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "sell",
+            "quantity": "0.793789",
+            "price": "10000",
+            "currencyPair": "BTCZAR",
+            "orderCount": 3
+        },
+        {
+            "side": "sell",
+            "quantity": "0.1",
+            "price": "11606",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "sell",
+            "quantity": "0.67713484",
+            "price": "14000",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "sell",
+            "quantity": "1",
+            "price": "15000",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "sell",
+            "quantity": "1",
+            "price": "16000",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "sell",
+            "quantity": "1",
+            "price": "17000",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "sell",
+            "quantity": "1",
+            "price": "18000",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "sell",
+            "quantity": "1",
+            "price": "19000",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        }
+    ],
+    "Bids": [{
+            "side": "buy",
+            "quantity": "0.1",
+            "price": "8802",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "buy",
+            "quantity": "0.2",
+            "price": "8801",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "buy",
+            "quantity": "0.1",
+            "price": "8800",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "buy",
+            "quantity": "0.1",
+            "price": "8700",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "buy",
+            "quantity": "0.1",
+            "price": "8600",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "buy",
+            "quantity": "0.1",
+            "price": "8500",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "buy",
+            "quantity": "0.1",
+            "price": "8400",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "buy",
+            "quantity": "0.3",
+            "price": "8200",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "buy",
+            "quantity": "0.1",
+            "price": "8100",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "buy",
+            "quantity": "0.1",
+            "price": "8000",
+            "currencyPair": "BTCZAR",
+            "orderCount": 1
+        },
+        {
+            "side": "buy",
+            "quantity": "0.08027437",
+            "price": "1",
+            "currencyPair": "BTCZAR",
+            "orderCount": 2
+        }
+    ]
+}
