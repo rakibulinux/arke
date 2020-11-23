@@ -27,7 +27,6 @@ group :development, :test do
   gem "rspec", "~> 3.9"
   gem "irb", "~> 1.0"
   gem "rack", "~> 2"
-  gem "octokit", "~> 4.17"
   gem "mime-types", "~> 3.3"
 end
 
