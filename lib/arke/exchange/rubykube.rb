@@ -23,7 +23,6 @@ module Arke::Exchange
         builder.ssl[:verify] = config["verify_ssl"] unless config["verify_ssl"].nil?
       end
       apply_flags(FORCE_MARKET_LOWERCASE)
-      @books = {}
     end
 
     def ws_connect(ws_id)
@@ -155,6 +154,7 @@ module Arke::Exchange
           orders << order
         end
 
+        raise "ACCOUNT:#{id} Bad response when fetching open orders" if resp.body.nil?
         break if resp.body.size < limit
         if page == 10
           logger.warn "More than #{orders.size} orders in result, stopping"

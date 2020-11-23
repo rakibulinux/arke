@@ -58,6 +58,7 @@ require "arke/strategy/microtrades_market"
 require "arke/strategy/microtrades"
 require "arke/strategy/orderback"
 require "arke/strategy/circuitbraker"
+require "arke/strategy/candle_sampling"
 
 require "arke/exchange/base"
 require "arke/exchange/binance"

@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-
 describe Arke::Strategy::MicrotradesCopy do
   let(:reactor) { double(:reactor) }
   let(:strategy) { Arke::Strategy::MicrotradesCopy.new([source], target, config, reactor) }
@@ -59,9 +58,6 @@ describe Arke::Strategy::MicrotradesCopy do
       ]
     ]
   end
-  let(:target_orderbook) { strategy.call }
-  let(:target_bids) { target_orderbook[:buy] }
-  let(:target_asks) { target_orderbook[:sell] }
 
   before(:each) do
     target.account.fetch_balances

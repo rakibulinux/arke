@@ -4,6 +4,7 @@ module Arke::Strategy
   class MicrotradesCopy < Base
     include ::Arke::Helpers::Precision
     include ::Arke::Helpers::Spread
+    include ::Arke::Helpers::Orderbook
 
     class EmptyOrderBook < StandardError; end
 
@@ -56,10 +57,6 @@ module Arke::Strategy
     end
 
     def call; end
-
-    def opposite_side(side)
-      side.to_s == "buy" ? :sell : :buy
-    end
 
     def get_price(price)
       if fx

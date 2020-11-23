@@ -8,4 +8,8 @@ module Arke::Helpers::Orderbook
   def better(side, a, b)
     side == :buy ? a > b : a < b
   end
+
+  def opposite_side(side)
+    side.to_s == "buy" ? :sell : :buy
+  end
 end

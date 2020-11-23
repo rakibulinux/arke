@@ -6,7 +6,7 @@ module Arke::Exchange
     include ::Arke::Helpers::Precision
     include ::Arke::Helpers::Flags
 
-    attr_reader :delay, :driver, :opts, :id, :ws, :host, :key, :secret, :logger
+    attr_reader :delay, :driver, :opts, :id, :ws, :host, :key, :secret, :logger, :books
     attr_accessor :timer, :executor
 
     DEFAULT_DELAY = 1
@@ -31,6 +31,7 @@ module Arke::Exchange
       @public_trades_cb = []
       @created_order_cb = []
       @deleted_order_cb = []
+      @books = {}
       @ws_queues = {
         public:  EM::Queue.new,
         private: EM::Queue.new,

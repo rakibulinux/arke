@@ -179,6 +179,19 @@ It creates an order arround the reference *price* with a random value *random_de
 | `price`           | Reference price for the strategy to create orderbook         |
 | `random_delta`    | Random value for deviation of the reference price (maximum deviation = random_delta / 2) |
 
+##### Candle-Sampling strategy
+
+This strategy copies trades from sources every *sampling_ratio* trade events.
+It will trigger a market order with the same amount than the trade being copied.
+The parameter *max_slippage* can protect against price slippage, it will considere the target orderbook and reduce the amount of the order accordingly to avoid price slippage.
+A random of 10% is applied on the *sampling_ratio* to make the strategy not deterministic.
+The *period* parameter doesn't affect this strategy since it only reacts on sources trade events.
+
+| Field                | Description                                                  |
+| -------------------- | ------------------------------------------------------------ |
+| `sampling_ratio`     | Number of trades to wait before copying one |
+| `max_slippage`       | Maximum price slippage allowed on a single trade triggered by the strategy |
+
 ##### Microtrades-Copy strategy
 
 This strategy creates random trades on a market with random amounts following the price of one or several sources.

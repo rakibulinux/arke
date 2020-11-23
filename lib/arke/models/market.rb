@@ -42,8 +42,14 @@ class Arke::Market
     fetch_openorders if flag?(FETCH_PRIVATE_OPEN_ORDERS)
   end
 
+  # Fetch the orderbook through REST API and return it
   def update_orderbook
     @orderbook = @account.update_orderbook(id)
+  end
+
+  # Return the current state of the orderbook received by websocket
+  def realtime_orderbook
+    account.books[id]&.fetch(:book)
   end
 
   def register_callbacks
