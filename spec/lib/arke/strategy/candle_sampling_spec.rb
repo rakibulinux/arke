@@ -12,12 +12,29 @@ describe Arke::Strategy::CandleSampling do
   let(:period_random) { 5 }
   let(:sampling_ratio) { 10_000 }
   let(:max_slippage) { 0.01 }
+  let(:max_balance) { nil }
 
   let(:account_config) do
     {
       "id"        => 1,
       "driver"    => "bitfaker",
       "orderbook" => orderbook,
+      "params"    => {
+        "balances" => [
+          {
+            "currency" => "BTC",
+            "total"    => 10.0,
+            "free"     => 5.0,
+            "locked"   => 0.0,
+          },
+          {
+            "currency" => "USD",
+            "total"    => 3000.0.to_d,
+            "free"     => 2000.0.to_d,
+            "locked"   => 1000.0.to_d,
+          }
+        ]
+      }
     }
   end
   let(:fx_config) { nil }
@@ -30,6 +47,7 @@ describe Arke::Strategy::CandleSampling do
       "params"              => {
         "sampling_ratio" => sampling_ratio,
         "max_slippage"   => max_slippage,
+        "max_balance"    => max_balance,
       },
       "target"              => {
         "driver"    => "bitfaker",
@@ -86,28 +104,32 @@ describe Arke::Strategy::CandleSampling do
   end
 
   context "trigger buy trade without price slippage" do
-    let(:public_trade) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 0.1, 1000, 100.0) }
+    let(:public_trade1) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 0.2, 999, 100.0) }
+    let(:public_trade2) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 0.1, 1000, 100.0) }
 
-    it "creates a sell order and take it with a buy order on the target" do
-      expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 0, 0.1, :buy, "market")).ordered
+    it do
+      expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 0, 0.15, :buy, "market")).ordered
 
       EM.synchrony do
-        strategy.instance_variable_set(:@next_threashold, 1)
-        strategy.on_trade(public_trade)
+        strategy.instance_variable_set(:@next_threashold, 2)
+        strategy.on_trade(public_trade1)
+        strategy.on_trade(public_trade2)
         EM::Synchrony.add_timer(0.011) { EM.stop }
       end
     end
   end
 
   context "trigger sell trade without price slippage" do
-    let(:public_trade) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "sell", 0.1, 1000, 100.0) }
+    let(:public_trade1) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 0.2, 1000, 100.0) }
+    let(:public_trade2) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 0.1, 999, 100.0) }
 
-    it "creates a sell order and take it with a sell order on the target" do
-      expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 0, 0.1, :sell, "market")).ordered
+    it do
+      expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 0, 0.15, :sell, "market")).ordered
 
       EM.synchrony do
-        strategy.instance_variable_set(:@next_threashold, 1)
-        strategy.on_trade(public_trade)
+        strategy.instance_variable_set(:@next_threashold, 2)
+        strategy.on_trade(public_trade1)
+        strategy.on_trade(public_trade2)
         EM::Synchrony.add_timer(0.011) { EM.stop }
       end
     end
@@ -115,14 +137,16 @@ describe Arke::Strategy::CandleSampling do
 
   context "trigger buy trade with price slippage protection" do
     let(:max_slippage) { 0.001 }
-    let(:public_trade) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 0.3, 1000, 100.0) }
+    let(:public_trade1) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 0.3, 990, 100.0) }
+    let(:public_trade2) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 0.3, 1000, 100.0) }
 
-    it "creates a sell order and take it with a buy order on the target" do
+    it do
       expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 0, 0.2, :buy, "market")).ordered
 
       EM.synchrony do
-        strategy.instance_variable_set(:@next_threashold, 1)
-        strategy.on_trade(public_trade)
+        strategy.instance_variable_set(:@next_threashold, 2)
+        strategy.on_trade(public_trade1)
+        strategy.on_trade(public_trade2)
         EM::Synchrony.add_timer(0.011) { EM.stop }
       end
     end
@@ -130,18 +154,57 @@ describe Arke::Strategy::CandleSampling do
 
   context "trigger sell trade with price slippage protection" do
     let(:max_slippage) { 0.001 }
-    let(:public_trade) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "sell", 0.3, 1000, 100.0) }
+    let(:public_trade1) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "sell", 0.3, 1010, 100.0) }
+    let(:public_trade2) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "sell", 0.3, 1000, 100.0) }
 
-    it "creates a sell order and take it with a sell order on the target" do
+    it do
       expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 0, 0.1, :sell, "market")).ordered
 
       EM.synchrony do
-        strategy.instance_variable_set(:@next_threashold, 1)
-        strategy.on_trade(public_trade)
+        strategy.instance_variable_set(:@next_threashold, 2)
+        strategy.on_trade(public_trade1)
+        strategy.on_trade(public_trade2)
         EM::Synchrony.add_timer(0.011) { EM.stop }
       end
     end
   end
 
+  #
+  # BitFaker balances
+  # 2000 USD
+  # 10 BTC
+  #
+  context "trigger buy trade with balance limit reached" do
+    let(:public_trade1) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 0.1, 999, 100.0) }
+    let(:public_trade2) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 1.0, 1000, 100.0) }
+    let(:max_balance) { 0.1 }
 
+    it do
+      expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 0, 0.2, :buy, "market")).ordered
+
+      EM.synchrony do
+        strategy.instance_variable_set(:@next_threashold, 2)
+        strategy.on_trade(public_trade1)
+        strategy.on_trade(public_trade2)
+        EM::Synchrony.add_timer(0.011) { EM.stop }
+      end
+    end
+  end
+
+  context "trigger sell trade with balance limit reached" do
+    let(:public_trade1) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 0.1, 1000, 100.0) }
+    let(:public_trade2) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 1, 999, 100.0) }
+    let(:max_balance) { 0.1 }
+
+    it do
+      expect(target.account).to receive(:create_order).with(::Arke::Order.new("BTCUSD", 0, 0.5, :sell, "market")).ordered
+
+      EM.synchrony do
+        strategy.instance_variable_set(:@next_threashold, 2)
+        strategy.on_trade(public_trade1)
+        strategy.on_trade(public_trade2)
+        EM::Synchrony.add_timer(0.011) { EM.stop }
+      end
+    end
+  end
 end

@@ -13,7 +13,25 @@ module Arke::Exchange
                   YAML.load_file(opts["orderbook"])[1]
                 else
                   YAML.load_file("./spec/fixtures/files/bitfinex.yaml")[1]
-                   end
+                end
+      if opts["params"] && opts["params"]["balances"]
+        @balances = opts["params"]["balances"]
+      else
+        @balances = [
+          {
+            "currency" => "BTC",
+            "total"    => 4_723_846.89208129,
+            "free"     => 4_723_846.89208129,
+            "locked"   => 0.0,
+          },
+          {
+            "currency" => "USD",
+            "total"    => 4_763_468.68006011,
+            "free"     => 4_763_368.68006011,
+            "locked"   => 100.0,
+          }
+        ]
+      end
     end
 
     def ws_connect(ws_id)
@@ -44,20 +62,7 @@ module Arke::Exchange
     end
 
     def get_balances
-      [
-        {
-          "currency" => "BTC",
-          "total"    => 4_723_846.89208129,
-          "free"     => 4_723_846.89208129,
-          "locked"   => 0.0,
-        },
-        {
-          "currency" => "USD",
-          "total"    => 4_763_468.68006011,
-          "free"     => 4_763_368.68006011,
-          "locked"   => 100.0,
-        }
-      ]
+      @balances
     end
 
     def market_config(_market)

@@ -220,7 +220,7 @@ module Arke::Exchange
     end
 
     def generate_headers
-      nonce = (Time.now.to_f*1000).to_i.to_s
+      nonce = (Time.now.to_f * 1000).to_i.to_s
       {
         "X-Auth-Apikey"    => @api_key,
         "X-Auth-Nonce"     => nonce,
