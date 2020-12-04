@@ -3,7 +3,13 @@
 module Arke::Helpers
   module Commands
     def conf
-      @conf ||= YAML.load_file(config)
+      return @conf if @conf
+
+      if config == "--"
+        @conf = YAML.safe_load(STDIN.read)
+      else
+        @conf = YAML.load_file(config)
+      end
     end
 
     def strategies_configs
