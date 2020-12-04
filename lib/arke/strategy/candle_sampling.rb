@@ -62,6 +62,10 @@ module Arke::Strategy
       when :buy
         currency = target.quote
         best_sell = target.realtime_orderbook.best_price(:sell)
+        if best_sell.nil?
+          logger.warn "ID:#{id} no bids in orderbook"
+          return 0
+        end
         raw_estimate = amount * best_sell
       when :sell
         currency = target.base
@@ -124,6 +128,10 @@ module Arke::Strategy
       amount = limit_amount_by_balance(side, amount)
       amount = limit_amount_by_price_slippage(side, amount)
 
+      set_next_threashold
+
+      return if amount.zero?
+
       Fiber.new do
         order = Arke::Order.new(target.id, 0, amount, side, "market")
 
@@ -136,7 +144,6 @@ module Arke::Strategy
         logger.error e.backtrace.join("\n").to_s
       end.resume
 
-      set_next_threashold
     end
 
     # def compute_ratio

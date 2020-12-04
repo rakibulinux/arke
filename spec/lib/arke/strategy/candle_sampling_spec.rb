@@ -207,4 +207,44 @@ describe Arke::Strategy::CandleSampling do
       end
     end
   end
+
+  context "trigger buy trade with empty target orderbook" do
+    let(:public_trade1) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 0.1, 999, 100.0) }
+    let(:public_trade2) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 1.0, 1000, 100.0) }
+    let(:max_balance) { 0.1 }
+    let(:sell_side) { ::RBTree[] } # Asks
+    let(:buy_side) { ::RBTree[] } # Bids
+
+    it do
+      expect(target.account).to_not receive(:create_order)
+
+      EM.synchrony do
+        strategy.instance_variable_set(:@next_threashold, 2)
+        strategy.on_trade(public_trade1)
+        strategy.on_trade(public_trade2)
+        EM::Synchrony.add_timer(0.011) { EM.stop }
+      end
+    end
+  end
+
+  context "trigger sell trade with empty target orderbook" do
+    let(:public_trade1) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 0.1, 1000, 100.0) }
+    let(:public_trade2) { ::Arke::PublicTrade.new(42, "XBTUSDT", "kraken", "buy", 1, 999, 100.0) }
+    let(:max_balance) { 0.1 }
+    let(:sell_side) { ::RBTree[] } # Asks
+    let(:buy_side) { ::RBTree[] } # Bids
+
+    it do
+      expect(target.account).to_not receive(:create_order)
+
+      EM.synchrony do
+        strategy.instance_variable_set(:@next_threashold, 2)
+        strategy.on_trade(public_trade1)
+        strategy.on_trade(public_trade2)
+        EM::Synchrony.add_timer(0.011) { EM.stop }
+      end
+    end
+  end
+
+
 end
