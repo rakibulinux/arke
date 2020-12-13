@@ -39,7 +39,7 @@ markets = [
   }
 ]
 
-shared_context "mocked rubykube" do
+shared_context "mocked opendax" do
   before(:each) do
     # TODO: find better way to store it (let is not accassible inside before)
     @authorized_api_key = "3107c98eb442e4135541d434410aaaa6"

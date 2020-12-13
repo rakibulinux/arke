@@ -1,32 +1,32 @@
 # frozen_string_literal: true
 
-describe Arke::Exchange::Rubykube do
+describe Arke::Exchange::Opendax do
   let(:exchange_config) do
     {
-      "driver" => "rubykube",
+      "driver" => "finex",
       "host"   => "http://www.devkube.com",
       "key"    => @authorized_api_key,
       "secret" => SecureRandom.hex,
     }
   end
   let(:market_id) { "ethusd" }
-  let(:market) { Arke::Market.new(market_id, rubykube) }
+  let(:market) { Arke::Market.new(market_id, finex) }
   let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
-  let(:rubykube) { Arke::Exchange::Rubykube.new(exchange_config) }
+  let(:finex) { Arke::Exchange::Finex.new(exchange_config) }
 
-  context "mocked rubykube" do
+  context "mocked opendax" do
     include_context "mocked opendax"
-    before(:each) { order.apply_requirements(rubykube) }
+    before(:each) { order.apply_requirements(finex) }
 
-    context "rubykube#create_order" do
+    context "finex#create_order" do
       it "gets 403 on request with wrong api key" do
-        rubykube.instance_variable_set(:@api_key, SecureRandom.hex)
+        finex.instance_variable_set(:@api_key, SecureRandom.hex)
 
-        expect(rubykube.create_order(order).id).to eq nil
+        expect(finex.create_order(order).id).to eq nil
       end
 
       it "doesn't updates open_orders after create" do
-        ord = rubykube.create_order(order)
+        ord = finex.create_order(order)
         assert_requested(:post, "http://www.devkube.com/api/v2/peatio/market/orders", times: 1) do |req|
           expect(JSON.parse(req.body)).to eq(
             "market"   => "ethusd",
@@ -41,7 +41,7 @@ describe Arke::Exchange::Rubykube do
       end
     end
 
-    context "rubykube#fetch_openorders" do
+    context "finex#fetch_openorders" do
       it "saves opened orders" do
         market.fetch_openorders
 
@@ -52,9 +52,9 @@ describe Arke::Exchange::Rubykube do
       end
     end
 
-    context "rubykube#get_balances" do
+    context "finex#get_balances" do
       it "get balances of all users accounts" do
-        expect(rubykube.get_balances).to eq(
+        expect(finex.get_balances).to eq(
           [
             {"currency" => "eth", "total" => 0.0, "free" => 0.0, "locked" => 0.0},
             {"currency" => "fth", "total" => 1_000_000.0, "free" => 1_000_000.0, "locked" => 0.0},
@@ -65,7 +65,7 @@ describe Arke::Exchange::Rubykube do
       end
     end
 
-    context "rubykube#stop_order" do
+    context "finex#stop_order" do
       let(:order) { Arke::Order.new("ethusd", 1, 1, :buy, "limit", 42) }
 
       it "cancels an open order and doesn't notify when the cancel is pending" do
@@ -92,7 +92,7 @@ describe Arke::Exchange::Rubykube do
           )
 
         cb = double("on_deleted_order callback", call: true)
-        rubykube.register_on_deleted_order(&cb.method(:call))
+        finex.register_on_deleted_order(&cb.method(:call))
         expect(cb).to_not receive(:call)
         market.stop_order(order)
       end
@@ -121,7 +121,7 @@ describe Arke::Exchange::Rubykube do
           )
 
         cb = double("on_deleted_order callback", call: true)
-        rubykube.register_on_deleted_order(&cb.method(:call))
+        finex.register_on_deleted_order(&cb.method(:call))
         expect(cb).to receive(:call).once.with(order)
         market.stop_order(order)
       end
@@ -142,7 +142,7 @@ describe Arke::Exchange::Rubykube do
       end
     end
 
-    context "rubykube#process_message" do
+    context "finex#process_message" do
       let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
       let(:updated_order) { Arke::Order.new("ETHUSD", 1.0, 0.5, :buy) }
       let(:order_partially_fullfilled) do
@@ -169,7 +169,7 @@ describe Arke::Exchange::Rubykube do
         )
       end
 
-      let(:order_id) { rubykube.create_order(order).id }
+      let(:order_id) { finex.create_order(order).id }
       let(:order_cancelled) do
         OpenStruct.new("data": {"order" => {"id" => order_id, "at" => 1_546_605_232, "market" => "ethusd", "kind" => "bid", "price" => "1", "state" => "cancel", "remaining_volume" => "1.0", "origin_volume" => "1.0"}}.to_json)
       end
@@ -179,28 +179,28 @@ describe Arke::Exchange::Rubykube do
       end
 
       before do
-        rubykube.create_order(order).id
+        finex.create_order(order).id
       end
 
       it "updates order when partially fullfilled" do
         market
-        rubykube.send(:ws_read_message, :private, order_partially_fullfilled)
+        finex.send(:ws_read_message, :private, order_partially_fullfilled)
         expect(market.open_orders[:buy][1].length).to eq(1)
         expect(market.open_orders[:buy][1][order_id]).to eq(updated_order)
       end
 
       it "removes order when cancelled" do
-        rubykube.send(:ws_read_message, :private, order_cancelled)
+        finex.send(:ws_read_message, :private, order_cancelled)
         expect(market.open_orders[:buy].length).to eq(0)
       end
 
       it "sends a callback on executed trade" do
-        expect(rubykube).to receive(:notify_private_trade).twice
-        rubykube.send(:ws_read_message, :private, trade_executed)
+        expect(finex).to receive(:notify_private_trade).twice
+        finex.send(:ws_read_message, :private, trade_executed)
       end
     end
 
-    context "rubykube#cancel_all_orders" do
+    context "finex#cancel_all_orders" do
       let(:order) { Arke::Order.new("ethusd", 1, 1, :buy, "limit", 12) }
       let(:order_second) { Arke::Order.new("ethusd", 1, 1, :sell, "limit", 13) }
 
@@ -217,10 +217,10 @@ describe Arke::Exchange::Rubykube do
     end
   end
 
-  context "rubykube#market_config after peatio 2.2.14" do
-    include_context "mocked opendax"
+  context "finex#market_config after peatio 2.2.14" do
+    include_context "mocked finex"
     it "generates market configuration" do
-      expect(rubykube.market_config("btcusd")).to eq(
+      expect(finex.market_config("btcusd")).to eq(
         "id"               => "btcusd",
         "base_unit"        => "btc",
         "quote_unit"       => "usd",
@@ -233,7 +233,7 @@ describe Arke::Exchange::Rubykube do
     end
   end
 
-  context "rubykube#market_config before peatio 2.2.14" do
+  context "finex#market_config before peatio 2.2.14" do
     it "generates market configuration" do
       stub_request(:get, %r{peatio/public/markets})
         .to_return(
@@ -254,7 +254,7 @@ describe Arke::Exchange::Rubykube do
           ].to_json,
           headers: {}
         )
-      expect(rubykube.market_config("btcusd")).to eq(
+      expect(finex.market_config("btcusd")).to eq(
         "id"               => "btcusd",
         "base_unit"        => "btc",
         "quote_unit"       => "usd",
@@ -267,7 +267,7 @@ describe Arke::Exchange::Rubykube do
     end
   end
 
-  context "rubykube#market_config misconfiguration" do
+  context "finex#market_config misconfiguration" do
     it "doesn't raise error for missing non required fields" do
       stub_request(:get, %r{peatio/public/markets})
         .to_return(
@@ -284,7 +284,7 @@ describe Arke::Exchange::Rubykube do
           ].to_json,
           headers: {}
         )
-      expect(rubykube.market_config("btcusd")).to eq(
+      expect(finex.market_config("btcusd")).to eq(
         "id"               => "btcusd",
         "base_unit"        => "btc",
         "quote_unit"       => "usd",
@@ -310,7 +310,7 @@ describe Arke::Exchange::Rubykube do
           ].to_json,
           headers: {}
         )
-      expect { rubykube.market_config("btcusd") }.to raise_error("Market btcusd not found")
+      expect { finex.market_config("btcusd") }.to raise_error("Market btcusd not found")
     end
 
     it "raises error if base_unit is missing" do
@@ -328,7 +328,7 @@ describe Arke::Exchange::Rubykube do
           ].to_json,
           headers: {}
         )
-      expect { rubykube.market_config("btcusd") }.to raise_error(/base_unit/)
+      expect { finex.market_config("btcusd") }.to raise_error(/base_unit/)
     end
 
     it "raises error if quote_unit is missing" do
@@ -346,7 +346,7 @@ describe Arke::Exchange::Rubykube do
           ].to_json,
           headers: {}
         )
-      expect { rubykube.market_config("btcusd") }.to raise_error(/quote_unit/)
+      expect { finex.market_config("btcusd") }.to raise_error(/quote_unit/)
     end
 
     it "raises error if amount_precision is missing" do
@@ -364,7 +364,7 @@ describe Arke::Exchange::Rubykube do
           ].to_json,
           headers: {}
         )
-      expect { rubykube.market_config("btcusd") }.to raise_error(/amount_precision/)
+      expect { finex.market_config("btcusd") }.to raise_error(/amount_precision/)
     end
 
     it "raises error if price_precision is missing" do
@@ -382,7 +382,7 @@ describe Arke::Exchange::Rubykube do
           ].to_json,
           headers: {}
         )
-      expect { rubykube.market_config("btcusd") }.to raise_error(/price_precision/)
+      expect { finex.market_config("btcusd") }.to raise_error(/price_precision/)
     end
   end
 
@@ -391,18 +391,17 @@ describe Arke::Exchange::Rubykube do
 
     let(:exchange_config) do
       {
-        "driver" => "rubykube",
+        "driver" => "finex",
         "host"   => "http://www.devkube.com",
         "key"    => @authorized_api_key,
-        "secret" => SecureRandom.hex,
-        "finex"  => true
+        "secret" => SecureRandom.hex
       }
     end
     let(:order) { Arke::Order.new("ethusd", 1, 2, :buy) }
-    before(:each) { order.apply_requirements(rubykube) }
+    before(:each) { order.apply_requirements(finex) }
 
     it "doesn't updates open_orders after create" do
-      ord = rubykube.create_order(order)
+      ord = finex.create_order(order)
       expect(ord.id).to be_nil
       expect(market.open_orders.contains?(order.side, order.price)).to eq(false)
       assert_requested(:post, "http://www.devkube.com/api/v2/finex/market/orders", times: 1) do |req|
@@ -419,7 +418,7 @@ describe Arke::Exchange::Rubykube do
     it "cancels an open order and doesn't notify when the cancel is pending" do
       o = Arke::Order.new("ethusd", 1, 1, :buy, "limit", 42)
       cb = double("on_deleted_order callback", call: true)
-      rubykube.register_on_deleted_order(&cb.method(:call))
+      finex.register_on_deleted_order(&cb.method(:call))
       expect(cb).to_not receive(:call)
       market.stop_order(o)
     end
@@ -445,14 +444,14 @@ describe Arke::Exchange::Rubykube do
     end
 
     it "updates an existing price point" do
-      rubykube.send(:ws_read_private_message, snapshot)
-      rubykube.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => ["252.32", "0.1"], "sequence" => 6112})
-      expect(rubykube.update_orderbook("ethusd")[:buy].to_hash).to eq(
+      finex.send(:ws_read_private_message, snapshot)
+      finex.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => ["252.32", "0.1"], "sequence" => 6112})
+      expect(finex.update_orderbook("ethusd")[:buy].to_hash).to eq(
         249.16.to_d => 0.20603.to_d,
         248.69.to_d => 0.09944.to_d,
         248.66.to_d => 0.05057.to_d
       )
-      expect(rubykube.update_orderbook("ethusd")[:sell].to_hash).to eq(
+      expect(finex.update_orderbook("ethusd")[:sell].to_hash).to eq(
         252.32.to_d => 0.1.to_d,
         252.92.to_d => 0.90403.to_d,
         253.08.to_d => 0.73563.to_d
@@ -460,44 +459,44 @@ describe Arke::Exchange::Rubykube do
     end
 
     it "deletes an existing price point" do
-      rubykube.send(:ws_read_private_message, snapshot)
-      rubykube.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => ["252.32", "0.0"], "sequence" => 6112})
-      rubykube.send(:ws_read_private_message, "ethusd.ob-inc" => {"bids" => ["248.69", "0.0"], "sequence" => 6113})
-      expect(rubykube.update_orderbook("ethusd")[:buy].to_hash).to eq(
+      finex.send(:ws_read_private_message, snapshot)
+      finex.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => ["252.32", "0.0"], "sequence" => 6112})
+      finex.send(:ws_read_private_message, "ethusd.ob-inc" => {"bids" => ["248.69", "0.0"], "sequence" => 6113})
+      expect(finex.update_orderbook("ethusd")[:buy].to_hash).to eq(
         249.16.to_d => 0.20603.to_d,
         248.66.to_d => 0.05057.to_d
       )
-      expect(rubykube.update_orderbook("ethusd")[:sell].to_hash).to eq(
+      expect(finex.update_orderbook("ethusd")[:sell].to_hash).to eq(
         252.92.to_d => 0.90403.to_d,
         253.08.to_d => 0.73563.to_d
       )
     end
 
     it "deletes an existing price point (again)" do
-      rubykube.send(:ws_read_private_message, snapshot)
-      rubykube.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => ["252.32", ""], "sequence" => 6112})
-      rubykube.send(:ws_read_private_message, "ethusd.ob-inc" => {"bids" => ["248.69", ""], "sequence" => 6113})
-      expect(rubykube.update_orderbook("ethusd")[:buy].to_hash).to eq(
+      finex.send(:ws_read_private_message, snapshot)
+      finex.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => ["252.32", ""], "sequence" => 6112})
+      finex.send(:ws_read_private_message, "ethusd.ob-inc" => {"bids" => ["248.69", ""], "sequence" => 6113})
+      expect(finex.update_orderbook("ethusd")[:buy].to_hash).to eq(
         249.16.to_d => 0.20603.to_d,
         248.66.to_d => 0.05057.to_d
       )
-      expect(rubykube.update_orderbook("ethusd")[:sell].to_hash).to eq(
+      expect(finex.update_orderbook("ethusd")[:sell].to_hash).to eq(
         252.92.to_d => 0.90403.to_d,
         253.08.to_d => 0.73563.to_d
       )
     end
 
     it "disconnects websocket if it detects a sequence out of order" do
-      rubykube.send(:ws_read_private_message, snapshot)
+      finex.send(:ws_read_private_message, snapshot)
       ws = double(close: true)
-      rubykube.instance_variable_set(:@ws, ws)
+      finex.instance_variable_set(:@ws, ws)
       expect(ws).to receive(:close)
-      rubykube.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => ["252.32", ""], "sequence" => 6113})
+      finex.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => ["252.32", ""], "sequence" => 6113})
     end
   end
 
   context "update balances on ranger messages" do
-    include_context "mocked opendax"
+    include_context "mocked finex"
 
     let(:balances_event) do
       {
@@ -509,8 +508,8 @@ describe Arke::Exchange::Rubykube do
     end
 
     it "updates an existing price point" do
-      rubykube.send(:ws_read_private_message, balances_event)
-      expect(rubykube.fetch_balances).to eq(
+      finex.send(:ws_read_private_message, balances_event)
+      expect(finex.fetch_balances).to eq(
         [
           {
             "currency" => "btc",
@@ -526,19 +525,19 @@ describe Arke::Exchange::Rubykube do
           },
         ]
       )
-      expect(rubykube.balance("btc")).to eq(
+      expect(finex.balance("btc")).to eq(
         "currency" => "btc",
         "free"     => 0.998,
         "locked"   => 0.002,
         "total"    => 1,
       )
-      expect(rubykube.balance("eth")).to eq(
+      expect(finex.balance("eth")).to eq(
         "currency" => "eth",
         "free"     => 1_000_000_000,
         "locked"   => 0,
         "total"    => 1_000_000_000,
       )
-      expect(rubykube.balance("trst")).to be_nil
+      expect(finex.balance("trst")).to be_nil
     end
   end
 end
