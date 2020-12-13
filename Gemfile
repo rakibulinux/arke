@@ -31,3 +31,7 @@ group :development, :test do
 end
 
 gem 'simplecov', require: false, group: :test
+
+gem "em-websocket", "~> 0.5.2"
+
+gem "concurrent-ruby", "~> 1.1"

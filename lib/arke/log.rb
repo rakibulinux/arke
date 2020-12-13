@@ -49,4 +49,31 @@ module Arke
       end
     end
   end
+
+  # class used to dispatch logs to multi reader
+  class DispatchDevice
+    def initialize
+      @devices = {}
+    end
+
+    def add_listenner(id, dev)
+      @devices[id] = dev
+    end
+
+    def remove_listenner(id)
+      @devices.delete(id)
+    end
+
+    def write(message)
+      @devices.each do |_id, dev|
+        dev.write(message)
+      end
+    end
+
+    def close
+      @devices.each do |_id, dev|
+        dev.close
+      end
+    end
+  end
 end
