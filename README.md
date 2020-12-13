@@ -94,14 +94,13 @@ strategies:
 | Field    | Description                                                  |
 | -------- | ------------------------------------------------------------ |
 | `id`     | ID identifying the account (must be unique)                  |
-| `driver` | Name of exchange driver (supported values are: `rubykube`, `binance`, `bitfinex`, `kraken`) |
+| `driver` | Name of exchange driver (supported values are: `opendax`, `finex`, `binance`, `bitfinex`, `kraken`) |
 | `debug`  | Flag to extend logs verbosity, valid values are: `true` or `false` |
 | `host`   | Base URL of the exchange API                                 |
 | `ws`     | Websocket URL of exchange                                    |
 | `key`    | API key                                                      |
 | `secret` | Secret key                                                   |
 | `delay`  | Minimum delay to respect between requests to this exchange (in second) |
-| `finex`  | Enable finex support for rubykube (default false)            |
 
 
 ### Strategies configuration

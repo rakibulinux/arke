@@ -69,6 +69,8 @@ require "arke/exchange/huobi"
 require "arke/exchange/kraken"
 require "arke/exchange/luno"
 require "arke/exchange/okex"
+require "arke/exchange/opendax"
+require "arke/exchange/finex"
 require "arke/exchange/rubykube"
 
 require "arke/command"
