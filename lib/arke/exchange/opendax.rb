@@ -267,12 +267,12 @@ module Arke::Exchange
     def ws_read_public_message(msg)
       msg.each do |key, content|
         case key
-        when /([^\.]+)\.ob-snap/
+        when /([^.]+)\.ob-snap/
           @books[Regexp.last_match(1)] = {
             book:     create_or_update_orderbook(Arke::Orderbook::Orderbook.new(Regexp.last_match(1)), content),
             sequence: content["sequence"],
           }
-        when /([^\.]+)\.ob-inc/
+        when /([^.]+)\.ob-inc/
           if @books[Regexp.last_match(1)].nil?
             return logger.error { "Received a book increment before snapshot on market #{Regexp.last_match(1)}" }
           end

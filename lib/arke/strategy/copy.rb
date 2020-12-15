@@ -9,6 +9,7 @@ module Arke::Strategy
   class Copy < Base
     include ::Arke::Helpers::PricePoints
     include ::Arke::Helpers::Spread
+
     attr_reader :limit_asks_base
     attr_reader :limit_bids_base
 
@@ -25,6 +26,7 @@ module Arke::Strategy
       @side_asks = %w[asks both].include?(@side)
       @side_bids = %w[bids both].include?(@side)
       check_config
+      config_markets
     end
 
     def check_config
@@ -35,6 +37,13 @@ module Arke::Strategy
       raise "limit_asks_base must be higher than zero" if limit_asks_base <= 0
       raise "limit_bids_base must be higher than zero" if limit_bids_base <= 0
       raise "side must be asks, bids or both" if !@side_asks && !@side_bids
+    end
+
+    def config_markets
+      sources.each do |s|
+        s.apply_flags(::Arke::Helpers::Flags::LISTEN_PUBLIC_ORDERBOOK)
+        s.account.add_market_to_listen(s.id)
+      end
     end
 
     def call

@@ -278,6 +278,204 @@ describe Arke::Exchange::Binance do
     end
   end
 
+  context "receive public depth events on websocket" do
+    #
+    # Order book price and quantity depth updates used to locally manage an order book.
+    #
+    # {
+    #   "e": "depthUpdate", // Event type
+    #   "E": 123456789,     // Event time
+    #   "s": "BNBBTC",      // Symbol
+    #   "U": 157,           // First update ID in event
+    #   "u": 160,           // Final update ID in event
+    #   "b": [              // Bids to be updated
+    #     [
+    #       "0.0024",       // Price level to be updated
+    #       "10"            // Quantity
+    #     ]
+    #   ],
+    #   "a": [              // Asks to be updated
+    #     [
+    #       "0.0026",       // Price level to be updated
+    #       "100"           // Quantity
+    #     ]
+    #   ]
+    # }
+
+    let(:depthUpdate_event_ethusdt) do
+      {
+        "stream" => "ethusdt@depth",
+        "data" => {
+          "e" => "depthUpdate",
+          "E" => 1_571_514_775_998,
+          "s" => "ETHUSDT",
+          "U" => 1,
+          "u" => 2,
+          "b" => [
+            ["3", "2"],
+            ["2", "2"],
+            ["1", "2"]
+          ],
+          "a" => [
+            ["5", "2"],
+            ["6", "2"],
+            ["7", "2"]
+          ]
+        }
+      }
+    end
+
+    let(:depthUpdate_event_btcusdt) do
+      {
+        "stream" => "btcusdt@depth",
+        "data" => {
+          "e" => "depthUpdate",
+          "E" => 1_571_514_775_998,
+          "s" => "BTCUSDT",
+          "U" => 1,
+          "u" => 2,
+          "b" => [
+            ["30", "2"],
+            ["20", "2"],
+            ["10", "2"]
+          ],
+          "a" => [
+            ["50", "2"],
+            ["60", "2"],
+            ["70", "2"]
+          ]
+        }
+      }
+    end
+
+    let(:api_orderbook_ethusdt) do
+      {
+        "lastUpdateId" => 2,
+        "bids" => [
+          ["2", "1"]
+        ],
+        "asks" => [
+          ["6", "1"]
+        ]
+      }
+    end
+
+    let(:api_orderbook_btcusdt) do
+      {
+        "lastUpdateId" => 2,
+        "bids" => [
+          ["20", "1"]
+        ],
+        "asks" => [
+          ["60", "1"]
+        ]
+      }
+    end
+
+    let(:binance) do
+      allow_any_instance_of(::Binance::Client::REST).to receive(:depth).with(symbol: "ETHUSDT", limit: 1000).and_return(api_orderbook_ethusdt)
+      allow_any_instance_of(::Binance::Client::REST).to receive(:depth).with(symbol: "BTCUSDT", limit: 1000).and_return(api_orderbook_btcusdt)
+      b = Arke::Exchange::Binance.new({})
+      b.apply_flags(Arke::Helpers::Flags::LISTEN_PUBLIC_ORDERBOOK)
+      b.initialize_orderbook("ETHUSDT")
+      b.initialize_orderbook("BTCUSDT")
+      b
+    end
+
+    it "using orderbook cached by websocket" do
+      binance.send(:ws_read_public_message, depthUpdate_event_ethusdt)
+      binance.send(:ws_read_public_message, depthUpdate_event_btcusdt)
+      orderbookETH = binance.update_orderbook("ETHUSDT")
+      expect(orderbookETH[:buy].to_hash).to eq(
+        3.to_d => 2.to_d,
+        2.to_d => 2.to_d,
+        1.to_d => 2.to_d
+      )
+      expect(orderbookETH[:sell].to_hash).to eq(
+        5.to_d => 2.to_d,
+        6.to_d => 2.to_d,
+        7.to_d => 2.to_d
+      )
+      orderbookBTC = binance.update_orderbook("BTCUSDT")
+      expect(orderbookBTC[:buy].to_hash).to eq(
+        30.to_d => 2.to_d,
+        20.to_d => 2.to_d,
+        10.to_d => 2.to_d
+      )
+      expect(orderbookBTC[:sell].to_hash).to eq(
+        50.to_d => 2.to_d,
+        60.to_d => 2.to_d,
+        70.to_d => 2.to_d
+      )
+    end
+
+    it "orderbook size will be WS_ORDERBOOK_MIN_CACHE_SIZE if current size exeeced WS_ORDERBOOK_MAX_CACHE_SIZE and return with sorted prices" do
+      stub_const("Arke::Exchange::Binance::WS_ORDERBOOK_MIN_CACHE_SIZE", 1)
+      stub_const("Arke::Exchange::Binance::WS_ORDERBOOK_MAX_CACHE_SIZE", 2)
+      binance.send(:ws_read_public_message, depthUpdate_event_ethusdt)
+      orderbook = binance.update_orderbook("ETHUSDT")
+      expect(orderbook[:buy].to_hash.keys.length).to eq(1)
+      expect(orderbook[:buy].to_hash).to eq(
+        3.to_d => 2.to_d
+      )
+      expect(orderbook[:sell].to_hash.keys.length).to eq(1)
+      expect(orderbook[:sell].to_hash).to eq(
+        5.to_d => 2.to_d
+      )
+    end
+
+    it "updates an existing price point" do
+      binance.send(:ws_read_public_message, depthUpdate_event_ethusdt)
+      binance.send(:ws_read_public_message, depthUpdate_event_ethusdt.merge(
+        "data" => depthUpdate_event_ethusdt["data"].merge(
+          "U" => 3,
+          "u" => 4,
+          "b" => [
+            ["1", "0"],
+            ["3.5", "2"]
+          ],
+          "a" => [
+            ["5", "0"],
+            ["8", "2"]
+          ]
+        )
+      ))
+      orderbook = binance.update_orderbook("ETHUSDT")
+      expect(orderbook[:buy].to_hash).to eq(
+        3.5.to_d => 2.to_d,
+        3.to_d => 2.to_d,
+        2.to_d => 2.to_d
+      )
+      expect(orderbook[:sell].to_hash).to eq(
+        6.to_d => 2.to_d,
+        7.to_d => 2.to_d,
+        8.to_d => 2.to_d
+      )
+    end
+
+    it "websocket will not disconnect if it is in correct sequences." do
+      binance.send(:ws_read_public_message, depthUpdate_event_ethusdt)
+      ws = double(close: true)
+      binance.instance_variable_set(:@ws, ws)
+      expect(ws).not_to receive(:close)
+      binance.send(:ws_read_public_message, depthUpdate_event_ethusdt.merge(
+        "data" => depthUpdate_event_ethusdt["data"].merge("U" => 3, "u" => 10)
+      ))
+      binance.send(:ws_read_public_message, depthUpdate_event_ethusdt.merge(
+        "data" => depthUpdate_event_ethusdt["data"].merge("U" => 11, "u" => 12)
+      ))
+    end
+
+    it "disconnects websocket if it detects a sequence out of order" do
+      binance.send(:ws_read_public_message, depthUpdate_event_ethusdt)
+      ws = double(close: true)
+      binance.instance_variable_set(:@ws, ws)
+      expect(ws).to receive(:close)
+      binance.send(:ws_read_public_message, depthUpdate_event_ethusdt)
+      expect(binance.books.keys.length).to eq(0)
+    end
+  end
+
   context "market_config" do
     it "returns market configuration" do
       expect(binance.market_config("ETHUSDT")).to eq(
