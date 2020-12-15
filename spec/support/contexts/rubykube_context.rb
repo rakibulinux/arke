@@ -118,7 +118,7 @@ shared_context "mocked finex" do
       .with(headers: authorized_header)
       .to_return(status: 201, body: {}.to_json, headers: {})
 
-    stub_request(:get, %r{peatio/public/markets$})
+    stub_request(:get, %r{finex/public/markets$})
       .to_return(
         status:  200,
         body:    markets.to_json,

@@ -313,6 +313,16 @@ describe Arke::Exchange::Rubykube do
       expect { rubykube.market_config("btcusd") }.to raise_error("Market btcusd not found")
     end
 
+    it "raises human friendly error if there is no body" do
+      stub_request(:get, %r{peatio/public/markets})
+        .to_return(
+          status:  200,
+          body:    nil,
+          headers: {}
+        )
+      expect { rubykube.market_config("btcusd") }.to raise_error("Market btcusd not found")
+    end
+
     it "raises error if base_unit is missing" do
       stub_request(:get, %r{peatio/public/markets})
         .to_return(
