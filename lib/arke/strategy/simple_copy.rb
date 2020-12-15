@@ -32,6 +32,7 @@ module Arke::Strategy
       logger.info "ID:#{id} shape: #{@shape}"
       logger.info "ID:#{id} levels: #{@levels}"
       check_config
+      config_markets
     end
 
     def check_config
@@ -44,6 +45,13 @@ module Arke::Strategy
       raise "balance_perc or balance_quote_perc must be higher than zero" if @balance_quote_perc <= 0
       raise "balance_perc or balance_base_perc must lower than one" if @balance_base_perc > 1
       raise "balance_perc or balance_quote_perc must lower than one" if @balance_quote_perc > 1
+    end
+
+    def config_markets
+      sources.each do |s|
+        s.apply_flags(::Arke::Helpers::Flags::LISTEN_PUBLIC_ORDERBOOK)
+        s.account.add_market_to_listen(s.id)
+      end
     end
 
     def mid_price
