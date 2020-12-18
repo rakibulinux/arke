@@ -9,8 +9,8 @@ module Arke::Strategy
   class SmartCopy < Base
     include ::Arke::Helpers::Splitter
     include ::Arke::Helpers::Spread
-    # attr_reader :limit_asks_base
-    # attr_reader :limit_bids_base
+    attr_reader :limit_asks
+    attr_reader :limit_bids
 
     def initialize(sources, target, config, reactor)
       super
@@ -47,7 +47,7 @@ module Arke::Strategy
     def mid_price
       top_ask = source.orderbook[:sell].first
       top_bid = source.orderbook[:buy].first
-      raise "Source order book is empty" if top_ask.nil? || top_bid.nil?
+      raise "Source orderbook is empty" if top_ask.nil? || top_bid.nil?
 
       (top_ask.first + top_bid.first) / 2
     end

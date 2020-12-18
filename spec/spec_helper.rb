@@ -16,6 +16,7 @@ Dir[File.join(__dir__, "support", "**", "*.rb")].each {|f| require f }
 require 'webmock/rspec'
 require "rack"
 require "simplecov"
+require "byebug"
 
 SimpleCov.start "rails"
 require "arke"

@@ -109,6 +109,7 @@ module Arke::Orderbook
 
     def group_by_level(side, price_points)
       return [] if price_points.empty?
+
       result = []
       level_index = 0
       init_level = proc do |price_point|
