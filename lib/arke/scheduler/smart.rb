@@ -28,7 +28,7 @@ module Arke::Scheduler
     #
     #  Scheduler tracks priorities
     #
-    # - orders at risk:               10^6 - price distance from the best price
+    # - orders at risk:               10^9 - price distance from the best price
     # - orders out boundaries:        10^6 - price distance from the best price (when low liquidity flag is raised)
     # - create orders in boundaries:  10^6 - price distance from the best price (when low levels flags is raised)
     # - orders in boundaries:         10^3 - price distance from the best price
