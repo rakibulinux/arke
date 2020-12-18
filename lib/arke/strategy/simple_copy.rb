@@ -6,7 +6,7 @@ module Arke::Strategy
   # * it adds a spread in percentage (param: spread)
   # * it updates open orders every period
   # * when an order matches it buys the liquidity on the source exchange
-  class SmartCopy < Base
+  class SimpleCopy < Base
     include ::Arke::Helpers::Splitter
     include ::Arke::Helpers::Spread
     attr_reader :limit_asks

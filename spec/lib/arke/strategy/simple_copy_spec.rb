@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-describe Arke::Strategy::SmartCopy do
+describe Arke::Strategy::SimpleCopy do
   let(:reactor) { double(:reactor) }
   let(:executor) { double(:executor) }
-  let(:strategy) { Arke::Strategy::SmartCopy.new([source], target, config, reactor) }
+  let(:strategy) { Arke::Strategy::SimpleCopy.new([source], target, config, reactor) }
   let(:account) { Arke::Exchange.create(account_config) }
   let(:target_mode) { Arke::Helpers::Flags::DEFAULT_TARGET_FLAGS }
   let(:source_mode) { Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS }
@@ -22,7 +22,7 @@ describe Arke::Strategy::SmartCopy do
   end
   let(:config) do
     {
-      "type"    => "smart_copy",
+      "type"    => "simple_copy",
       "params"  => {
         "spread_bids"  => spread_bids,
         "spread_asks"  => spread_asks,

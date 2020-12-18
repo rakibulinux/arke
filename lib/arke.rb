@@ -60,7 +60,7 @@ require "arke/strategy/microtrades"
 require "arke/strategy/orderback"
 require "arke/strategy/circuitbraker"
 require "arke/strategy/candle_sampling"
-require "arke/strategy/smart_copy"
+require "arke/strategy/simple_copy"
 
 require "arke/exchange/base"
 require "arke/exchange/binance"
