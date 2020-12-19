@@ -15,7 +15,7 @@ module Arke::Strategy
     def initialize(sources, target, config, reactor)
       super
       params = @config["params"] || {}
-      @levels_size = params["levels_size"].to_d
+      @levels_price_size = params["levels_price_size"]&.to_d || params["levels_size"]&.to_d
       @levels_count = params["levels_count"].to_i
       @spread_bids = params["spread_bids"].to_d
       @spread_asks = params["spread_asks"].to_d
@@ -27,7 +27,7 @@ module Arke::Strategy
     end
 
     def check_config
-      raise "levels_size must be higher than zero" if @levels_size <= 0
+      raise "levels_price_size must be higher than zero" if @levels_price_size <= 0
       raise "levels_count must be minimum 1" if @levels_count < 1
       raise "spread_bids must be higher than zero" if @spread_bids.negative?
       raise "spread_asks must be higher than zero" if @spread_asks.negative?
@@ -43,7 +43,7 @@ module Arke::Strategy
       assert_currency_found(target.account, target.quote)
 
       split_opts = {
-        step_size: @levels_size,
+        step_size: @levels_price_size,
       }
 
       top_ask = source.orderbook[:sell].first
@@ -79,7 +79,7 @@ module Arke::Strategy
       price_points_bids = price_points_bids&.map {|pp| ::Arke::PricePoint.new(apply_spread(:buy, pp.price_point, @spread_bids)) }
 
       push_debug("0_levels_count", @levels_count)
-      push_debug("0_levels_size", @levels_size)
+      push_debug("0_levels_price_size", @levels_price_size)
       push_debug("0_top_ask", top_ask&.first)
       push_debug("0_top_bid", top_bid&.first)
       push_debug("0_asks_price_points", price_points_asks.inspect)

@@ -120,9 +120,10 @@ module Arke::Scheduler
       actions = []
       current = @current_ob.group_by_level(side, price_levels)
       desired = @desired_ob.group_by_level(side, price_levels)
-      logger.debug { "#{prefix} #{side} price_levels: #{price_levels.inspect}" }
-      logger.debug { "#{prefix} #{side} current: #{current.inspect}" }
-      logger.debug { "#{prefix} #{side} desired: #{desired.inspect}" }
+      side_s = side == :buy ? "buy ".green : "sell".red
+      logger.debug { "#{prefix} #{side_s} price_levels: #{price_levels.inspect}" }
+      logger.debug { "#{prefix} #{side_s} current: #{current.inspect}" }
+      logger.debug { "#{prefix} #{side_s} desired: #{desired.inspect}" }
 
       price_levels.each_with_index do |price_point, i|
         raise "PricePoint expected, got #{price_point.class}" unless price_point.is_a?(::Arke::PricePoint)
@@ -133,10 +134,10 @@ module Arke::Scheduler
         diff_percent = desired_amount.zero? ? 1000 : diff_amount.abs.to_d / desired_amount.to_d
 
         if diff_percent <= ADJUST_LEVEL_AMOUNT_RATIO
-          logger.info { "#{prefix} L%02.0f #{side} wants:%0.6f now:%0.6f diff:%0.0f%% (SKIPPED)" % [i + 1, desired_amount, current_amount, diff_percent * 100] }
+          logger.info { "#{prefix} L%02.0f #{side_s} wants:%0.6f now:%0.6f diff:%0.0f%% (SKIPPED)" % [i + 1, desired_amount, current_amount, diff_percent * 100] }
           next
         else
-          logger.info { "#{prefix} L%02.0f #{side} wants:%0.6f now:%0.6f diff:%0.0f%%" % [i + 1, desired_amount, current_amount, diff_percent * 100] }
+          logger.info { "#{prefix} L%02.0f #{side_s} wants:%0.6f now:%0.6f diff:%0.0f%%" % [i + 1, desired_amount, current_amount, diff_percent * 100] }
         end
 
         # CANCEL ORDERS

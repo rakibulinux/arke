@@ -23,6 +23,8 @@ module Arke::Orderbook
       @volume_asks_base = 0
       @volume_bids_quote = 0
       @volume_asks_quote = 0
+      @price_points_asks = []
+      @price_points_bids = []
 
       case shape
       when :V
@@ -33,15 +35,21 @@ module Arke::Orderbook
         raise "Invalid shape #{shape}"
       end
 
-      ::Arke::Orderbook::Orderbook.new(
-        @market,
-        buy:               @bids,
-        sell:              @asks,
-        volume_bids_quote: @volume_bids_quote,
-        volume_asks_quote: @volume_asks_quote,
-        volume_bids_base:  @volume_bids_base,
-        volume_asks_base:  @volume_asks_base
-      )
+      [
+        ::Arke::Orderbook::Orderbook.new(
+          @market,
+          buy:               @bids,
+          sell:              @asks,
+          volume_bids_quote: @volume_bids_quote,
+          volume_asks_quote: @volume_asks_quote,
+          volume_bids_base:  @volume_bids_base,
+          volume_asks_base:  @volume_asks_base
+        ),
+        {
+          asks: @price_points_asks,
+          bids: @price_points_bids
+        }
+      ]
     end
 
     def self.shape(a)
@@ -51,6 +59,7 @@ module Arke::Orderbook
         @asks[order.price] = order.amount
         @volume_asks_base += order.amount
         @volume_asks_quote += order.amount * order.price
+        @price_points_asks << ::Arke::PricePoint.new(order.price)
         current_ask_price += @levels_price_size
       end
 
@@ -60,13 +69,14 @@ module Arke::Orderbook
         @bids[order.price] = order.amount
         @volume_bids_base += order.amount
         @volume_bids_quote += order.amount * order.price
+        @price_points_bids << ::Arke::PricePoint.new(order.price)
         current_bid_price -= @levels_price_size
         break if current_ask_price.negative?
       end
     end
 
     def self.amount(a)
-      a.to_d * (1 + @random)
+      a.to_d * (1 + (rand - 0.5) * @random)
     end
 
     def self.amount_v(n)
