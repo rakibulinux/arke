@@ -29,9 +29,11 @@ module Arke::Strategy
 
       logger.info "ID:#{id} levels_price_size: %.2f" % [@levels_price_size]
       logger.info "ID:#{id} levels_count: %.0f" % [@levels_count]
-      logger.info "ID:#{id} spread_bids: %.4f" % [@spread_bids]
-      logger.info "ID:#{id} spread_asks: %.4f" % [@spread_asks]
-      logger.info "ID:#{id} random: %.2f" % [@random]
+      logger.info "ID:#{id} spread_bids: %.0f%%" % [@spread_bids * 100]
+      logger.info "ID:#{id} spread_asks: %.0f%%" % [@spread_asks * 100]
+      logger.info "ID:#{id} balance_base_perc: %.0f%%" % [@balance_base_perc * 100]
+      logger.info "ID:#{id} balance_quote_perc: %.0f%%" % [@balance_quote_perc * 100]
+      logger.info "ID:#{id} random: %.0f%%" % [@random * 100]
       logger.info "ID:#{id} shape: #{@shape}"
       logger.info "ID:#{id} levels: #{@levels}"
 

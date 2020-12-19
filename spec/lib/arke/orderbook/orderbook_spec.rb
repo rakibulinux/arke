@@ -183,16 +183,16 @@ describe ::Arke::Orderbook::Orderbook do
     end
 
     it "adjusts volume according to requirements" do
-      book = ob.adjust_volume_simple(6, 3) # Asks (Sell) / Bids (Buy)
+      book = ob.adjust_volume_simple(6, 33) # Asks (Sell) / Bids (Buy)
       expect(book[:sell].to_hash).to eq(
         5.0.to_d => 2,
         8.0.to_d => 2,
         2.0.to_d => 2
       )
       expect(book[:buy].to_hash).to eq(
-        6.0.to_d => 1,
-        8.0.to_d => 1,
-        9.0.to_d => 1
+        5.0.to_d => 1.5,
+        8.0.to_d => 1.5,
+        9.0.to_d => 1.5
       )
       # expect(book.volume_bids_base).to eq(0.2.to_d)
       # expect(book.volume_asks_base).to eq(0.3.to_d)

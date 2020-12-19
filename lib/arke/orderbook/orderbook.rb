@@ -164,8 +164,8 @@ module Arke::Orderbook
       self[:buy].each do |price, amount|
         order = Arke::Order.new(@market, price, amount * bids_ratio, :buy)
         bids[order.price] = order.amount
-        adj_volume_asks_base += order.amount
-        adj_volume_asks_quote += order.amount * order.price
+        adj_volume_bids_base += order.amount
+        adj_volume_bids_quote += order.amount * order.price
       end
 
       self[:sell].each do |price, amount|

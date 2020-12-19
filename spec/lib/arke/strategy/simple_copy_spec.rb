@@ -18,6 +18,22 @@ describe Arke::Strategy::SimpleCopy do
     {
       "id"     => 1,
       "driver" => "bitfaker",
+      "params" => {
+        "balances" => [
+          {
+            "currency" => "btc",
+            "total"    => 3,
+            "free"     => 3,
+            "locked"   => 0
+          },
+          {
+            "currency" => "usd",
+            "total"    => 10_000,
+            "free"     => 10_000,
+            "locked"   => 0
+          }
+        ]
+      }
     }
   end
   let(:config) do
@@ -54,8 +70,8 @@ describe Arke::Strategy::SimpleCopy do
   context "set_liquidity_limits" do
     it do
       strategy.set_liquidity_limits
-      expect(strategy.limit_asks).to eq(4_723_846.89208129)
-      expect(strategy.limit_bids).to eq(4_763_468.68006011)
+      expect(strategy.limit_asks).to eq(3)
+      expect(strategy.limit_bids).to eq(10_000)
     end
   end
 end
