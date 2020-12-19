@@ -5,7 +5,6 @@ module Arke::Orderbook
     include ::Arke::Helpers::Orderbook
 
     attr_reader :book, :market
-    attr_reader :volume_bids_quote, :volume_asks_quote
 
     def initialize(market, opts={})
       @market = market
@@ -69,8 +68,16 @@ module Arke::Orderbook
       @volume_bids_base ||= @book[:buy].inject(0.0) {|sum, n| sum + n.last }
     end
 
+    def volume_bids_quote
+      @volume_bids_quote ||= @book[:buy].inject(0.0) {|sum, n| sum + n.first * n.last }
+    end
+
     def volume_asks_base
       @volume_asks_base ||= @book[:sell].inject(0.0) {|sum, n| sum + n.last }
+    end
+
+    def volume_asks_quote
+      @volume_asks_quote ||= @book[:sell].inject(0.0) {|sum, n| sum + n.first * n.last }
     end
 
     def [](side)

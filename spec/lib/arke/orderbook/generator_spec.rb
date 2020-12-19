@@ -67,12 +67,30 @@ describe Arke::Orderbook::Generator do
         103.to_d => 2,
         104.to_d => 3
       )
+      expect(pps[:asks]).to eq(
+        [
+          ::Arke::PricePoint.new(100),
+          ::Arke::PricePoint.new(101),
+          ::Arke::PricePoint.new(102),
+          ::Arke::PricePoint.new(103),
+          ::Arke::PricePoint.new(104)
+        ]
+      )
       expect(ob.book[:buy].to_hash).to eq(
         99.to_d => 1,
         98.to_d => 2,
         97.to_d => 1,
         96.to_d => 2,
         95.to_d => 3
+      )
+      expect(pps[:bids]).to eq(
+        [
+          ::Arke::PricePoint.new(99),
+          ::Arke::PricePoint.new(98),
+          ::Arke::PricePoint.new(97),
+          ::Arke::PricePoint.new(96),
+          ::Arke::PricePoint.new(95)
+        ]
       )
     end
   end

@@ -168,4 +168,36 @@ describe ::Arke::Orderbook::Orderbook do
       expect(book.volume_asks_base).to eq(3.to_d)
     end
   end
+
+  context "adjust_volume_simple" do
+    let(:ob) { ::Arke::Orderbook::Orderbook.new(market) }
+
+    before(:each) do
+      ob.update(::Arke::Order.new("ethusd", 5, 4, :sell))
+      ob.update(::Arke::Order.new("ethusd", 8, 4, :sell))
+      ob.update(::Arke::Order.new("ethusd", 2, 4, :sell))
+
+      ob.update(::Arke::Order.new("ethusd", 5, 3, :buy))
+      ob.update(::Arke::Order.new("ethusd", 8, 3, :buy))
+      ob.update(::Arke::Order.new("ethusd", 9, 3, :buy))
+    end
+
+    it "adjusts volume according to requirements" do
+      book = ob.adjust_volume_simple(6, 3) # Asks (Sell) / Bids (Buy)
+      expect(book[:sell].to_hash).to eq(
+        5.0.to_d => 2,
+        8.0.to_d => 2,
+        2.0.to_d => 2
+      )
+      expect(book[:buy].to_hash).to eq(
+        6.0.to_d => 1,
+        8.0.to_d => 1,
+        9.0.to_d => 1
+      )
+      # expect(book.volume_bids_base).to eq(0.2.to_d)
+      # expect(book.volume_asks_base).to eq(0.3.to_d)
+      # expect(book.volume_bids_quote).to eq(16_761_904_761_904_762.to_d * 1e-16)
+      # expect(book.volume_asks_quote).to eq(1.5.to_d)
+    end
+  end
 end
