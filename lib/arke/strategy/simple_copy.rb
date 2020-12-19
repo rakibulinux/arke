@@ -21,10 +21,19 @@ module Arke::Strategy
       @spread_asks = params["spread_asks"].to_d
       @random = (params["random"]&.to_d || 0.3).to_d
       @shape = params["shape"] || "W"
+      @levels = params["levels"]
 
       balance_perc = params["balance_perc"]&.to_d || 1.to_d
       @balance_base_perc = params["balance_base_perc"]&.to_d || balance_perc
       @balance_quote_perc = params["balance_quote_perc"]&.to_d || balance_perc
+
+      logger.info "ID:#{id} levels_price_size: %.2f" % [@levels_price_size]
+      logger.info "ID:#{id} levels_count: %.0f" % [@levels_count]
+      logger.info "ID:#{id} spread_bids: %.4f" % [@spread_bids]
+      logger.info "ID:#{id} spread_asks: %.4f" % [@spread_asks]
+      logger.info "ID:#{id} random: %.2f" % [@random]
+      logger.info "ID:#{id} shape: #{@shape}"
+      logger.info "ID:#{id} levels: #{@levels}"
 
       # @side_asks = %w[asks both].include?(@side)
       # @side_bids = %w[bids both].include?(@side)
@@ -34,6 +43,7 @@ module Arke::Strategy
     def check_config
       raise "levels_price_size must be higher than zero" if @levels_price_size <= 0
       raise "levels_count must be minimum 1" if @levels_count < 1
+      raise "levels must be an array" if !@levels.nil? && !@levels.is_a?(Array)
       raise "spread_bids must be higher than zero" if @spread_bids.negative?
       raise "spread_asks must be higher than zero" if @spread_asks.negative?
       raise "balance_perc or balance_base_perc must be higher than zero" if @balance_base_perc <= 0
@@ -75,6 +85,8 @@ module Arke::Strategy
       set_liquidity_limits()
 
       opts = {
+        shape:             @shape,
+        levels:            @levels,
         levels_count:      @levels_count,
         levels_price_size: @levels_price_size,
         random:            @random,

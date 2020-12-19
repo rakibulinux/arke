@@ -5,11 +5,12 @@ module Arke::Orderbook
     def self.generate(opts={})
       @levels_count = opts[:levels_count]
       @levels_price_size = opts[:levels_price_size]
+      @levels = opts[:levels]
       @random = opts[:random] || 0.0
       @market = opts[:market]
       @best_ask_price = opts[:best_ask_price]
       @best_bid_price = opts[:best_bid_price]
-      shape = opts[:shape]&.capitalize&.to_sym || :W
+      shape = opts[:shape]&.downcase&.to_s || "w"
       raise "levels_count missing" unless @levels_count
       raise "best_ask_price missing" unless @best_ask_price
       raise "best_bid_price missing" unless @best_bid_price
@@ -27,10 +28,12 @@ module Arke::Orderbook
       @price_points_bids = []
 
       case shape
-      when :V
+      when "v"
         shape(method(:amount_v))
-      when :W
+      when "w"
         shape(method(:amount_w))
+      when "custom"
+        shape(method(:amount_custom))
       else
         raise "Invalid shape #{shape}"
       end
@@ -77,6 +80,10 @@ module Arke::Orderbook
 
     def self.amount(a)
       a.to_d * (1 + (rand - 0.5) * @random)
+    end
+
+    def self.amount_custom(n)
+      n + 1 > @levels.size ? @levels.last : @levels[n]
     end
 
     def self.amount_v(n)
