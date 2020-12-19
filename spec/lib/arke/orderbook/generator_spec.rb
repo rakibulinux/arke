@@ -19,13 +19,22 @@ describe Arke::Orderbook::Generator do
     let(:shape) { "V" }
 
     it do
-      ob = gen.generate(params)
+      ob, pps = gen.generate(params)
       expect(ob.book[:sell].to_hash).to eq(
         100.to_d => 1,
         101.to_d => 2,
         102.to_d => 3,
         103.to_d => 4,
         104.to_d => 5
+      )
+      expect(pps[:asks]).to eq(
+        [
+          ::Arke::PricePoint.new(100),
+          ::Arke::PricePoint.new(101),
+          ::Arke::PricePoint.new(102),
+          ::Arke::PricePoint.new(103),
+          ::Arke::PricePoint.new(104)
+        ]
       )
       expect(ob.book[:buy].to_hash).to eq(
         99.to_d => 1,
@@ -34,6 +43,15 @@ describe Arke::Orderbook::Generator do
         96.to_d => 4,
         95.to_d => 5
       )
+      expect(pps[:bids]).to eq(
+        [
+          ::Arke::PricePoint.new(99),
+          ::Arke::PricePoint.new(98),
+          ::Arke::PricePoint.new(97),
+          ::Arke::PricePoint.new(96),
+          ::Arke::PricePoint.new(95)
+        ]
+      )
     end
   end
 
@@ -41,7 +59,7 @@ describe Arke::Orderbook::Generator do
     let(:shape) { "W" }
 
     it do
-      ob = gen.generate(params)
+      ob, pps = gen.generate(params)
       expect(ob.book[:sell].to_hash).to eq(
         100.to_d => 1,
         101.to_d => 2,
@@ -58,5 +76,4 @@ describe Arke::Orderbook::Generator do
       )
     end
   end
-
 end
