@@ -78,7 +78,7 @@ steps:
         - "*-stable"
 
   - name: Push and Notify
-    image: quay.io/openware/sdk-citools:2.6.5
+    image: quay.io/openware/sdk-citools:2.6.7
     environment:
       BOT_USERNAME: kite-bot
       BOT_NAME: Kite Bot
