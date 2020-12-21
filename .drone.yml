@@ -16,7 +16,7 @@ steps:
         path: /usr/local/bundle
 
   - name: Bump and tag
-    image: quay.io/openware/sdk-citools:2.6.5
+    image: quay.io/openware/sdk-citools:2.6.7
     environment:
       BOT_NAME: Kite
       BOT_EMAIL: kite-bot@heliostech.fr
