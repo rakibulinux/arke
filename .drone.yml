@@ -8,7 +8,7 @@ steps:
     commands:
       - gem update bundler
       - bundle --jobs $(nproc)
-      - rspec spec
+      - bundle exec rspec spec
     volumes:
       - name: gem-cache
         path: /root/.gem
