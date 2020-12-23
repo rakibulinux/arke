@@ -34,19 +34,18 @@ accounts:
 
 strategies:
 - id: copy-ETHUSD
-  type: simple-copy
-  debug: true
+  type: copy
   enabled: true
   period: 30
   params:
-    spread_bids: 0.003
-    spread_asks: 0.003
-    max_amount_per_order: 1
+    limit_asks_base: 100
+    limit_bids_base: 100
+    max_amount_per_order: 0.5
     levels_price_step: 5
+    levels_size: 1
     levels_price_func: linear
     levels_count: 6
-    shape: custom
-    levels: [0.1, 0.2, 1, 2, 0.1]
+    side: both
   target:
     account_id: bitfaker-target
     market_id: ethusd
@@ -54,6 +53,27 @@ strategies:
   sources:
   - account_id: bitfaker-source
     market_id: ETHUSD
+
+# - id: copy-ETHUSD
+#   type: simple-copy
+#   enabled: true
+#   period: 30
+#   params:
+#     spread_bids: 0.003
+#     spread_asks: 0.003
+#     max_amount_per_order: 1
+#     levels_price_step: 5
+#     levels_price_func: linear
+#     levels_count: 6
+#     shape: custom
+#     levels: [0.1, 0.2, 1, 2, 0.1]
+#   target:
+#     account_id: bitfaker-target
+#     market_id: ethusd
+
+#   sources:
+#   - account_id: bitfaker-source
+#     market_id: ETHUSD
 
 # - id: microtrades-FTHUSD
 #   type: microtrades

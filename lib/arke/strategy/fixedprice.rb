@@ -7,13 +7,14 @@ module Arke::Strategy
   # * it updates open orders every period
   # * when an order matches it buys the liquidity on the source exchange
   class Fixedprice < Base
-    include ::Arke::Helpers::Splitter
+    include ::Arke::Helpers::PricePoints
     include ::Arke::Helpers::Spread
 
     def initialize(sources, target, config, reactor)
       super
       params = @config["params"] || {}
-      @levels_size = params["levels_size"].to_d
+      @levels_price_step = params["levels_price_step"]&.to_d || params["levels_size"]&.to_d
+      @levels_price_func = params["levels_price_func"] || "constant"
       @levels_count = params["levels_count"].to_i
       @price = params["price"].to_d
       @random_delta = params["random_delta"].to_d
@@ -30,7 +31,7 @@ module Arke::Strategy
 
     def check_config
       raise "ID:#{id} Price must not be zero" if @price.zero?
-      raise "ID:#{id} levels_size is missing" unless @levels_size
+      raise "ID:#{id} levels_price_step is missing" unless @levels_price_step
       raise "ID:#{id} levels_count is missing" unless @levels_count
     end
 
@@ -49,14 +50,10 @@ module Arke::Strategy
       assert_currency_found(target.account, target.base)
       assert_currency_found(target.account, target.quote)
 
-      split_opts = {
-        step_size: @levels_size,
-      }
-
       delta = rand(0..@random_delta) - (@random_delta / 2)
       top_ask = top_bid = @price + delta
-      price_points_asks = @side_asks ? split_constant_pp(:asks, top_ask, @levels_count, split_opts) : []
-      price_points_bids = @side_bids ? split_constant_pp(:bids, top_bid, @levels_count, split_opts) : []
+      price_points_asks = (@side_asks ? price_points(:asks, top_ask, @levels_count, @levels_price_func, @levels_price_step) : nil) || []
+      price_points_bids = (@side_bids ? price_points(:bids, top_bid, @levels_count, @levels_price_func, @levels_price_step) : nil) || []
       volume_asks_base = 0.to_d
       volume_bids_base = 0.to_d
 

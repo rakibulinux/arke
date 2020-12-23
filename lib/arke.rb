@@ -22,7 +22,7 @@ module Arke; end
 
 require "arke/helpers/precision"
 require "arke/helpers/commands"
-require "arke/helpers/splitter"
+require "arke/helpers/price_points"
 require "arke/helpers/spread"
 require "arke/helpers/flags"
 require "arke/helpers/orderbook"

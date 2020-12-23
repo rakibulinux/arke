@@ -2,6 +2,8 @@
 
 module Arke::Orderbook
   class Generator
+    include ::Arke::Helpers::PricePoints
+
     def generate(opts={})
       @levels_count = opts[:levels_count]
       @levels_price_step = opts[:levels_price_step]
@@ -56,19 +58,6 @@ module Arke::Orderbook
       ]
     end
 
-    def price_step(n)
-      case @levels_price_func
-      when "constant"
-        @levels_price_step
-      when "linear"
-        (n + 1) * @levels_price_step
-      when "exp"
-        Math.exp(n) * @levels_price_step
-      else
-        raise "Invalid levels_price_func #{@levels_price_func}"
-      end
-    end
-
     def shape(a)
       current_ask_price = @best_ask_price
       @levels_count.times do |n|
@@ -76,7 +65,7 @@ module Arke::Orderbook
         @asks[order.price] = order.amount
         @volume_asks_base += order.amount
         @volume_asks_quote += order.amount * order.price
-        current_ask_price += price_step(n)
+        current_ask_price += price_step(n, @levels_price_func, @levels_price_step)
         @price_points_asks << ::Arke::PricePoint.new(current_ask_price)
       end
 
@@ -86,7 +75,7 @@ module Arke::Orderbook
         @bids[order.price] = order.amount
         @volume_bids_base += order.amount
         @volume_bids_quote += order.amount * order.price
-        current_bid_price -= price_step(n)
+        current_bid_price -= price_step(n, @levels_price_func, @levels_price_step)
         break if current_bid_price.negative?
 
         @price_points_bids << ::Arke::PricePoint.new(current_bid_price)

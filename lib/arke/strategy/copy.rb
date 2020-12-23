@@ -7,7 +7,7 @@ module Arke::Strategy
   # * it updates open orders every period
   # * when an order matches it buys the liquidity on the source exchange
   class Copy < Base
-    include ::Arke::Helpers::Splitter
+    include ::Arke::Helpers::PricePoints
     include ::Arke::Helpers::Spread
     attr_reader :limit_asks_base
     attr_reader :limit_bids_base
@@ -16,6 +16,7 @@ module Arke::Strategy
       super
       params = @config["params"] || {}
       @levels_price_step = params["levels_price_step"]&.to_d || params["levels_size"]&.to_d
+      @levels_price_func = params["levels_price_func"] || "constant"
       @levels_count = params["levels_count"].to_i
       @spread_bids = params["spread_bids"].to_d
       @spread_asks = params["spread_asks"].to_d
@@ -42,16 +43,12 @@ module Arke::Strategy
       assert_currency_found(target.account, target.base)
       assert_currency_found(target.account, target.quote)
 
-      split_opts = {
-        step_size: @levels_price_step,
-      }
-
       top_ask = source.orderbook[:sell].first
       top_bid = source.orderbook[:buy].first
       raise "Source order book is empty" if top_ask.nil? || top_bid.nil?
 
-      price_points_asks = @side_asks ? split_constant_pp(:asks, top_ask.first, @levels_count, split_opts) : nil
-      price_points_bids = @side_bids ? split_constant_pp(:bids, top_bid.first, @levels_count, split_opts) : nil
+      price_points_asks = @side_asks ? price_points(:asks, top_ask.first, @levels_count, @levels_price_func, @levels_price_step) : nil
+      price_points_bids = @side_bids ? price_points(:bids, top_bid.first, @levels_count, @levels_price_func, @levels_price_step) : nil
       ob_agg = source.orderbook.aggregate(price_points_bids, price_points_asks, target.min_amount)
       ob = ob_agg.to_ob
 
