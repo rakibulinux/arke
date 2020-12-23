@@ -98,7 +98,7 @@ describe Arke::Exchange::Valr do
           "amount_precision" => 8,
           "base_unit"        => "ZEC",
           "id"               => "ZECBTC",
-          "min_amount"       => 0.0521,
+          "min_amount"       => "0.0521".to_d,
           "price_precision"  => 8,
           "quote_unit"       => "BTC"
         )

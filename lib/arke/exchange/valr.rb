@@ -31,17 +31,13 @@ module Arke::Exchange
       market_infos = markets.select {|m| m["symbol"]&.upcase == market.upcase }.first
       raise "Market #{market} not found" unless market_infos
 
-      price_precision = [
-        market_infos.fetch("quoteCurrency")["decimalPlaces"],
-        value_precision(market_infos["tickSize"].to_d)
-      ].min
       {
         "id"               => market_infos.fetch("symbol"),
-        "base_unit"        => market_infos.fetch("baseCurrency")["shortName"],
-        "quote_unit"       => market_infos.fetch("quoteCurrency")["shortName"],
-        "min_amount"       => market_infos.fetch("minBaseAmount"),
-        "amount_precision" => market_infos.fetch("baseCurrency")["decimalPlaces"],
-        "price_precision"  => price_precision
+        "base_unit"        => market_infos.fetch("baseCurrency"),
+        "quote_unit"       => market_infos.fetch("quoteCurrency"),
+        "min_amount"       => market_infos.fetch("minBaseAmount").to_d,
+        "amount_precision" => market_infos.fetch("baseDecimalPlaces").to_i,
+        "price_precision"  => value_precision(market_infos["tickSize"].to_d)
       }
     end
 
