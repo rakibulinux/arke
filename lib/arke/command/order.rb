@@ -56,7 +56,28 @@ module Arke::Command
       end
     end
 
-    class Open < Clamp::Command
+    class CancelAll < Clamp::Command
+      include Arke::Helpers::Commands
+      option "--config", "FILE_PATH", "Strategies config file", default: "config/strategies.yml"
+      option "--market", "MARKET_ID", "market id on the target platform"
+
+      parameter "ACCOUNT_ID", "market id on the target platform", attribute_name: :account_id
+      def execute
+        logger = ::Arke::Log
+        logger.level = Logger::DEBUG
+        acc_config = accounts_configs.find {|a| a["id"] == account_id }
+        raise "account #{account_id} not found" unless acc_config
+
+        EM.synchrony do
+          ex = Arke::Exchange.create(acc_config)
+          response = ex.cancel_all_orders(market)
+          logger.info { "Response: #{response.body}" }
+          EM.stop
+        end
+      end
+    end
+
+    class List < Clamp::Command
       include Arke::Helpers::Commands
       option "--config", "FILE_PATH", "Strategies config file", default: "config/strategies.yml"
       option "--market", "MARKET_ID", "market id on the target platform"
@@ -71,17 +92,37 @@ module Arke::Command
         EM.synchrony do
           ex = Arke::Exchange.create(acc_config)
           orders = ex.fetch_openorders(market)
-          orders.each do |o|
-            pp o
+          liquidity = {}
+          orders.each do |order|
+            pp order
+            market = ex.market_config(order.market)
+
+            case order.side
+            when :buy
+              c = market["quote_unit"]
+              liquidity[c] ||= 0.to_d
+              liquidity[c] += order.price * order.amount
+            when :sell
+              c = market["base_unit"]
+              liquidity[c] ||= 0.to_d
+              liquidity[c] += order.amount
+            else
+              logger.error "Unexpected order side #{order.side}"
+            end
           end
           puts "#{orders.size} orders"
+          puts 'Liquidity used:'
+          liquidity.each do |c, amount|
+            puts "#{c}: %f" % [amount]
+          end
           EM.stop
         end
       end
     end
 
-    subcommand "open", "List open orders", Open
+    subcommand "list", "List open orders", List
     subcommand "create", "Create an order", Create
     subcommand "cancel", "Cancel an order", Cancel
+    subcommand "cancel-all", "Cancel all orders", CancelAll
   end
 end

@@ -140,13 +140,49 @@ module Arke::Orderbook
       end
 
       Orderbook.new(
-        @market,
+        market,
         buy:               bids,
         sell:              asks,
         volume_bids_quote: volume_bids_quote.round(16),
         volume_asks_quote: volume_asks_quote.round(16),
         volume_bids_base:  volume_bids_base.round(16),
-        volume_asks_base:  volume_asks_base.round(16),
+        volume_asks_base:  volume_asks_base.round(16)
+      )
+    end
+
+    def adjust_volume_simple(adjusted_volume_base, adjusted_volume_quote)
+      bids_ratio = adjusted_volume_quote.to_d / volume_bids_quote.to_d
+      asks_ratio = adjusted_volume_base.to_d / volume_asks_base.to_d
+
+      asks = ::RBTree.new
+      bids = ::RBTree.new
+      adj_volume_bids_base = 0.to_d
+      adj_volume_asks_base = 0.to_d
+      adj_volume_bids_quote = 0.to_d
+      adj_volume_asks_quote = 0.to_d
+
+      self[:buy].each do |price, amount|
+        order = Arke::Order.new(@market, price, amount * bids_ratio, :buy)
+        bids[order.price] = order.amount
+        adj_volume_bids_base += order.amount
+        adj_volume_bids_quote += order.amount.to_d * order.price.to_d
+      end
+
+      self[:sell].each do |price, amount|
+        order = Arke::Order.new(@market, price, amount * asks_ratio, :sell)
+        asks[order.price] = order.amount
+        adj_volume_asks_base += order.amount
+        adj_volume_asks_quote += order.amount.to_d * order.price.to_d
+      end
+
+      ::Arke::Orderbook::Orderbook.new(
+        market,
+        buy:               bids,
+        sell:              asks,
+        volume_bids_quote: adj_volume_bids_quote,
+        volume_asks_quote: adj_volume_asks_quote,
+        volume_bids_base:  adj_volume_bids_base,
+        volume_asks_base:  adj_volume_asks_base
       )
     end
 

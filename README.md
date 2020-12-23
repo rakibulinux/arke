@@ -121,9 +121,30 @@ strategies:
 
 #### Parameters for strategies
 
+##### Simple Copy strategy
+
+The *simple-copy* strategy uses the mid-price (the middle price between the best ask and best bid of the orderbook) of a source orderbook and generate an orderbook using a predefined or custom pattern. The depth of the created orderbook is defined by the number of orders in each side with the *levels_count* parameter and the price difference between orders with the *levels_price_size* parameter.
+
+Orders amount are set according to the source orders volume of the same price level.
+
+| Field                  | Description                                                  |
+| ---------------------- | ------------------------------------------------------------ |
+| `spread_bids`          | Spread for bids side (in percentage)                         |
+| `spread_asks`          | Spread for asks side (in percentage)                         |
+| `balance_base_perc`    | Percentage of the balance to use in Asks side                |
+| `balance_quote_perc`   | Percentage of the balance to use in Bids side                |
+| `balance_perc`         | Percentage of the balance to use in both side if previous parameters are not specified |
+| `levels_price_step`    | Minimum price difference between levels                      |
+| `levels_price_func`    | Function to use for levels price step from the level, possibles values are `constant`, `linear`, `exp` |
+| `levels_count`         | Number of orders for each side                               |
+| `max_amount_per_order` | Maximum size for one order, if more liquidity is needed for one level several orders of this size will be created |
+| `shape`                | Pattern to be used to generate the orderbook, possible values are `v`, `w` and `custom` |
+| `random`               | Random factor to apply to every level, default is 0.3 for 30% |
+| `levels`               | Levels pattern to use in case of `custom` shape. (ex: `[0.1, 0.2, 1, 2, 0.1]`) |
+
 ##### Copy strategy
 
-The *Copy* strategy uses a source exchange market to create an orderbook on a target market. The depth of the created orderbook is defined by the number of orders in each side with the *levels_count* parameter and the price difference between orders with the *price_size* parameter.
+The *copy* strategy uses a source exchange market to create an orderbook on a target market. The depth of the created orderbook is defined by the number of orders in each side with the *levels_count* parameter and the price difference between orders with the *price_size* parameter.
 
 Orders amount are set according to the source orders volume of the same price level.
 
@@ -133,7 +154,7 @@ Orders amount are set according to the source orders volume of the same price le
 | `spread_asks`          | Spread for asks side (in percentage)                         |
 | `limit_asks_base`      | Sum of amounts of orders of ask side                         |
 | `limit_bids_base`      | Sum of amounts of orders of bid side                         |
-| `levels_size`          | Minimum price difference between orders                      |
+| `levels_price_step`    | Minimum price difference between levels                      |
 | `levels_count`         | Number of orders for each side                               |
 | `max_amount_per_order` | Maximum size for one order, if more liquidity is needed for one level several orders of this size will be created |
 | `side`                 | Side where orders will be created (valid: `asks`, `bids`, `both`) |

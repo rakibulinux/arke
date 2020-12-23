@@ -56,15 +56,14 @@ module Arke::Exchange
       super(ws_id)
     end
 
-    # Ping the api
-    def ping
-      @connection.get "/#{barong_route}/identity/ping"
+    def account_infos
+      get "#{@barong_route}/resource/users/me"
     end
 
     def cancel_all_orders(market)
       post(
         "#{@finex ? @finex_route : @peatio_route}/market/orders/cancel",
-        market: market.downcase
+        market: market.to_s.downcase
       )
     end
 
@@ -144,7 +143,7 @@ module Arke::Exchange
       limit = 1000
       page = 1
       loop do
-        resp = get("#{@peatio_route}/market/orders", market: market.downcase.to_s, limit: limit, page: page, state: "wait")
+        resp = get("#{@peatio_route}/market/orders", market: market.to_s.downcase, limit: limit, page: page, state: "wait")
         if resp.body.is_a?(Hash) && resp.body["errors"]
           raise resp.body["errors"].to_s
         end

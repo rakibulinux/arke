@@ -10,9 +10,7 @@ module Arke
     GRACE_TIME = 3.0
     FETCH_OPEN_ORDERS_PERIOD = 600
 
-    # * @shutdown is a flag which controls strategy execution
     def initialize(strategies_configs, accounts_configs, dry_run)
-      @shutdown = false
       @dry_run = dry_run
       @logger = Arke::Log
       init_accounts(accounts_configs)
@@ -83,6 +81,7 @@ module Arke
     def run
       EM.synchrony do
         trap("INT") { stop }
+        trap("TERM") { stop }
         # Fetch open orders if needed
         @markets.each(&:start)
 
@@ -237,12 +236,9 @@ module Arke
     end
 
     # Stops workers and strategy execution
-    # * sets @shutdown flag to +true+
-    # * broadcasts +:shutdown+ action to workers
     def stop
-      puts "Shutdown trading"
+      puts "Shutting down arke"
       EM.stop
-      @shutdown = true
     end
   end
 end
