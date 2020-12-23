@@ -56,6 +56,16 @@ module Arke
         end
       end
 
+      class Infos < Base
+        def platform_do(account)
+          puts "#{account.id}: #{account.host}".blue
+          return puts "  get account infos not supported".red unless account.respond_to?(:account_infos)
+          return puts "  secret not configured".yellow unless account.secret
+
+          pp account.account_infos.body
+        end
+      end
+
       class MarketConfig < Base
         parameter "ACCOUNT_ID", "market id on the target platform", attribute_name: :account_id
         parameter "MARKET_ID", "market id on the target platform", attribute_name: :market_id
@@ -82,6 +92,7 @@ module Arke
       subcommand "balances", "Show platforms balances", Balances
       subcommand "deposit_addresses", "Show platforms deposits addresses", DepositAddresses
       subcommand "market_config", "Show a market configuration", MarketConfig
+      subcommand "infos", "Show the account informations", Infos
     end
   end
 end

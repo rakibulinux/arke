@@ -309,12 +309,12 @@ describe Arke::Scheduler::Smart do
 
     context "low liquidity flag is not raised" do
       it "cancels orders over the bounds with very low priority" do
-        expect(action_scheduler.cancel_out_of_boundaries_orders(:sell, price_levels[:asks].last&.price_point, &proc { false })).to eq(
+        expect(action_scheduler.cancel_out_of_boundaries_orders(:sell, price_levels[:asks].last&.price_point, proc { false })).to eq(
           [
             Arke::Action.new(:order_stop, target, order: order_sell_14, priority: 1.05),
           ]
         )
-        expect(action_scheduler.cancel_out_of_boundaries_orders(:buy, price_levels[:bids].last&.price_point, &proc { false })).to eq(
+        expect(action_scheduler.cancel_out_of_boundaries_orders(:buy, price_levels[:bids].last&.price_point, proc { false })).to eq(
           [
             Arke::Action.new(:order_stop, target, order: order_buy_11, priority: 1.1),
             Arke::Action.new(:order_stop, target, order: order_buy_12, priority: 1.2),
@@ -325,12 +325,12 @@ describe Arke::Scheduler::Smart do
 
     context "low liquidity flag is raised" do
       it "cancels orders over the bounds with high priority" do
-        expect(action_scheduler.cancel_out_of_boundaries_orders(:sell, price_levels[:asks].last&.price_point, &proc { true })).to eq(
+        expect(action_scheduler.cancel_out_of_boundaries_orders(:sell, price_levels[:asks].last&.price_point, proc { true })).to eq(
           [
             Arke::Action.new(:order_stop, target, order: order_sell_14, priority: 1_000_000.05.to_d),
           ]
         )
-        expect(action_scheduler.cancel_out_of_boundaries_orders(:buy, price_levels[:bids].last&.price_point, &proc { true })).to eq(
+        expect(action_scheduler.cancel_out_of_boundaries_orders(:buy, price_levels[:bids].last&.price_point, proc { true })).to eq(
           [
             Arke::Action.new(:order_stop, target, order: order_buy_11, priority: 1_000_000.1.to_d),
             Arke::Action.new(:order_stop, target, order: order_buy_12, priority: 1_000_000.2.to_d),
@@ -486,7 +486,7 @@ describe Arke::Scheduler::Smart do
         ::Arke::PricePoint.new(20, 19.5),
         ::Arke::PricePoint.new(24, 22.5),
       ]
-      expect(action_scheduler.adjust_levels(:sell, price_points, 20, &proc { false })).to eq(
+      expect(action_scheduler.adjust_levels(:sell, price_points, 20, proc { false }, proc { false })).to eq(
         [
           ::Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22.5, 0.5, :sell), priority: 1028.571429),
           ::Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22.5, 0.5, :sell), priority: 1028.571429),

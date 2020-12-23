@@ -40,7 +40,7 @@ module Arke::Exchange
     end
 
     def cancel_all_orders(_market)
-      puts "order cancelled"
+      logger.info { "ACCOUNT:#{id} all orders cancelled" }
     end
 
     def create_order(order)

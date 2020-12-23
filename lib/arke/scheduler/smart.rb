@@ -28,7 +28,7 @@ module Arke::Scheduler
     #
     #  Scheduler tracks priorities
     #
-    # - orders at risk:               10^6 - price distance from the best price
+    # - orders at risk:               10^9 - price distance from the best price
     # - orders out boundaries:        10^6 - price distance from the best price (when low liquidity flag is raised)
     # - create orders in boundaries:  10^6 - price distance from the best price (when low levels flags is raised)
     # - orders in boundaries:         10^3 - price distance from the best price
@@ -85,19 +85,21 @@ module Arke::Scheduler
       actions
     end
 
-    def cancel_out_of_boundaries_orders(side, last_level_price, &high_liquidity)
+    def cancel_out_of_boundaries_orders(side, last_level_price, high_liquidity)
       return [] if last_level_price.nil?
+
+      hl = high_liquidity.call()
+      logger.warn { "High liquidity flag raised on side #{side} (cancel_out_of_boundaries_orders)" } if hl
 
       actions = []
       @current_ob[side].each do |price, orders|
         orders.each do |_id, order|
           next unless better(side, last_level_price, price)
-          logger.warn { "High liquidity flag raised on side #{side}" } if high_liquidity.call()
 
           priority = (price - last_level_price).abs
-          priority = high_liquidity.call() ? track_fast(priority) : track_low(priority)
+          priority = hl ? track_fast(priority) : track_low(priority)
           action = ::Arke::Action.new(:order_stop, @target, order: order, priority: priority)
-          fast_track_liquidity_accounting(action) if high_liquidity.call()
+          fast_track_liquidity_accounting(action) if hl
           actions.push(action)
         end
       end
@@ -116,13 +118,18 @@ module Arke::Scheduler
       "ID:#{@target&.id}"
     end
 
-    def adjust_levels(side, price_levels, desired_best_price, &low_liquidity)
+    def adjust_levels(side, price_levels, desired_best_price, low_liquidity, high_liquidity)
       actions = []
       current = @current_ob.group_by_level(side, price_levels)
       desired = @desired_ob.group_by_level(side, price_levels)
-      logger.debug { "#{prefix} #{side} price_levels: #{price_levels.inspect}" }
-      logger.debug { "#{prefix} #{side} current: #{current.inspect}" }
-      logger.debug { "#{prefix} #{side} desired: #{desired.inspect}" }
+      side_s = side == :buy ? "buy ".green : "sell".red
+      logger.debug { "#{prefix} #{side_s} price_levels: #{price_levels.inspect}" }
+      logger.debug { "#{prefix} #{side_s} current: #{current.inspect}" }
+      logger.debug { "#{prefix} #{side_s} desired: #{desired.inspect}" }
+      hl = high_liquidity.call()
+      ll = low_liquidity.call()
+      logger.warn { "High liquidity flag raised on side #{side} (adjust_levels)" } if hl
+      logger.warn { "Low liquidity flag raised on side #{side} (adjust_levels)" } if ll
 
       price_levels.each_with_index do |price_point, i|
         raise "PricePoint expected, got #{price_point.class}" unless price_point.is_a?(::Arke::PricePoint)
@@ -131,38 +138,45 @@ module Arke::Scheduler
         desired_amount = desired[i] ? desired[i][:orders].sum : 0
         diff_amount = desired_amount - current_amount
         diff_percent = desired_amount.zero? ? 1000 : diff_amount.abs.to_d / desired_amount.to_d
-
+        price = price_point.price
         if diff_percent <= ADJUST_LEVEL_AMOUNT_RATIO
-          logger.info { "#{prefix} L%02.0f #{side} wants:%0.6f now:%0.6f diff:%0.0f%% (SKIPPED)" % [i + 1, desired_amount, current_amount, diff_percent * 100] }
+          logger.info { "#{prefix} L%02.0f #{side_s} price:%0.6f vol:%0.6f now:%0.6f diff:%0.0f%% (SKIPPED)" % [i + 1, price, desired_amount, current_amount, diff_percent * 100] }
           next
         else
-          logger.info { "#{prefix} L%02.0f #{side} wants:%0.6f now:%0.6f diff:%0.0f%%" % [i + 1, desired_amount, current_amount, diff_percent * 100] }
+          logger.info { "#{prefix} L%02.0f #{side_s} price:%.6f vol:%0.6f now:%0.6f diff:%0.0f%%" % [i + 1, price, desired_amount, current_amount, diff_percent * 100] }
         end
+
+        # if side == :buy && i+1 == 12
+        #   require 'byebug'
+        #   byebug
+        # end
 
         # CANCEL ORDERS
         if diff_amount.negative?
           current[i][:orders].sort_by(&:amount).each do |order|
             diff_amount += order.amount.to_d
             priority = 100.to_d / (1.to_d + (desired_best_price.to_d - order.price).abs)
-            priority = track_normal(priority)
-            actions.push(::Arke::Action.new(:order_stop, @target, order: order, priority: priority))
+            priority = hl ? track_fast(priority) : track_normal(priority)
+            action = ::Arke::Action.new(:order_stop, @target, order: order, priority: priority)
+            fast_track_liquidity_accounting(action) if hl
+            actions.push(action)
             break if diff_amount >= 0
           end
           next
         end
 
-        logger.warn { "#{prefix} Low liquidity flag raised on side #{side}" } if low_liquidity.call()
+        logger.warn { "#{prefix} Low liquidity flag raised on side #{side}" } if ll
 
         # CREATE ORDERS
         while diff_amount.positive?
           amount = @max_amount_per_order ? [diff_amount, @max_amount_per_order].min : diff_amount
           price = price_point.weighted_price || desired[i][:price]
           priority = 100.to_d / (1.to_d + (desired_best_price - price).abs)
-          priority = low_liquidity.call() ? track_fast(priority) : track_normal(priority)
+          priority = ll ? track_fast(priority) : track_normal(priority)
           diff_amount -= amount
           order = ::Arke::Order.new(@market, price, amount, side)
           action = ::Arke::Action.new(:order_create, @target, order: order, priority: priority)
-          fast_track_liquidity_accounting(action) if low_liquidity.call()
+          fast_track_liquidity_accounting(action) if ll
           actions.push(action)
           break if diff_amount <= 0
         end
@@ -224,14 +238,13 @@ module Arke::Scheduler
       list = []
       list += cancel_risky_orders(:sell, desired_best_sell)
       list += cancel_risky_orders(:buy, desired_best_buy)
-      list += adjust_levels(:sell, @price_levels[:asks], desired_best_sell, &proc { low_liquidity_sell_flag })
-      list += adjust_levels(:buy,  @price_levels[:bids], desired_best_buy, &proc { low_liquidity_buy_flag })
-      list += cancel_out_of_boundaries_orders(:buy,  @price_levels[:bids].last&.price_point, &proc { high_liquidity_buy_flag })
-      list += cancel_out_of_boundaries_orders(:sell, @price_levels[:asks].last&.price_point, &proc { high_liquidity_sell_flag })
+      list += adjust_levels(:sell, @price_levels[:asks], desired_best_sell, proc { low_liquidity_sell_flag }, proc { high_liquidity_buy_flag })
+      list += adjust_levels(:buy,  @price_levels[:bids], desired_best_buy, proc { low_liquidity_buy_flag }, proc { high_liquidity_sell_flag })
+      list += cancel_out_of_boundaries_orders(:buy,  @price_levels[:bids].last&.price_point, proc { high_liquidity_buy_flag })
+      list += cancel_out_of_boundaries_orders(:sell, @price_levels[:asks].last&.price_point, proc { high_liquidity_sell_flag })
       list = list.sort_by(&:priority).reverse
       logger.warn { "#{prefix} SmartScheduler: accounting fast track bids: #{@fast_track_liquidity_bids}" }
       logger.warn { "#{prefix} SmartScheduler: accounting fast track asks: #{@fast_track_liquidity_asks}" }
-      logger.debug { "#{prefix} SmartScheduler: returned actions: #{list}" }
       list
     end
   end
