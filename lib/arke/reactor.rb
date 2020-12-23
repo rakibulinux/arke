@@ -22,11 +22,15 @@ module Arke
       logger.fatal "ID:#{id} Strategy stopped"
     end
 
+    def get_market_id(market)
+      market["id"] || market["name"]
+    end
+
     def init_accounts(accounts_configs)
       @accounts = {}
       @markets = []
       accounts_configs.each do |config|
-        account = @accounts[config["id"]] = Arke::Exchange.create(config)
+        account = @accounts[get_market_id(config)] = Arke::Exchange.create(config)
         executor = ActionExecutor.new(account, purge_on_push: true)
         account.executor = executor
       end
@@ -36,10 +40,6 @@ module Arke
       return nil unless config
 
       market_id = config["market_id"]
-      if market_id.nil? && config["market"]&.key?("id")
-        market_id = config["market"]["id"]
-        logger.warn "market:id in configuration will be deprecated in favor of market_id"
-      end
       @markets << Market.new(market_id, get_account(config["account_id"]), mode)
       @markets.last
     end
