@@ -9,6 +9,7 @@ module Arke
     # * takes +config+ and resolves correct Exchange class with +exchange_class+ helper
     def self.create(config)
       raise "driver is missing for account id #{config["id"]}" if config["driver"].to_s.empty?
+      config["params"] ||= {}
       exchange_class(config["driver"]).new(config)
     end
 
