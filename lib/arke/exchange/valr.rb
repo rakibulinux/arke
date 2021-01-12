@@ -103,13 +103,13 @@ module Arke::Exchange
     def create_order(order)
       params = if order.type == "market"
                  {
-                   market:     order.market.upcase,
+                   pair:     order.market.upcase,
                    side:       order.side.to_s.upcase,
                    baseAmount: "%f" % order.amount
                  }
                else
                  {
-                   market:   order.market.upcase,
+                   pair:   order.market.upcase,
                    side:     order.side.to_s.upcase,
                    quantity: "%f" % order.amount,
                    price:    "%f" % order.price,

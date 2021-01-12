@@ -10,7 +10,7 @@ describe Arke::Exchange::Valr do
     }
   end
   let(:market_id) { "ethusd" }
-  let(:market) { Arke::Market.new(market_id, valr) }
+  let(:pair) { Arke::Market.new(market_id, valr) }
   let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
   let(:valr) { Arke::Exchange::Valr.new(exchange_config) }
 
@@ -169,12 +169,12 @@ describe Arke::Exchange::Valr do
       it "creates a limit order" do
         stub_request(:post, "https://api.valr.com/v1/orders/limit")
           .with(
-            body:    "{\"market\":\"ETHZAR\",\"side\":\"SELL\",\"quantity\":\"0.074650\",\"price\":\"150000.000000\"}",
+            body:    "{\"pair\":\"ETHZAR\",\"side\":\"SELL\",\"quantity\":\"0.074650\",\"price\":\"150000.000000\"}",
             headers: {
               "Accept"           => "application/json",
               "User-Agent"       => "Faraday v0.15.4",
               "X-Valr-Api-Key"   => "abcdef",
-              "X-Valr-Signature" => "0a77882b85ff31d17d931b64e48069446c2bbf75a13671d38b3f9e66df48d5c4cc8a4db7cd18c65f1af86f7001ed7633abe0ec45c994ca6fca1ddb069d16d783",
+              "X-Valr-Signature" => "21d0e13adb241f9cb303eff248db3f5c60ad9d0d78afbdde50969a57ecc5f90105b7af974b89aa1dbff5f9eb4bf0b9b4bea04ca2149ad29724afa1f8f2215a2a",
               "X-Valr-Timestamp" => "1576353032322571"
             }
           )
@@ -193,12 +193,12 @@ describe Arke::Exchange::Valr do
       it "creates a market order sell" do
         stub_request(:post, "https://api.valr.com/v1/orders/market")
           .with(
-            body:    "{\"market\":\"ETHZAR\",\"side\":\"SELL\",\"baseAmount\":\"0.074650\"}",
+            body:    "{\"pair\":\"ETHZAR\",\"side\":\"SELL\",\"baseAmount\":\"0.074650\"}",
             headers: {
               "Accept"           => "application/json",
               "User-Agent"       => "Faraday v0.15.4",
               "X-Valr-Api-Key"   => "abcdef",
-              "X-Valr-Signature" => "846ae977cd75d45aceb5570eb8090ef2dc17c0ac0b71954680c7e3dd29fb2cf3e9903d0f3f7a5e2c94a3a3c8e59626ae90a7824e928840802a7245feae277600",
+              "X-Valr-Signature" => "44a425a387709023ee8f843b84d5d7c3cc7b90792c50f47c56ce6f2c27de8786821917cceddc787502c1630ce5007f54b67df722be12a84a958610c5fc94c896",
               "X-Valr-Timestamp" => "1576353032322571"
             }
           )
@@ -216,12 +216,12 @@ describe Arke::Exchange::Valr do
       it "creates a market order buy" do
         stub_request(:post, "https://api.valr.com/v1/orders/market")
           .with(
-            body:    "{\"market\":\"ETHZAR\",\"side\":\"BUY\",\"baseAmount\":\"0.074650\"}",
+            body:    "{\"pair\":\"ETHZAR\",\"side\":\"BUY\",\"baseAmount\":\"0.074650\"}",
             headers: {
               "Accept"           => "application/json",
               "User-Agent"       => "Faraday v0.15.4",
               "X-Valr-Api-Key"   => "abcdef",
-              "X-Valr-Signature" => "9d1a0f556f7517f97b4ea364f8ec77e0ac2b51c3832f2dfb0680cb1b2ad700841273f1059182ac3d77e415c31591114bafcb7035c1482bef376c64dd68b8eb80",
+              "X-Valr-Signature" => "8b331540b0fc79b57f903291cc2898f3851ba3824a6cb6e96e0b3db0c87637c6889ce1bbbbff97e3bc40ee802f3127ea63882ca9ee1c5ac1b6ac5c371c12e669",
               "X-Valr-Timestamp" => "1576353032322571"
             }
           )
