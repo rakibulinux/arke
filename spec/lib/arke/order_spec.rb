@@ -7,6 +7,7 @@ describe Arke::Order do
   let(:order4) { Arke::Order.new("ethusd", 2, 1, :buy) }
   let(:order5) { Arke::Order.new("ethusd", 1, 2, :buy) }
   let(:order6) { Arke::Order.new("ethusd", 1, 1, :sell) }
+  let(:order7) { Arke::Order.new("ethusd", 1, 1, :buy, "market") }
 
   it "supports comparison" do
     expect(order1).to eq(order2)
@@ -14,6 +15,7 @@ describe Arke::Order do
     expect(order1).to_not eq(order4)
     expect(order1).to_not eq(order5)
     expect(order1).to_not eq(order6)
+    expect(order1).to_not eq(order7)
   end
 
   context "apply_precision" do

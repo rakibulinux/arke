@@ -75,7 +75,7 @@ describe Arke::ActionExecutor do
       expect(account).to receive(:create_order).with(order_sell2)
       EM.synchrony do
         action_executor.start
-        EM::Synchrony.add_timer(0.05) { EM.stop }
+        EM::Synchrony.add_timer(0.5) { EM.stop }
       end
     end
   end

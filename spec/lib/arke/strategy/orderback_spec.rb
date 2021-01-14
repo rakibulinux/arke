@@ -12,6 +12,7 @@ describe Arke::Strategy::Orderback do
   let(:limit_asks_base) { 1.0 }
   let(:limit_bids_base) { 1.5 }
   let(:orderback_grace_time) { nil }
+  let(:orderback_type) { nil }
   let(:enable_orderback) { "true" }
   let(:fx_config) { nil }
 
@@ -30,6 +31,7 @@ describe Arke::Strategy::Orderback do
         "side"                  => side,
         "min_order_back_amount" => 0.001,
         "orderback_grace_time"  => orderback_grace_time,
+        "orderback_type"        => orderback_type,
         "enable_orderback"      => enable_orderback,
       },
       "fx"      => fx_config,
@@ -198,7 +200,7 @@ describe Arke::Strategy::Orderback do
       trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 139.45, 69.725, 14)
       source.account.executor = double(:executor)
 
-      orderb = ::Arke::Order.new("xbtusd", 138.069306, 0.5, :buy, "limit")
+      orderb = ::Arke::Order.new("xbtusd", 138.069306, 0.5, :buy, "market")
       actions = [
         ::Arke::Action.new(:order_create, source, order: orderb)
       ]
@@ -215,7 +217,7 @@ describe Arke::Strategy::Orderback do
       trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 98, 49, 14)
       source.account.executor = double(:executor)
 
-      orderb = ::Arke::Order.new("xbtusd", 100, 0.5, :sell, "limit")
+      orderb = ::Arke::Order.new("xbtusd", 100, 0.5, :sell, "market")
       actions = [
         ::Arke::Action.new(:order_create, source, order: orderb)
       ]
@@ -237,7 +239,7 @@ describe Arke::Strategy::Orderback do
       trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 139.45, nil, 14)
       trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 139.45, nil, 14)
 
-      orderb = ::Arke::Order.new("xbtusd", 138.069306, 0.6, :buy, "limit")
+      orderb = ::Arke::Order.new("xbtusd", 138.069306, 0.6, :buy, "market")
       actions = [
         ::Arke::Action.new(:order_create, source, order: orderb)
       ]
@@ -265,8 +267,8 @@ describe Arke::Strategy::Orderback do
       trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 139.45, nil, 14)
       trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 140.00, nil, 15)
 
-      orderb1 = ::Arke::Order.new("xbtusd", 138.069306, 0.3, :buy, "limit")
-      orderb2 = ::Arke::Order.new("xbtusd", 138.613861, 0.3, :buy, "limit")
+      orderb1 = ::Arke::Order.new("xbtusd", 138.069306, 0.3, :buy, "market")
+      orderb2 = ::Arke::Order.new("xbtusd", 138.613861, 0.3, :buy, "market")
       actions = [
         ::Arke::Action.new(:order_create, source, order: orderb1),
         ::Arke::Action.new(:order_create, source, order: orderb2)
@@ -295,7 +297,7 @@ describe Arke::Strategy::Orderback do
       trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 139.45, nil, 14)
       trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 139.45, nil, 15)
 
-      orderb = ::Arke::Order.new("xbtusd", 138.069306, 0.6, :buy, "limit")
+      orderb = ::Arke::Order.new("xbtusd", 138.069306, 0.6, :buy, "market")
       actions = [
         ::Arke::Action.new(:order_create, source, order: orderb)
       ]
@@ -335,7 +337,7 @@ describe Arke::Strategy::Orderback do
         trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 101, 50.50, 14)
         source.account.executor = double(:executor)
 
-        orderb = ::Arke::Order.new("xbtusd", 200, 0.5, :buy, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 200, 0.5, :buy, "market")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
@@ -352,7 +354,7 @@ describe Arke::Strategy::Orderback do
         trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 98, 49, 14)
         source.account.executor = double(:executor)
 
-        orderb = ::Arke::Order.new("xbtusd", 200, 0.5, :sell, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 200, 0.5, :sell, "market")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
@@ -373,7 +375,7 @@ describe Arke::Strategy::Orderback do
         trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 102, 51, 14)
         source.account.executor = double(:executor)
 
-        orderb = ::Arke::Order.new("xbtusd", 200, 0.5, :buy, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 200, 0.5, :buy, "market")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
@@ -395,7 +397,7 @@ describe Arke::Strategy::Orderback do
         trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 101, nil, 14)
         trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 101, nil, 14)
 
-        orderb = ::Arke::Order.new("xbtusd", 200, 0.6, :buy, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 200, 0.6, :buy, "market")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
@@ -423,8 +425,8 @@ describe Arke::Strategy::Orderback do
         trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 101, nil, 14)
         trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 106.05, nil, 15)
 
-        orderb1 = ::Arke::Order.new("xbtusd", 200, 0.3, :buy, "limit")
-        orderb2 = ::Arke::Order.new("xbtusd", 210, 0.3, :buy, "limit")
+        orderb1 = ::Arke::Order.new("xbtusd", 200, 0.3, :buy, "market")
+        orderb2 = ::Arke::Order.new("xbtusd", 210, 0.3, :buy, "market")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb1),
           ::Arke::Action.new(:order_create, source, order: orderb2)
@@ -453,7 +455,7 @@ describe Arke::Strategy::Orderback do
         trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 101, nil, 14)
         trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 101, nil, 15)
 
-        orderb = ::Arke::Order.new("xbtusd", 200, 0.6, :buy, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 200, 0.6, :buy, "market")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
@@ -481,7 +483,7 @@ describe Arke::Strategy::Orderback do
         trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 102, nil, 14)
         trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 101, nil, 15)
 
-        orderb = ::Arke::Order.new("xbtusd", 200, 0.6, :buy, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 200, 0.6, :buy, "market")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
@@ -509,7 +511,7 @@ describe Arke::Strategy::Orderback do
         trade2 = ::Arke::Trade.new(43, "BTCUSD", nil, 0.2, 102, nil, 14)
         trade3 = ::Arke::Trade.new(44, "BTCUSD", nil, 0.3, 101, nil, 15)
 
-        orderb = ::Arke::Order.new("xbtusd", 2000, 0.6, :buy, "limit")
+        orderb = ::Arke::Order.new("xbtusd", 2000, 0.6, :buy, "market")
         actions = [
           ::Arke::Action.new(:order_create, source, order: orderb)
         ]
@@ -525,6 +527,53 @@ describe Arke::Strategy::Orderback do
           EM::Synchrony.add_timer(0.5) { strategy.fx.instance_variable_set(:@rate, 0.05) }
           EM::Synchrony.add_timer(1.1) { EM.stop }
         end
+      end
+    end
+  end
+
+  context "orderback_type" do
+    let(:orderback_grace_time) { 0.002 }
+
+    def validate_orderback_type(type)
+      order = ::Arke::Order.new("BTCUSD", 139.45, 1, :sell, "limit", 14)
+      target.add_order(order)
+      trade = ::Arke::Trade.new(42, "BTCUSD", nil, 0.5, 139.45, 69.725, 14)
+      source.account.executor = double(:executor)
+
+      orderb = ::Arke::Order.new("xbtusd", 138.069306, 0.5, :buy, type)
+      actions = [
+        ::Arke::Action.new(:order_create, source, order: orderb)
+      ]
+      expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
+      EM.synchrony do
+        strategy.notify_private_trade(trade)
+        EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
+      end
+    end
+
+    it "triggers a buy back with `market` order type as default to the source market" do
+      validate_orderback_type("market")
+    end
+
+    context "orderback_type: limit" do
+      let!(:strategy) { Arke::Strategy::Orderback.new([source], target, config.merge("params" => config["params"].merge("orderback_type" => "limit")), nil) }
+
+      it "triggers a buy back with `limit` order type to the source market" do
+        validate_orderback_type("limit")
+      end
+    end
+
+    context "orderback_type: market" do
+      let!(:strategy) { Arke::Strategy::Orderback.new([source], target, config.merge("params" => config["params"].merge("orderback_type" => "market")), nil) }
+
+      it "triggers a buy back with `market` order type to the source market" do
+        validate_orderback_type("market")
+      end
+    end
+
+    context "orderback_type: invalid" do
+      it "should have the RuntimeError: orderback_type must be `limit` or `market`" do
+        expect { Arke::Strategy::Orderback.new([source], target, config.merge("params" => config["params"].merge("orderback_type" => "invalid")), nil) }.to raise_error(RuntimeError, /orderback_type must be `limit` or `market`/)
       end
     end
   end

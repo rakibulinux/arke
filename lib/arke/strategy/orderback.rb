@@ -14,6 +14,7 @@ module Arke::Strategy
     attr_reader :limit_bids_base
 
     DEFAULT_ORDERBACK_GRACE_TIME = 1.0
+    DEFAULT_ORDERBACK_TYPE = "market"
 
     def initialize(sources, target, config, reactor)
       super
@@ -31,9 +32,11 @@ module Arke::Strategy
       @enable_orderback = params["enable_orderback"] ? true : false
       @min_order_back_amount = params["min_order_back_amount"].to_f
       @orderback_grace_time = params["orderback_grace_time"]&.to_f || DEFAULT_ORDERBACK_GRACE_TIME
+      @orderback_type = params["orderback_type"] || DEFAULT_ORDERBACK_TYPE
       logger.info "Initializing #{self.class} strategy with order_back #{@enable_orderback ? 'enabled' : 'disabled'}"
       logger.info "- min order back amount: #{@min_order_back_amount}"
       logger.info "- orderback_grace_time: #{@orderback_grace_time}"
+      logger.info "- orderback_type: #{@orderback_type}"
       sources.each {|s| s.apply_flags(FETCH_PRIVATE_BALANCE) }
       register_callbacks
       check_config
@@ -48,6 +51,7 @@ module Arke::Strategy
       raise "limit_asks_base must be higher than zero" if limit_asks_base <= 0
       raise "limit_bids_base must be higher than zero" if limit_bids_base <= 0
       raise "side must be asks, bids or both" if !@side_asks && !@side_bids
+      raise "orderback_type must be `limit` or `market`" unless %w[limit market].include?(@orderback_type)
     end
 
     def register_callbacks
@@ -63,7 +67,7 @@ module Arke::Strategy
     end
 
     def notify_private_trade_with_trust(trade)
-      order = Arke::Order.new(trade.market, trade.price, trade.volume, trade.type)
+      order = Arke::Order.new(trade.market, trade.price, trade.volume, trade.type, @orderback_type)
       order_back(trade, order)
     end
 
@@ -118,7 +122,7 @@ module Arke::Strategy
         orders = []
         actions = []
         grouped_trades.each do |k, v|
-          order = Arke::Order.new(source.id, k[0].to_f, v, k[1].to_sym)
+          order = Arke::Order.new(source.id, k[0].to_f, v, k[1].to_sym, @orderback_type)
           if order.amount > @min_order_back_amount
             order.apply_requirements(source.account)
             logger.info { "ID:#{id} Pushing order back #{order} (min order back amount: #{@min_order_back_amount})".magenta }

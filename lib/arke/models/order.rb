@@ -27,7 +27,8 @@ module Arke
       order.market == market && \
       order.price == price && \
       order.amount == amount && \
-      order.side == side
+      order.side == side && \
+      order.type.to_s == type.to_s
     end
 
     #
