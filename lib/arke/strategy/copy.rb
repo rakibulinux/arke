@@ -20,8 +20,14 @@ module Arke::Strategy
       @levels_count = params["levels_count"].to_i
       @spread_bids = params["spread_bids"].to_d
       @spread_asks = params["spread_asks"].to_d
+
+      # Either
       @limit_asks_base = params["limit_asks_base"].to_d
       @limit_bids_base = params["limit_bids_base"].to_d
+      # Or
+      @limit_asks_balance_perc = params["limit_asks_balance_perc"].to_d
+      @limit_bids_balance_perc = params["limit_bids_balance_perc"].to_d
+
       @side_asks = %w[asks both].include?(@side)
       @side_bids = %w[bids both].include?(@side)
       check_config
@@ -32,6 +38,8 @@ module Arke::Strategy
       raise "levels_count must be minimum 1" if @levels_count.nil? || @levels_count < 1
       raise "spread_bids must be higher than zero" if @spread_bids.negative?
       raise "spread_asks must be higher than zero" if @spread_asks.negative?
+
+      # TODO: check accordingly that either limit_asks_base or limit_asks_balance_perc is setup (same of bids)
       raise "limit_asks_base must be higher than zero" if limit_asks_base <= 0
       raise "limit_bids_base must be higher than zero" if limit_bids_base <= 0
       raise "side must be asks, bids or both" if !@side_asks && !@side_bids
@@ -57,6 +65,7 @@ module Arke::Strategy
 
       target_base_total = target.account.balance(target.base)["total"]
 
+      # TODO: document the logic here
       if target_base_total < limit_asks_base
         limit_asks_base_applied = target_base_total
         logger.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower than the limit set to #{@limit_asks_base}")
@@ -64,10 +73,15 @@ module Arke::Strategy
         limit_asks_base_applied = limit_asks_base
       end
 
+      # TODO: 1. calculate the percentage of the balance to use
+      # TODO: 2. pass the right params to the adjust_volume method
+
+      # SUGGESTION: estimate the limit_bids_base amount using the mid price, limit_bids_base = (limit_bids_balance_perc * target_bids_balance) / mid_price
+
       ob_adjusted = ob.adjust_volume(
-        limit_bids_base,
+        limit_bids_base, # here I would put the estimation below (this is the problematic one because the amount of quote depends on the price)
         limit_asks_base_applied,
-        limit_bids_quote,
+        limit_bids_quote, # here I would put (limit_bids_balance_perc * target_bids_balance)
         limit_asks_quote
       )
       ob_spread = ob_adjusted.spread(@spread_bids, @spread_asks)
