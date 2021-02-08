@@ -148,16 +148,18 @@ The *copy* strategy uses a source exchange market to create an orderbook on a ta
 
 Orders amount are set according to the source orders volume of the same price level.
 
-| Field                  | Description                                                  |
-| ---------------------- | ------------------------------------------------------------ |
-| `spread_bids`          | Spread for bids side (in percentage)                         |
-| `spread_asks`          | Spread for asks side (in percentage)                         |
-| `limit_asks_base`      | Sum of amounts of orders of ask side                         |
-| `limit_bids_base`      | Sum of amounts of orders of bid side                         |
-| `levels_price_step`    | Minimum price difference between levels                      |
-| `levels_count`         | Number of orders for each side                               |
-| `max_amount_per_order` | Maximum size for one order, if more liquidity is needed for one level several orders of this size will be created |
-| `side`                 | Side where orders will be created (valid: `asks`, `bids`, `both`) |
+| Field                       | Description                                                                     |
+| --------------------------- | ------------------------------------------------------------------------------- |
+| `spread_bids`               | Spread for bids side (in percentage)                                            |
+| `spread_asks`               | Spread for asks side (in percentage)                                            |
+| `limit_asks_base`           | Sum of amounts of orders of ask side                                            |
+| `limit_bids_base`           | Sum of amounts of orders of bid side                                            |
+| `balance_base_perc`         | Ratio for sum of amounts of orders of ask side based on base currency balance   |
+| `balance_quote_perc`        | Ratio for sum of amounts of orders of bid side based on quote currency balance  |
+| `levels_price_step`         | Minimum price difference between levels                                         |
+| `levels_count`              | Number of orders for each side                                                  |
+| `max_amount_per_order`      | Maximum size for one order, if more liquidity is needed for one level several orders of this size will be created |
+| `side`                      | Side where orders will be created (valid: `asks`, `bids`, `both`)               |
 
 
 

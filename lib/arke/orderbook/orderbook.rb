@@ -88,7 +88,7 @@ module Arke::Orderbook
       )
     end
 
-    # TODO: document the usage of this method (check the specs)
+    # Limit the total orderbook amount to not exceed limit_bids_quote and limit_asks_quote
     def adjust_volume(limit_bids_base, limit_asks_base, limit_bids_quote=nil, limit_asks_quote=nil)
       if limit_bids_base && (limit_bids_base < @volume_bids_base)
         volume_bids_base = 0.0
