@@ -18,12 +18,12 @@ module Arke::Strategy
       @levels_count = params["levels_count"].to_i
       @spread_bids = params["spread_bids"].to_d
       @spread_asks = params["spread_asks"].to_d
-      @limit_asks_base = params["limit_asks_base"].to_d
-      @limit_bids_base = params["limit_bids_base"].to_d
+      @limit_asks_base = params["limit_asks_base"]&.to_d
+      @limit_bids_base = params["limit_bids_base"]&.to_d
       @limit_asks_base_applied = @limit_asks_base
       @limit_bids_base_applied = @limit_bids_base
-      @balance_base_perc = params["balance_base_perc"].to_d
-      @balance_quote_perc = params["balance_quote_perc"].to_d
+      @balance_base_perc = params["balance_base_perc"]&.to_d
+      @balance_quote_perc = params["balance_quote_perc"]&.to_d
       @side_asks = %w[asks both].include?(@side)
       @side_bids = %w[bids both].include?(@side)
       check_config(params)
@@ -35,12 +35,12 @@ module Arke::Strategy
       raise "levels_count must be minimum 1" if @levels_count.nil? || @levels_count < 1
       raise "spread_bids must be higher than zero" if @spread_bids.negative?
       raise "spread_asks must be higher than zero" if @spread_asks.negative?
-      raise "limit_asks_base or balance_base_perc must be specified" unless params.key?("limit_asks_base") || params.key?("balance_base_perc")
-      raise "limit_asks_base must be higher than zero" if params.key?("limit_asks_base") && @limit_asks_base <= 0
-      raise "balance_base_perc must be higher than 0 to 1" if params.key?("balance_base_perc") && (@balance_base_perc <= 0 || @balance_base_perc > 1)
-      raise "limit_bids_base or balance_quote_perc must be specified" unless params.key?("limit_bids_base") || params.key?("balance_quote_perc")
-      raise "limit_bids_base must be higher than zero" if params.key?("limit_bids_base") && @limit_bids_base <= 0
-      raise "balance_quote_perc must be higher than 0 to 1" if params.key?("balance_quote_perc") && (@balance_quote_perc <= 0 || @balance_quote_perc > 1)
+      raise "limit_asks_base or balance_base_perc must be specified" if @limit_asks_base.nil? && @balance_base_perc.nil?
+      raise "limit_asks_base must be higher than zero" if !@limit_asks_base.nil? && @limit_asks_base <= 0
+      raise "balance_base_perc must be higher than 0 to 1" if !@balance_base_perc.nil? && (@balance_base_perc <= 0 || @balance_base_perc > 1)
+      raise "limit_bids_base or balance_quote_perc must be specified" if @limit_bids_base.nil? && @balance_quote_perc.nil?
+      raise "limit_bids_base must be higher than zero" if !@limit_bids_base.nil? && @limit_bids_base <= 0
+      raise "balance_quote_perc must be higher than 0 to 1" if !@balance_quote_perc.nil? && (@balance_quote_perc <= 0 || @balance_quote_perc > 1)
       raise "side must be asks, bids or both" if !@side_asks && !@side_bids
     end
 
@@ -85,13 +85,13 @@ module Arke::Strategy
       limit_bids_base_applied = @limit_bids_base
 
       # Adjust bids/asks limit by balance ratio.
-      if @balance_quote_perc > 0
+      if !@balance_quote_perc.nil? && @balance_quote_perc > 0
         limit_bids_quote = quote_balance * @balance_quote_perc
-        limit_bids_base_applied = limit_bids_quote / mid_price if @limit_bids_base == 0 
+        limit_bids_base_applied = limit_bids_quote / mid_price if @limit_bids_base.nil?
       end
-      if @balance_base_perc > 0
+      if !@balance_base_perc.nil? && @balance_base_perc > 0
         target_base_total = base_balance * @balance_base_perc
-        limit_asks_base_applied = target_base_total if @limit_asks_base == 0 
+        limit_asks_base_applied = target_base_total if @limit_asks_base.nil?
       end
 
       # Adjust bids/asks limit if it exeeded the target (balance).
