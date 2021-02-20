@@ -146,11 +146,6 @@ module Arke::Scheduler
           logger.info { "#{prefix} L%02.0f #{side_s} price:%.6f vol:%0.6f now:%0.6f diff:%0.0f%%" % [i + 1, price, desired_amount, current_amount, diff_percent * 100] }
         end
 
-        # if side == :buy && i+1 == 12
-        #   require 'byebug'
-        #   byebug
-        # end
-
         # CANCEL ORDERS
         if diff_amount.negative?
           current[i][:orders].sort_by(&:amount).each do |order|

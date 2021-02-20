@@ -14,10 +14,9 @@ accounts:
   driver: bitfaker
   delay: 1
 
-
 - id: bitfaker-target
   driver: bitfaker
-  delay: 1
+  delay: [0.8, 1, 3]
   key: anything
   secret: 42
   orderbook: [1,[]]
@@ -37,10 +36,11 @@ strategies:
   type: copy
   enabled: true
   period: 30
+  delay: [0.3, 0.7, 1.3]
   params:
     limit_asks_base: 100
     limit_bids_base: 100
-    max_amount_per_order: 0.5
+    max_amount_per_order: 10
     levels_price_step: 5
     levels_size: 1
     levels_price_func: linear

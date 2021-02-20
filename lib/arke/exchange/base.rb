@@ -21,7 +21,7 @@ module Arke::Exchange
       @api_key = opts["key"]
       @secret = opts["secret"]
       @id = opts["id"]
-      @delay = (opts["delay"] || DEFAULT_DELAY).to_f
+      @delay = Array(opts["delay"] || DEFAULT_DELAY).map(&:to_d)
       @markets_to_listen = opts["markets"] || []
       @adapter = opts[:faraday_adapter] || :em_synchrony
       @opts = opts

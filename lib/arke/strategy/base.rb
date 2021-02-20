@@ -6,7 +6,7 @@ module Arke::Strategy
     attr_accessor :timer
     attr_accessor :fx
     attr_reader :debug_infos, :period, :period_random_delay, :linked_strategy_id
-    attr_reader :sources, :target, :id, :debug, :logger
+    attr_reader :sources, :target, :id, :debug, :logger, :delay
     attr_reader :max_amount_per_order
 
     SIDES = %w[asks bids both].freeze
@@ -20,6 +20,7 @@ module Arke::Strategy
       @debug_infos = {}
       @period = (config["period"] || DEFAULT_PERIOD).to_f
       @period_random_delay = config["period_random_delay"].to_f
+      @delay = Array(config["delay"] || target.account.delay)
       params = @config["params"] || {}
       @linked_strategy_id = params["linked_strategy_id"]
       @side = SIDES.include?(params["side"]) ? params["side"] : "both"

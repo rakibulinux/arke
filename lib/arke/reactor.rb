@@ -90,7 +90,7 @@ module Arke
           account.ws_connect_private if account.flag?(WS_PRIVATE)
         end
 
-        # Setup fetching balance
+        # Setup balance fetcher
         update_balances
         Fiber.new do
           EM::Synchrony.add_periodic_timer(23) { update_balances }
@@ -98,7 +98,7 @@ module Arke
 
         # Initialize executors & fx classes
         @strategies.each do |strategy|
-          strategy.target.account.executor.create_queue(strategy.id)
+          strategy.target.account.executor.create_queue(strategy.id, strategy.delay)
           strategy.sources.each do |source|
             source.account.executor.create_queue(strategy.id)
           end
