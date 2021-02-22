@@ -115,6 +115,10 @@ module Arke::Exchange
                    price:    "%f" % order.price,
                  }
                end
+      if order.type == "post_only"
+        params[:postOnly] = true
+        order.type == "limit"
+      end
       response = authenticated_post("/v1/orders/#{order.type}", params: params)
 
       if response.status >= 300

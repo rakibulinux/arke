@@ -221,14 +221,21 @@ module Arke::Exchange
       raise "ACCOUNT:#{id} amount_s is nil" if order.amount_s.nil?
       raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
 
-      order = {
+      params = {
         symbol: order.market,
         amount: order.amount_s,
-        price:  order.price_s,
         side:   order.side,
-        type:   "exchange limit",
       }
-      authenticated_post("/v1/order/new", params: order).body
+
+      if order.type == "post_only"
+        order.type = "limit"
+        params[:is_postonly] = true
+      end
+
+      params[:type] = "exchange #{order.type}"
+      params[:price] = order.price_s
+
+      authenticated_post("/v1/order/new", params: params).body
     end
 
     def fetch_openorders(market)
