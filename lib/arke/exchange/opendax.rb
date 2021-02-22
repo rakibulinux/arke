@@ -73,19 +73,23 @@ module Arke::Exchange
       raise "ACCOUNT:#{id} amount_s is nil" if order.amount_s.nil?
       raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
 
-      params = @finex ? {
-        market: order.market.downcase,
-        side:   order.side.to_s,
-        amount: order.amount_s,
-        price:  order.price_s,
-        type:   order.type,
-      } : {
-        market:   order.market.downcase,
-        side:     order.side.to_s,
-        volume:   order.amount_s,
-        price:    order.price_s,
-        ord_type: order.type,
-      }
+      params = if @finex
+        {
+          market: order.market.downcase,
+          side:   order.side.to_s,
+          amount: order.amount_s,
+          price:  order.price_s,
+          type:   order.type,
+        }
+      else
+        {
+          market:   order.market.downcase,
+          side:     order.side.to_s,
+          volume:   order.amount_s,
+          price:    order.price_s,
+          ord_type: (order.type == "post_only" ? "limit" : order.type),
+        }
+      end
       params.delete(:price) if order.type == "market"
       response = post("#{@finex ? @finex_route : @peatio_route}/market/orders", params)
 

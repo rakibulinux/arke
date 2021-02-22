@@ -158,6 +158,12 @@ module Arke::Exchange
       raise "ACCOUNT:#{id} amount_s is nil" if order.amount_s.nil?
       raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
 
+      if order.side.to_s == "post_only"
+        oflags = "post"
+        order.type = "limit"
+      else
+        oflags = nil
+      end
       params = {
         pair:      order.market,
         type:      order.side.to_s,
@@ -165,6 +171,7 @@ module Arke::Exchange
         price:     order.price_s,
         ordertype: order.type.to_s,
       }
+      params[:oflags] = oflags if oflags
 
       post_private("AddOrder", params)
     end

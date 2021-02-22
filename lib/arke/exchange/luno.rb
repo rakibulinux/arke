@@ -78,11 +78,13 @@ module Arke::Exchange
       raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
 
       type = order.side == :buy ? "BID" : "ASK"
+      post_only = order.type == "post_only"
       params = {
-        pair:   order.market.upcase,
-        type:   type,
-        volume: order.amount_s,
-        price:  order.price_s,
+        pair:      order.market.upcase,
+        type:      type,
+        volume:    order.amount_s,
+        price:     order.price_s,
+        post_only: post_only,
       }
       path = "/api/1/postorder"
       BitX.conn.basic_auth(@api_key, @secret)
