@@ -32,10 +32,10 @@ describe Arke::Scheduler::Smart do
     }
   end
   let(:target) { Arke::Market.new(exchange_config["market"], Arke::Exchange::Bitfaker.new(exchange_config)) }
-  let(:order_buy) { Arke::Order.new(market, 1, 1, :buy, "limit", 9) }
-  let(:order_buy2) { Arke::Order.new(market, 0.9, 3, :buy, "limit", 12) }
-  let(:order_sell) { Arke::Order.new(market, 1.1, 1, :sell, "limit", 10) }
-  let(:order_sell2) { Arke::Order.new(market, 1.4, 1, :sell, "limit", 11) }
+  let(:order_buy) { Arke::Order.new(market, 1, 1, :buy, "post_only", 9) }
+  let(:order_buy2) { Arke::Order.new(market, 0.9, 3, :buy, "post_only", 12) }
+  let(:order_sell) { Arke::Order.new(market, 1.1, 1, :sell, "post_only", 10) }
+  let(:order_sell2) { Arke::Order.new(market, 1.4, 1, :sell, "post_only", 11) }
 
   context "current and desired orderbooks are empty" do
     it "creates no action" do
@@ -93,8 +93,8 @@ describe Arke::Scheduler::Smart do
 
       expect(action_scheduler.schedule).to eq(
         [
-          # Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 1, 3, :buy, "limit"), priority: 2750.to_d),
-          Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 1.4, 1, :sell, "limit"), priority: 1076.923077),
+          # Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 1, 3, :buy, "post_only"), priority: 2750.to_d),
+          Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 1.4, 1, :sell, "post_only"), priority: 1076.923077),
         ]
       )
     end
@@ -118,11 +118,11 @@ describe Arke::Scheduler::Smart do
         }
       end
       it "adjusts levels depending on liquidity needs for each" do
-        order_sell_14 = Arke::Order.new(market, 2.0, 1, :sell, "limit", 14)
-        order_sell_13 = Arke::Order.new(market, 1.9, 1, :sell, "limit", 13)
-        order_buy_10  = Arke::Order.new(market, 1.4, 3, :buy,  "limit", 10)
-        order_buy_11  = Arke::Order.new(market, 1,   1, :buy,  "limit", 11)
-        order_buy_12  = Arke::Order.new(market, 0.9, 1, :buy,  "limit", 12)
+        order_sell_14 = Arke::Order.new(market, 2.0, 1, :sell, "post_only", 14)
+        order_sell_13 = Arke::Order.new(market, 1.9, 1, :sell, "post_only", 13)
+        order_buy_10  = Arke::Order.new(market, 1.4, 3, :buy,  "post_only", 10)
+        order_buy_11  = Arke::Order.new(market, 1,   1, :buy,  "post_only", 11)
+        order_buy_12  = Arke::Order.new(market, 0.9, 1, :buy,  "post_only", 12)
 
         current_openorders.add_order(order_buy_10)
         current_openorders.add_order(order_buy_11)
@@ -154,12 +154,12 @@ describe Arke::Scheduler::Smart do
         }
       end
       it "adjusts levels depending on liquidity needs for each" do
-        order_buy_15  = Arke::Order.new(market, 1.5, 1, :buy,  "limit", 15)
-        order_buy_14  = Arke::Order.new(market, 1.4, 1, :buy,  "limit", 14)
-        order_buy_13  = Arke::Order.new(market, 1.3, 3, :buy,  "limit", 13)
-        order_buy_12  = Arke::Order.new(market, 1.2, 1, :buy,  "limit", 12)
-        order_buy_11  = Arke::Order.new(market, 1.1, 1, :buy,  "limit", 11)
-        order_buy_10  = Arke::Order.new(market, 1.0, 3, :buy,  "limit", 10)
+        order_buy_15  = Arke::Order.new(market, 1.5, 1, :buy,  "post_only", 15)
+        order_buy_14  = Arke::Order.new(market, 1.4, 1, :buy,  "post_only", 14)
+        order_buy_13  = Arke::Order.new(market, 1.3, 3, :buy,  "post_only", 13)
+        order_buy_12  = Arke::Order.new(market, 1.2, 1, :buy,  "post_only", 12)
+        order_buy_11  = Arke::Order.new(market, 1.1, 1, :buy,  "post_only", 11)
+        order_buy_10  = Arke::Order.new(market, 1.0, 3, :buy,  "post_only", 10)
 
         current_openorders.add_order(order_buy_10)
         current_openorders.add_order(order_buy_11)
@@ -191,47 +191,47 @@ describe Arke::Scheduler::Smart do
       end
 
       it "stops overlapping orders first (sell overlap buy on market price DUMP)" do
-        order_sell = Arke::Order.new(market, 2.0, 1, :sell, "limit", 1)
-        order_buy  = Arke::Order.new(market, 1.0, 1, :buy,  "limit", 2)
+        order_sell = Arke::Order.new(market, 2.0, 1, :sell, "post_only", 1)
+        order_buy  = Arke::Order.new(market, 1.0, 1, :buy,  "post_only", 2)
 
         current_openorders.add_order(order_buy)
         current_openorders.add_order(order_sell)
 
-        desired_orderbook.update(Arke::Order.new(market, 2.2, 1, :sell))
-        desired_orderbook.update(Arke::Order.new(market, 2.1, 1, :buy))
+        desired_orderbook.update(Arke::Order.new(market, 2.2, 1, :sell, "post_only"))
+        desired_orderbook.update(Arke::Order.new(market, 2.1, 1, :buy, "post_only"))
 
         expect(action_scheduler.schedule).to eq(
           [
             Arke::Action.new(:order_stop, target, order: order_sell, priority: 1_000_000_000.2.to_d),
-            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.1, 1, :buy), priority: 1100),
-            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 1, :sell), priority: 1100),
+            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.1, 1, :buy, "post_only"), priority: 1100),
+            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 1, :sell, "post_only"), priority: 1100),
             Arke::Action.new(:order_stop, target, order: order_buy, priority: 1047.619048),
           ]
         )
       end
 
       it "stops overlapping orders first (buy overlap sell on market price PUMP)" do
-        order_sell_14 = Arke::Order.new(market, 2.0,  1, :sell, "limit", 14)
-        order_sell_13 = Arke::Order.new(market, 1.9,  1, :sell, "limit", 13)
-        order_buy_10  = Arke::Order.new(market, 1.4,  3, :buy,  "limit", 10)
-        order_buy_11  = Arke::Order.new(market, 1.35, 1, :buy,  "limit", 11)
+        order_sell_14 = Arke::Order.new(market, 2.0,  1, :sell, "post_only", 14)
+        order_sell_13 = Arke::Order.new(market, 1.9,  1, :sell, "post_only", 13)
+        order_buy_10  = Arke::Order.new(market, 1.4,  3, :buy,  "post_only", 10)
+        order_buy_11  = Arke::Order.new(market, 1.35, 1, :buy,  "post_only", 11)
 
         current_openorders.add_order(order_buy_10)
         current_openorders.add_order(order_buy_11)
         current_openorders.add_order(order_sell_13)
         current_openorders.add_order(order_sell_14)
 
-        desired_orderbook.update(Arke::Order.new(market, 2.2, 1,  :sell))
-        desired_orderbook.update(Arke::Order.new(market, 2.1, 1,  :sell))
-        desired_orderbook.update(Arke::Order.new(market, 2.0, 1,  :buy))
-        desired_orderbook.update(Arke::Order.new(market, 1.9, 1,  :buy))
+        desired_orderbook.update(Arke::Order.new(market, 2.2, 1,  :sell, "post_only"))
+        desired_orderbook.update(Arke::Order.new(market, 2.1, 1,  :sell, "post_only"))
+        desired_orderbook.update(Arke::Order.new(market, 2.0, 1,  :buy, "post_only"))
+        desired_orderbook.update(Arke::Order.new(market, 1.9, 1,  :buy, "post_only"))
 
         expect(action_scheduler.schedule).to eq(
           [
             Arke::Action.new(:order_stop, target, order: order_sell_13, priority: 1_000_000_000.2),
             Arke::Action.new(:order_stop, target, order: order_sell_14, priority: 1_000_000_000.1),
-            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.1, 1, :buy), priority: 1090.909091),
-            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 2, :sell), priority: 1090.909091),
+            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.1, 1, :buy, "post_only"), priority: 1090.909091),
+            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 2, :sell, "post_only"), priority: 1090.909091),
             Arke::Action.new(:order_stop, target, order: order_buy_10, priority: 1062.5),
             Arke::Action.new(:order_stop, target, order: order_buy_11, priority: 1060.606061),
           ]
@@ -239,34 +239,34 @@ describe Arke::Scheduler::Smart do
       end
 
       it "stops overlapping orders first (buy == sell on market price PUMP)" do
-        order_sell = Arke::Order.new(market, 2.0, 1, :sell, "limit", 1)
-        order_buy = Arke::Order.new(market, 1.0, 1, :buy, "limit", 2)
+        order_sell = Arke::Order.new(market, 2.0, 1, :sell, "post_only", 1)
+        order_buy = Arke::Order.new(market, 1.0, 1, :buy, "post_only", 2)
 
         current_openorders.add_order(order_buy)
         current_openorders.add_order(order_sell)
 
-        desired_orderbook.update(Arke::Order.new(market, 2.1, 1, :sell))
-        desired_orderbook.update(Arke::Order.new(market, 2.0, 1, :buy))
+        desired_orderbook.update(Arke::Order.new(market, 2.1, 1, :sell, "post_only"))
+        desired_orderbook.update(Arke::Order.new(market, 2.0, 1, :buy, "post_only"))
 
         expect(action_scheduler.schedule).to eq(
           [
             Arke::Action.new(:order_stop, target, order: order_sell, priority: 1_000_000_000.1),
-            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.1, 1, :buy), priority: 1090.909091),
-            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 1, :sell), priority: 1090.909091),
+            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.1, 1, :buy, "post_only"), priority: 1090.909091),
+            Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 2.2, 1, :sell, "post_only"), priority: 1090.909091),
             Arke::Action.new(:order_stop, target, order: order_buy, priority: 1050),
           ]
         )
       end
 
       it "stops overlapping orders first (buy == sell on market price DUMP)" do
-        order_sell = Arke::Order.new(market, 2.0, 1, :sell, "limit", 1)
-        order_buy  = Arke::Order.new(market, 1.0, 1, :buy,  "limit", 2)
+        order_sell = Arke::Order.new(market, 2.0, 1, :sell, "post_only", 1)
+        order_buy  = Arke::Order.new(market, 1.0, 1, :buy,  "post_only", 2)
 
         current_openorders.add_order(order_buy)
         current_openorders.add_order(order_sell)
 
-        desired_orderbook.update(Arke::Order.new(market, 1.0, 1, :sell))
-        desired_orderbook.update(Arke::Order.new(market, 0.9, 1, :buy))
+        desired_orderbook.update(Arke::Order.new(market, 1.0, 1, :sell, "post_only"))
+        desired_orderbook.update(Arke::Order.new(market, 0.9, 1, :buy, "post_only"))
 
         expect(action_scheduler.schedule).to eq(
           [
@@ -277,20 +277,20 @@ describe Arke::Scheduler::Smart do
     end
 
     it "raises error if any ask price is lower than big price" do
-      desired_orderbook.update(Arke::Order.new(market, 2.2, 1,  :sell))
-      desired_orderbook.update(Arke::Order.new(market, 2.0, 1,  :sell))
-      desired_orderbook.update(Arke::Order.new(market, 2.1, 1,  :buy))
-      desired_orderbook.update(Arke::Order.new(market, 1.9, 1,  :buy))
+      desired_orderbook.update(Arke::Order.new(market, 2.2, 1,  :sell, "post_only"))
+      desired_orderbook.update(Arke::Order.new(market, 2.0, 1,  :sell, "post_only"))
+      desired_orderbook.update(Arke::Order.new(market, 2.1, 1,  :buy, "post_only"))
+      desired_orderbook.update(Arke::Order.new(market, 1.9, 1,  :buy, "post_only"))
       expect { action_scheduler.schedule }.to raise_error(Arke::Scheduler::InvalidOrderBook)
     end
   end
 
   context "cancel_out_of_boundaries_orders" do
-    let(:order_sell_14) { Arke::Order.new(market, 2.0, 1, :sell, "limit", 14) }
-    let(:order_sell_13) { Arke::Order.new(market, 1.9, 1, :sell, "limit", 13) }
-    let(:order_buy_10)  { Arke::Order.new(market, 1.4, 3, :buy,  "limit", 10) }
-    let(:order_buy_11)  { Arke::Order.new(market, 1.0, 1, :buy,  "limit", 11) }
-    let(:order_buy_12)  { Arke::Order.new(market, 0.9, 1, :buy,  "limit", 12) }
+    let(:order_sell_14) { Arke::Order.new(market, 2.0, 1, :sell, "post_only", 14) }
+    let(:order_sell_13) { Arke::Order.new(market, 1.9, 1, :sell, "post_only", 13) }
+    let(:order_buy_10)  { Arke::Order.new(market, 1.4, 3, :buy,  "post_only", 10) }
+    let(:order_buy_11)  { Arke::Order.new(market, 1.0, 1, :buy,  "post_only", 11) }
+    let(:order_buy_12)  { Arke::Order.new(market, 0.9, 1, :buy,  "post_only", 12) }
 
     before(:each) do
       current_openorders.add_order(order_buy_10)
@@ -354,17 +354,17 @@ describe Arke::Scheduler::Smart do
     end
 
     it "raises the flag when current sell side liquidity go over the limits" do
-      current_openorders.add_order(Arke::Order.new(market, 1.9, 1, :sell, "limit", 13))
-      current_openorders.add_order(Arke::Order.new(market, 2.0, 1, :sell, "limit", 14))
-      current_openorders.add_order(Arke::Order.new(market, 2.0, 9, :sell, "limit", 15))
+      current_openorders.add_order(Arke::Order.new(market, 1.9, 1, :sell, "post_only", 13))
+      current_openorders.add_order(Arke::Order.new(market, 2.0, 1, :sell, "post_only", 14))
+      current_openorders.add_order(Arke::Order.new(market, 2.0, 9, :sell, "post_only", 15))
       expect(action_scheduler.high_liquidity_sell_flag).to be(false)
     end
 
     it "raises the flag when current sell side liquidity go over the limits" do
-      current_openorders.add_order(Arke::Order.new(market, 1.9, 1, :sell, "limit", 13))
-      current_openorders.add_order(Arke::Order.new(market, 2.0, 1, :sell, "limit", 14))
-      current_openorders.add_order(Arke::Order.new(market, 2.0, 9, :sell, "limit", 15))
-      current_openorders.add_order(Arke::Order.new(market, 1.9, 3, :sell, "limit", 16))
+      current_openorders.add_order(Arke::Order.new(market, 1.9, 1, :sell, "post_only", 13))
+      current_openorders.add_order(Arke::Order.new(market, 2.0, 1, :sell, "post_only", 14))
+      current_openorders.add_order(Arke::Order.new(market, 2.0, 9, :sell, "post_only", 15))
+      current_openorders.add_order(Arke::Order.new(market, 1.9, 3, :sell, "post_only", 16))
       expect(action_scheduler.high_liquidity_sell_flag).to be(true)
     end
   end
@@ -378,16 +378,16 @@ describe Arke::Scheduler::Smart do
     end
 
     it "raises the flag when current buy side liquidity go over the limits" do
-      current_openorders.add_order(Arke::Order.new(market, 1.9, 1, :buy, "limit", 13))
-      current_openorders.add_order(Arke::Order.new(market, 2.0, 1, :buy, "limit", 14))
-      current_openorders.add_order(Arke::Order.new(market, 2.0, 9, :buy, "limit", 15))
+      current_openorders.add_order(Arke::Order.new(market, 1.9, 1, :buy, "post_only", 13))
+      current_openorders.add_order(Arke::Order.new(market, 2.0, 1, :buy, "post_only", 14))
+      current_openorders.add_order(Arke::Order.new(market, 2.0, 9, :buy, "post_only", 15))
       expect(action_scheduler.high_liquidity_buy_flag).to be(false)
     end
     it "raises the flag when current buy side liquidity go over the limits" do
-      current_openorders.add_order(Arke::Order.new(market, 1.9, 1, :buy, "limit", 13))
-      current_openorders.add_order(Arke::Order.new(market, 2.0, 1, :buy, "limit", 14))
-      current_openorders.add_order(Arke::Order.new(market, 2.0, 9, :buy, "limit", 15))
-      current_openorders.add_order(Arke::Order.new(market, 1.9, 3, :buy, "limit", 16))
+      current_openorders.add_order(Arke::Order.new(market, 1.9, 1, :buy, "post_only", 13))
+      current_openorders.add_order(Arke::Order.new(market, 2.0, 1, :buy, "post_only", 14))
+      current_openorders.add_order(Arke::Order.new(market, 2.0, 9, :buy, "post_only", 15))
+      current_openorders.add_order(Arke::Order.new(market, 1.9, 3, :buy, "post_only", 16))
       expect(action_scheduler.high_liquidity_buy_flag).to be(true)
     end
   end
@@ -401,27 +401,27 @@ describe Arke::Scheduler::Smart do
     end
 
     it "does not raises the flag when current buy side liquidity is lower the limit" do
-      current_openorders.add_order(Arke::Order.new(market, 10, 1, :buy, "limit", 13))
-      current_openorders.add_order(Arke::Order.new(market, 10, 1, :buy, "limit", 14))
-      current_openorders.add_order(Arke::Order.new(market, 10, 9, :buy, "limit", 15))
+      current_openorders.add_order(Arke::Order.new(market, 10, 1, :buy, "post_only", 13))
+      current_openorders.add_order(Arke::Order.new(market, 10, 1, :buy, "post_only", 14))
+      current_openorders.add_order(Arke::Order.new(market, 10, 9, :buy, "post_only", 15))
       expect(action_scheduler.high_liquidity_buy_flag).to be(false)
     end
 
     it "raises the flag when current buy side liquidity go over the limits" do
-      current_openorders.add_order(Arke::Order.new(market, 10, 1, :buy, "limit", 13))
-      current_openorders.add_order(Arke::Order.new(market, 10, 1, :buy, "limit", 14))
-      current_openorders.add_order(Arke::Order.new(market, 10, 9, :buy, "limit", 15))
-      current_openorders.add_order(Arke::Order.new(market, 10, 2, :buy, "limit", 16))
+      current_openorders.add_order(Arke::Order.new(market, 10, 1, :buy, "post_only", 13))
+      current_openorders.add_order(Arke::Order.new(market, 10, 1, :buy, "post_only", 14))
+      current_openorders.add_order(Arke::Order.new(market, 10, 9, :buy, "post_only", 15))
+      current_openorders.add_order(Arke::Order.new(market, 10, 2, :buy, "post_only", 16))
       expect(action_scheduler.high_liquidity_buy_flag).to be(true)
     end
   end
 
   context "cancel_risky_orders" do
-    let(:order_sell_14) { Arke::Order.new(market, 2.0, 1, :sell, "limit", 14) }
-    let(:order_sell_13) { Arke::Order.new(market, 1.9, 1, :sell, "limit", 13) }
-    let(:order_buy_10)  { Arke::Order.new(market, 1.4, 3, :buy,  "limit", 10) }
-    let(:order_buy_11)  { Arke::Order.new(market, 1.0, 1, :buy,  "limit", 11) }
-    let(:order_buy_12)  { Arke::Order.new(market, 0.9, 1, :buy,  "limit", 12) }
+    let(:order_sell_14) { Arke::Order.new(market, 2.0, 1, :sell, "post_only", 14) }
+    let(:order_sell_13) { Arke::Order.new(market, 1.9, 1, :sell, "post_only", 13) }
+    let(:order_buy_10)  { Arke::Order.new(market, 1.4, 3, :buy,  "post_only", 10) }
+    let(:order_buy_11)  { Arke::Order.new(market, 1.0, 1, :buy,  "post_only", 11) }
+    let(:order_buy_12)  { Arke::Order.new(market, 0.9, 1, :buy,  "post_only", 12) }
 
     before(:each) do
       current_openorders.add_order(order_buy_10)
@@ -453,13 +453,13 @@ describe Arke::Scheduler::Smart do
   end
 
   context "adjust_levels" do
-    let(:order_sell_14) { Arke::Order.new(market, 20, 1, :sell, "limit", 14) }
-    let(:order_sell_13) { Arke::Order.new(market, 19, 1, :sell, "limit", 13) }
-    let(:order_sell_15) { Arke::Order.new(market, 18, 1, :sell, "limit", 15) }
+    let(:order_sell_14) { Arke::Order.new(market, 20, 1, :sell, "post_only", 14) }
+    let(:order_sell_13) { Arke::Order.new(market, 19, 1, :sell, "post_only", 13) }
+    let(:order_sell_15) { Arke::Order.new(market, 18, 1, :sell, "post_only", 15) }
 
-    let(:order_buy_10)  { Arke::Order.new(market, 14, 3, :buy,  "limit", 10) }
-    let(:order_buy_11)  { Arke::Order.new(market, 10, 1, :buy,  "limit", 11) }
-    let(:order_buy_12)  { Arke::Order.new(market, 9, 1, :buy, "limit", 12) }
+    let(:order_buy_10)  { Arke::Order.new(market, 14, 3, :buy,  "post_only", 10) }
+    let(:order_buy_11)  { Arke::Order.new(market, 10, 1, :buy,  "post_only", 11) }
+    let(:order_buy_12)  { Arke::Order.new(market, 9, 1, :buy, "post_only", 12) }
     let(:opts) do
       {
         price_levels:         price_levels,
@@ -474,11 +474,11 @@ describe Arke::Scheduler::Smart do
       current_openorders.add_order(order_sell_13)
       current_openorders.add_order(order_sell_14)
 
-      desired_orderbook.update(Arke::Order.new(market, 22, 1.2, :sell))
-      desired_orderbook.update(Arke::Order.new(market, 20, 1.1, :sell))
+      desired_orderbook.update(Arke::Order.new(market, 22, 1.2, :sell, "post_only"))
+      desired_orderbook.update(Arke::Order.new(market, 20, 1.1, :sell, "post_only"))
 
-      desired_orderbook.update(Arke::Order.new(market, 21, 1, :buy))
-      desired_orderbook.update(Arke::Order.new(market, 19, 1, :buy))
+      desired_orderbook.update(Arke::Order.new(market, 21, 1, :buy, "post_only"))
+      desired_orderbook.update(Arke::Order.new(market, 19, 1, :buy, "post_only"))
     end
 
     it "creates orders when levels need liquidity" do
@@ -488,9 +488,9 @@ describe Arke::Scheduler::Smart do
       ]
       expect(action_scheduler.adjust_levels(:sell, price_points, 20, proc { false }, proc { false })).to eq(
         [
-          ::Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22.5, 0.5, :sell), priority: 1028.571429),
-          ::Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22.5, 0.5, :sell), priority: 1028.571429),
-          ::Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22.5, 0.2, :sell), priority: 1028.571429),
+          ::Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22.5, 0.5, :sell, "post_only"), priority: 1028.571429),
+          ::Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22.5, 0.5, :sell, "post_only"), priority: 1028.571429),
+          ::Arke::Action.new(:order_create, target, order: Arke::Order.new(market, 22.5, 0.2, :sell, "post_only"), priority: 1028.571429),
         ]
       )
     end

@@ -174,7 +174,7 @@ module Arke::Scheduler
           priority = 100.to_d / (1.to_d + (desired_best_price - price).abs)
           priority = ll ? track_fast(priority) : track_normal(priority)
           diff_amount -= amount
-          order = ::Arke::Order.new(@market, price, amount, side)
+          order = ::Arke::Order.new(@market, price, amount, side, "post_only")
           action = ::Arke::Action.new(:order_create, @target, order: order, priority: priority)
           fast_track_liquidity_accounting(action) if ll
           actions.push(action)
