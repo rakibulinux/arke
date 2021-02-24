@@ -43,7 +43,7 @@ module Arke::Strategy
       actions.sort_by!(&:priority)
       actions.reverse!
 
-      target.account.executor.push(actions) unless actions.empty?
+      target.account.executor.push(@id, actions) unless actions.empty?
 
       [nil, nil]
     end

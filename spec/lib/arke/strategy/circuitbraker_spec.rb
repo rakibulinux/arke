@@ -21,6 +21,7 @@ describe Arke::Strategy::Circuitbraker do
   end
   let(:config) do
     {
+      "id"      => "circuitbraker-test",
       "type"    => "circuitbraker",
       "params"  => {
         "spread_bids" => spread_bids,
@@ -55,6 +56,7 @@ describe Arke::Strategy::Circuitbraker do
       target.add_order(order17)
 
       expect(executor).to receive(:push).with(
+        "circuitbraker-test",
         [
           Arke::Action.new(:order_stop, target, order: order15, priority: 1_000_000_004.5543),
           Arke::Action.new(:order_stop, target, order: order17, priority: 1_000_000_003.00268),
