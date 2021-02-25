@@ -59,7 +59,7 @@ module Arke::Strategy
 
       if target.account.bulk_order_support
         logger.info { "ACCOUNT:#{id} #{"Canceling".red} #{actions.size} orders" }
-        target.account.stop_order_bulk(actions.map {|a| a.params[:order].id })
+        target.account.stop_order_bulk(actions.map {|a| a.params[:order] })
       else
         target.account.executor.push(@id, actions)
       end
