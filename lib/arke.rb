@@ -26,6 +26,7 @@ require "arke/helpers/price_points"
 require "arke/helpers/spread"
 require "arke/helpers/flags"
 require "arke/helpers/orderbook"
+require "arke/helpers/array"
 
 require "arke/configuration"
 require "arke/log"

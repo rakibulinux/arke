@@ -10,11 +10,23 @@ module Arke::Strategy
       @spread_bids = params["spread_bids"]&.to_d
       @spread_asks = params["spread_asks"]&.to_d
       check_config
+      config_markets
+
+      logger.info "ID:#{id} Bulk order support: #{target.account.bulk_order_support}"
+      logger.info "ID:#{id} Spread bids: #{@spread_bids}"
+      logger.info "ID:#{id} Spread asks: #{@spread_asks}"
     end
 
     def check_config
       raise "spread_bids must be higher than zero" if @spread_bids.nil? || @spread_bids.negative?
       raise "spread_asks must be higher than zero" if @spread_asks.nil? || @spread_asks.negative?
+    end
+
+    def config_markets
+      sources.each do |s|
+        s.apply_flags(::Arke::Helpers::Flags::LISTEN_PUBLIC_ORDERBOOK)
+        s.account.add_market_to_listen(s.id)
+      end
     end
 
     def call
@@ -43,7 +55,14 @@ module Arke::Strategy
       actions.sort_by!(&:priority)
       actions.reverse!
 
-      target.account.executor.push(@id, actions) unless actions.empty?
+      return [nil, nil] if actions.empty?
+
+      if target.account.bulk_order_support
+        logger.info { "ACCOUNT:#{id} #{"Canceling".red} #{actions.size} orders" }
+        target.account.stop_order_bulk(actions.map {|a| a.params[:order].id })
+      else
+        target.account.executor.push(@id, actions)
+      end
 
       [nil, nil]
     end

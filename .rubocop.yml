@@ -143,3 +143,5 @@ Layout/HeredocIndentation:
 Style/MethodCallWithoutArgsParentheses:
   Enabled: false
 
+AllCops:
+  SuggestExtensions: false

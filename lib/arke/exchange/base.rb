@@ -7,6 +7,7 @@ module Arke::Exchange
     include ::Arke::Helpers::Flags
 
     attr_reader :delay, :driver, :opts, :id, :ws, :host, :key, :secret, :logger, :books
+    attr_reader :bulk_order_support
     attr_accessor :timer, :executor
 
     DEFAULT_DELAY = 1
@@ -31,6 +32,7 @@ module Arke::Exchange
       @public_trades_cb = []
       @created_order_cb = []
       @deleted_order_cb = []
+      @bulk_order_support = false
       @books = {}
       @ws_queues = {
         public:  EM::Queue.new,
@@ -89,11 +91,11 @@ module Arke::Exchange
 
     def ws_write_message(ws_id, msg)
       unless @ws_connected
-        logger.debug { "ACCOUNT:#{id} websocket #{ws_id} is not connected, message delayed: #{msg}" }
+        logger.debug { "ACCOUNT:#{id} websocket #{ws_id} is not connected, message delayed: #{msg}" } if @debug
         @ws_queues[ws_id].push(msg)
         return
       end
-      logger.debug { "ACCOUNT:#{id} pushing websocket message: #{msg}" }
+      logger.debug { "ACCOUNT:#{id} pushing websocket message: #{msg}" } if @debug
       @ws.send(msg)
     end
 
@@ -106,7 +108,7 @@ module Arke::Exchange
     end
 
     def ws_read_message(ws_id, msg)
-      logger.debug { "ACCOUNT:#{id} received #{ws_id} websocket message: #{msg.data}" }
+      logger.debug { "ACCOUNT:#{id} received #{ws_id} websocket message: #{msg.data}" } if @debug
 
       object = JSON.parse(msg.data)
       case ws_id
@@ -185,7 +187,7 @@ module Arke::Exchange
     end
 
     def update_balances(balances)
-      logger.debug { "Updating balances: #{balances}" }
+      logger.debug { "Updating balances: #{balances}" } if @debug
       @balances = @forced_balances = balances
     end
 

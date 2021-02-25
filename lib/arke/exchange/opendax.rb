@@ -244,6 +244,16 @@ module Arke::Exchange
       response
     end
 
+    def delete(path, params=nil)
+      logger.info { "ACCOUNT:#{id} DELETE: #{path} PARAMS: #{params}" } if @debug
+      response = @connection.delete do |req|
+        req.headers = generate_headers
+        req.url path
+        req.body = params.to_json
+      end
+      response
+    end
+
     def get(path, params=nil)
       response = @connection.get do |req|
         req.headers = generate_headers

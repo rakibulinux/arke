@@ -124,7 +124,7 @@ module Arke
               tick(strategy)
             end
 
-            if strategy.period_random_delay
+            if strategy.period_random_delay.to_f.positive?
               add_periodic_random_timer(strategy)
             else
               strategy.timer = EM::Synchrony.add_periodic_timer(strategy.period) { tick(strategy) }

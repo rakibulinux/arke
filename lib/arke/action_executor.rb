@@ -2,7 +2,7 @@
 
 module Arke
   class ActionExecutor
-    include Arke::Helpers::Precision
+    include ::Arke::Helpers::Precision
     attr_reader :id, :account, :logger
 
     def initialize(account, opts={})
