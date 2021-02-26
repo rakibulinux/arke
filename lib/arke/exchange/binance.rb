@@ -279,7 +279,7 @@ module Arke::Exchange
 
     def get_symbol_info(market)
       @exchange_info ||= @client.exchange_info["symbols"]
-      @exchange_info.find {|s| s["symbol"] == market }
+      @exchange_info&.find {|s| s["symbol"] == market }
     end
 
     def get_symbol_filter(market, filter)
