@@ -16,11 +16,12 @@ module Arke::Exchange
       @finex = config["finex"] == true
       @ws_base_url = config["ws"] ||= "wss://%s" % [URI.parse(config["host"]).hostname]
 
-      @connection = Faraday.new(url: "#{config['host']}/api/v2") do |builder|
-        builder.response :json
-        builder.response :logger if @debug
-        builder.adapter(@adapter)
-        builder.ssl[:verify] = config["verify_ssl"] unless config["verify_ssl"].nil?
+      @connection = Faraday.new(url: "#{config['host']}/api/v2") do |conn|
+        conn.options.timeout = 10
+        conn.response :json
+        conn.response :logger if @debug
+        conn.adapter(@adapter)
+        conn.ssl[:verify] = config["verify_ssl"] unless config["verify_ssl"].nil?
       end
       apply_flags(FORCE_MARKET_LOWERCASE)
     end
