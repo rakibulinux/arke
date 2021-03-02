@@ -46,6 +46,9 @@ require "arke/action_executor"
 require "arke/scheduler/simple"
 require "arke/scheduler/smart"
 
+require "arke/plugins/base"
+require "arke/plugins/limit_balance"
+
 require "arke/orderbook/base"
 require "arke/orderbook/orderbook"
 require "arke/orderbook/aggregated"

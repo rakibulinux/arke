@@ -212,4 +212,170 @@ describe Arke::Strategy::Copy do
       Arke::Log.info("sell: #{ob[:sell].to_hash.inspect}")
     end
   end
+
+  context "balance percent" do
+    let(:config) do
+      {
+        "type"    => "copy",
+        "params"  => {
+          "spread_bids"           => 0,
+          "spread_asks"           => 0,
+          "limit_bids_base"       => 2,
+          "limit_asks_base"       => 2,
+          "balance_quote_perc"    => 1,
+          "balance_base_perc"     => 1,
+          "levels_algo"           => "constant",
+          "levels_size"           => 1,
+          "levels_count"          => 5,
+          "side"                  => "both",
+          "min_order_back_amount" => 0.001,
+        },
+        "target"  => target_market,
+        "sources" => [source_market],
+      }
+    end
+
+    let(:source_config) do
+      {
+        "id"        => 1,
+        "driver"    => "bitfaker",
+        "orderbook" => [1, [
+          [1,  105, -5],
+          [2,  104, -4],
+          [3,  103, -3],
+          [4,  102, -2],
+          [5,  101, -1],
+          [6,  99,   1],
+          [7,  98,   2],
+          [8,  97,   3],
+          [9,  99,   4],
+          [10, 95,   5],
+        ]],
+      }
+    end
+
+    let(:mid_price) { 100 }
+
+    let(:target_config) do
+      {
+        "id"     => 2,
+        "driver" => "bitfaker",
+        "params" => {
+          "balances" => [
+            {
+              "currency" => "BTC",
+              "total"    => 100,
+              "free"     => 100,
+              "locked"   => 0.0,
+            },
+            {
+              "currency" => "USD",
+              "total"    => 100 * mid_price,
+              "free"     => 100 * mid_price,
+              "locked"   => 0.0,
+            }
+          ],
+        }
+      }
+    end
+
+    let(:expected_target_bids) do
+      {
+        98.66666666666667 => 0.8450704225352113,
+        97.0              => 0.4225352112676056,
+        96.0              => 0.0140845070422535,
+        95.0              => 0.7042253521126761,
+        94.0              => 0.0140845070422535
+      }
+    end
+
+    let(:expected_target_asks) do
+      {
+        101.66666666666667 => 0.3973509933774834,
+        103.0              => 0.3973509933774834,
+        104.0              => 0.5298013245033113,
+        105.0              => 0.6622516556291391,
+        106.0              => 0.0132450331125828
+      }
+    end
+
+    let(:result) do
+      {
+        bids: summary(target_bids),
+        asks: summary(target_asks)
+      }
+    end
+
+    def summary(orderbook)
+      orderbook = float_hash(orderbook.to_hash)
+      amount = orderbook.values.sum
+      volume = orderbook.map{ |k, v| k * v }.sum
+      {
+        orderbook: orderbook,
+        amount: amount,
+        volume: volume
+      }
+    end
+
+    def float_hash(hash)
+      hash.map{ |k, v| [k.to_f, v.to_f] }.to_h
+    end
+
+    it "get right orberbook when balance is more than limit bids/asks" do
+      expect(result[:bids][:orderbook]).to eq(expected_target_bids)
+      expect(result[:asks][:orderbook]).to eq(expected_target_asks)
+      expect(result[:bids][:amount]).to eq(config["params"]["limit_bids_base"])
+      expect(result[:asks][:amount]).to eq(config["params"]["limit_asks_base"])
+    end
+
+    context "not specificed limit bids/asks" do
+      let(:config) do
+        {
+          "type"    => "copy",
+          "params"  => {
+            "spread_bids"           => 0,
+            "spread_asks"           => 0,
+            "balance_quote_perc"    => 1,
+            "balance_base_perc"     => 1,
+            "levels_algo"           => "constant",
+            "levels_size"           => 1,
+            "levels_count"          => 5,
+            "side"                  => "both",
+            "min_order_back_amount" => 0.001,
+          },
+          "target"  => target_market,
+          "sources" => [source_market],
+        }
+      end
+
+      let(:target_config) do
+        {
+          "id"     => 2,
+          "driver" => "bitfaker",
+          "params" => {
+            "balances" => [
+              {
+                "currency" => "BTC",
+                "total"    => 5,
+                "free"     => 5,
+                "locked"   => 0.0,
+              },
+              {
+                "currency" => "USD",
+                "total"    => 2 * mid_price,
+                "free"     => 2 * mid_price,
+                "locked"   => 0.0,
+              }
+            ],
+          }
+        }
+      end
+
+      it "bids volume equal to quote balance and asks volume equal to base balance" do
+        expect(result[:bids][:amount] * mid_price).to eq(target_config["params"]["balances"][1]["free"])
+        expect(result[:asks][:volume]).to eq(target_config["params"]["balances"][0]["free"] * mid_price)
+      end
+    end
+
+  end
 end
