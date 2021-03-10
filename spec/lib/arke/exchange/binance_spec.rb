@@ -486,7 +486,20 @@ describe Arke::Exchange::Binance do
         "max_price"        => 10_000_000,
         "min_amount"       => 0.00001,
         "amount_precision" => 5,
-        "price_precision"  => 8
+        "price_precision"  => 2
+      )
+    end
+
+    it "returns market configuration with precision considering PRICE_FILTER tickSize" do
+      expect(binance.market_config("OMGUSDT")).to eq(
+        "id"               => "OMGUSDT",
+        "base_unit"        => "OMG",
+        "quote_unit"       => "USDT",
+        "min_price"        => 0.0001,
+        "max_price"        => 1000,
+        "min_amount"       => 0.01,
+        "amount_precision" => 2,
+        "price_precision"  => 4
       )
     end
   end

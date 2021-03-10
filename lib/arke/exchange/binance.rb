@@ -2,6 +2,8 @@
 
 module Arke::Exchange
   class Binance < Base
+    include Arke::Helpers::Precision
+
     attr_accessor :orderbook
 
     WS_ORDERBOOK_MIN_CACHE_SIZE = 200
@@ -302,6 +304,8 @@ module Arke::Exchange
       raise "#{market} not found" unless info
 
       price_filter = get_symbol_filter(market, "PRICE_FILTER")
+      tick_precision = value_precision(price_filter&.fetch("tickSize").to_d)
+      price_precision = [info.fetch("quotePrecision"), tick_precision].min
 
       {
         "id"               => info.fetch("symbol"),
@@ -311,7 +315,7 @@ module Arke::Exchange
         "max_price"        => price_filter&.fetch("maxPrice").to_f,
         "min_amount"       => get_min_quantity(market),
         "amount_precision" => get_amount_precision(market),
-        "price_precision"  => info.fetch("quotePrecision")
+        "price_precision"  => price_precision
       }
     end
   end
