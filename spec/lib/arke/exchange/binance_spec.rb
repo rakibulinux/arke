@@ -173,6 +173,12 @@ describe Arke::Exchange::Binance do
     it "amount of order too small" do
       expect { binance.get_amount(small_order) }.to_not raise_error(Exception)
     end
+
+    it "amount of market order without price" do
+      o = Arke::Order.new("ETHUSDT", nil, 1, :buy)
+      expect(binance.get_amount(o)).to eq "1.00000"
+    end
+
   end
 
   context "receive public trades events on websocket" do

@@ -223,7 +223,7 @@ module Arke::Exchange
       min_notional = @min_notional[order.market] ||= get_min_notional(order.market)
       amount_precision = @amount_precision[order.market] ||= get_amount_precision(order.market)
       notional = order.price * order.amount
-      amount = if notional > min_notional
+      amount = if order.price.to_d.zero? or notional > min_notional
                  order.amount
                else
                  (min_notional / order.price).ceil(amount_precision)
@@ -237,10 +237,9 @@ module Arke::Exchange
       raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
 
       raw_order = {
-        symbol:        order.market.upcase,
-        side:          order.side.upcase,
-        time_in_force: "GTC",
-        quantity:      "%f" % amount,
+        symbol:   order.market.upcase,
+        side:     order.side.upcase,
+        quantity: "%f" % amount,
       }
 
       if order.type == "market"
@@ -248,10 +247,19 @@ module Arke::Exchange
       else
         raw_order[:type] = "LIMIT"
         raw_order[:price] = order.price_s
+        raw_order[:time_in_force] = "GTC"
       end
-
       logger.debug { "Binance order: #{raw_order}" }
       @client.create_order!(raw_order)
+    end
+
+    def stop_order(order)
+      raise "Trying to cancel an order without id #{order}" if order.id.nil? || order.id == 0
+
+      @client.cancel_order!({
+        symbol: order.market,
+        orderId: order.id,
+      })
     end
 
     def get_balances
@@ -268,6 +276,8 @@ module Arke::Exchange
 
     def fetch_openorders(market)
       @client.open_orders(symbol: market).map do |o|
+        raise "Unexpected response: #{o} (check the market ID)" unless o.is_a?(Hash)
+
         remaining_volume = o["origQty"].to_f - o["executedQty"].to_f
         Arke::Order.new(
           o["symbol"],

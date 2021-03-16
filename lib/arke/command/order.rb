@@ -24,10 +24,10 @@ module Arke::Command
           order = ::Arke::Order.new(market_id, price, amount, side, type)
           order.apply_requirements(ex)
           logger.info order.inspect
-
           unless dry?
             response = ex.create_order(order)
-            logger.info { "Response: #{response.body}" }
+            response = response.respond_to?(:body) ? response.body : response
+            logger.info { "Response: #{response}" }
           end
 
           EM.stop
@@ -38,8 +38,9 @@ module Arke::Command
     class Cancel < Clamp::Command
       include Arke::Helpers::Commands
       option "--config", "FILE_PATH", "Strategies config file", default: "config/strategies.yml"
+      option "--market", "MARKET_ID", "market id on the target platform"
 
-      parameter "ACCOUNT_ID", "market id on the target platform", attribute_name: :account_id
+      parameter "ACCOUNT_ID", "account id", attribute_name: :account_id
       parameter "ORDER_ID", "order identifier to cancel", attribute_name: :order_id
       def execute
         logger = ::Arke::Log
@@ -49,9 +50,10 @@ module Arke::Command
 
         EM.synchrony do
           ex = Arke::Exchange.create(acc_config)
-          order = Struct.new(:id).new(order_id)
+          order = Struct.new(:id, :market).new(order_id, market)
           response = ex.stop_order(order)
-          logger.info { "Response: #{response.body}" }
+          response = response.respond_to?(:body) ? response.body : response
+          logger.info { "Response: #{response}" }
           EM.stop
         end
       end
@@ -72,7 +74,8 @@ module Arke::Command
         EM.synchrony do
           ex = Arke::Exchange.create(acc_config)
           response = ex.cancel_all_orders(market)
-          logger.info { "Response: #{response.body}" }
+          response = response.respond_to?(:body) ? response.body : response
+          logger.info { "Response: #{response}" }
           EM.stop
         end
       end
