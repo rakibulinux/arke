@@ -6,12 +6,13 @@ module Arke::Command
       include Arke::Helpers::Commands
       option "--config", "FILE_PATH", "Strategies config file", default: "config/strategies.yml"
       option "--dry", :flag, "do not send the order"
+      option "--type", "ORDER_TYPE", "Order type (limit or market)", default: "limit"
 
       parameter "ACCOUNT_ID", "market id on the target platform", attribute_name: :account_id
       parameter "MARKET_ID", "market id on the target platform", attribute_name: :market_id
       parameter "SIDE", "buy or sell", attribute_name: :side
-      parameter "PRICE", "price", attribute_name: :price
       parameter "AMOUNT", "amount", attribute_name: :amount
+      parameter "[PRICE]", "price", attribute_name: :price
       def execute
         logger = ::Arke::Log
         logger.level = Logger::DEBUG
@@ -20,7 +21,7 @@ module Arke::Command
 
         EM.synchrony do
           ex = Arke::Exchange.create(acc_config)
-          order = ::Arke::Order.new(market_id, price, amount, side)
+          order = ::Arke::Order.new(market_id, price, amount, side, type)
           order.apply_requirements(ex)
           logger.info order.inspect
 

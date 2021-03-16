@@ -98,7 +98,8 @@ describe Arke::Exchange::Huobi do
         "min_amount"       => 0.0001,
         "max_amount"       => 1000,
         "amount_precision" => 6,
-        "price_precision"  => 2
+        "price_precision"  => 2,
+        "min_order_size"   => 1
       )
     end
   end

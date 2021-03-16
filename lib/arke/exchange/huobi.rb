@@ -2,6 +2,7 @@
 
 module Arke::Exchange
   class Huobi < Base
+    include Arke::Helpers::Precision
     attr_reader :orderbook, :ts_pattern
 
     def initialize(opts)
@@ -68,16 +69,34 @@ module Arke::Exchange
       raise "ACCOUNT:#{id} amount_s is nil" if order.amount_s.nil?
       raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
 
-      type = order.type == "market" ? "market" : "limit"
+      if order.type == "market"
+        type = "market"
+        if order.side == "buy"
+          price_precision = market_config(order.market)["price_precision"]
+          amount = apply_precision(order.amount * order.price, price_precision)
+          amount = "%0.#{price_precision.to_i}f" % amount
+        else
+          amount = order.amount_s
+        end
+      else
+        type = "limit"
+        amount = order.amount_s
+      end
 
       params = {
         "account-id": @account_id,
         "symbol":     order.market.downcase,
         "type":       "#{order.side}-#{type}",
-        "amount":     order.amount_s,
+        "amount":     amount,
       }
       params["price"] = order.price_s if type == "limit"
       authenticated_request("/v1/order/orders/place", "POST", params)
+    end
+
+    def stop_order(order)
+      raise "Trying to cancel an order without id #{order}" if order.id.nil? || order.id == 0
+
+      authenticated_request("/v1/order/orders/#{order.id}/submitcancel", "POST")
     end
 
     def fetch_openorders(market)
@@ -95,7 +114,7 @@ module Arke::Exchange
     end
 
     def symbols
-      get("/v1/common/symbols").body["data"]
+      @symbols ||= get("/v1/common/symbols").body["data"]
     end
 
     def market_config(market)
@@ -112,6 +131,7 @@ module Arke::Exchange
         "max_amount"       => market_infos["max-order-amt"],
         "amount_precision" => market_infos["amount-precision"],
         "price_precision"  => market_infos["price-precision"],
+        "min_order_size"   => market_infos["min-order-value"]
       }
     end
 

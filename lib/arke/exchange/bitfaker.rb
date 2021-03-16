@@ -75,6 +75,7 @@ module Arke::Exchange
         "min_amount"       => 0.1,
         "amount_precision" => 6,
         "price_precision"  => 6,
+        "min_order_size"   => nil,
       }
     end
 

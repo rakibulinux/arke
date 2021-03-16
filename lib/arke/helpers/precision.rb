@@ -2,8 +2,12 @@
 
 module Arke::Helpers
   module Precision
-    def apply_precision(value, precision, min_value=nil)
-      value = value.round(12).floor(precision)
+    def apply_precision(value, precision, min_value=nil, rounding_method=:floor)
+      value = if rounding_method == :ceil
+                value.round(12).ceil(precision)
+              else
+                value.round(12).floor(precision)
+              end
       value = min_value if !min_value.nil? && (value < min_value)
       value
     end

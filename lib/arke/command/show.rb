@@ -86,6 +86,7 @@ module Arke
           puts "%18s  %s" % ["min_amount", config["min_amount"]&.to_f]
           puts "%18s  %s" % ["amount_precision", config["amount_precision"]&.to_f]
           puts "%18s  %s" % ["price_precision", config["price_precision"]&.to_f]
+          puts "%18s  %s" % ["min_order_size", config["min_order_size"]&.to_f]
         end
       end
 

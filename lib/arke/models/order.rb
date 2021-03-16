@@ -43,9 +43,19 @@ module Arke
       price_precision = market_config["price_precision"]
       amount_precision = market_config["amount_precision"]
       min_amount = market_config["min_amount"]
+      min_order_size = market_config["min_order_size"]
+      amount_rounding_method = :floor
+
+      if !min_order_size.nil? && @price.to_d.positive?
+        size = @price * @amount
+        if size < min_order_size
+          min_amount = @amount = min_order_size / @price
+          amount_rounding_method = :ceil
+        end
+      end
 
       @price = apply_precision(@price, price_precision)
-      @amount = apply_precision(@amount, amount_precision, min_amount)
+      @amount = apply_precision(@amount, amount_precision, min_amount, amount_rounding_method)
       @price_s = "%0.#{price_precision.to_i}f" % @price
       @amount_s = "%0.#{amount_precision.to_i}f" % @amount
     end

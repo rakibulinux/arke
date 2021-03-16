@@ -63,5 +63,27 @@ describe Arke::Order do
       expect(order.price_s).to eq("2.450000")
       expect(order.amount_s).to eq("1.120000")
     end
+
+    it "applies min_order_size according to precision" do
+      expect(target_account).to receive(:market_config).and_return(
+        {
+          "id"               => "htusdt",
+          "base_unit"        => "ht",
+          "quote_unit"       => "usdt",
+          "min_price"        => nil,
+          "max_price"        => nil,
+          "min_amount"       => 0.1,
+          "amount_precision" => 2,
+          "price_precision"  => 4,
+          "min_order_size"   => 5,
+        }
+      )
+      order = Arke::Order.new("htusdt", "14.56".to_d, "0.1".to_d, :buy)
+      order.apply_requirements(target_account)
+      expect(order.price).to eq("14.56".to_d)
+      expect(order.amount).to eq("0.35".to_d)
+      expect(order.price_s).to eq("14.5600")
+      expect(order.amount_s).to eq("0.35")
+    end
   end
 end
