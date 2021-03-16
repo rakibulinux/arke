@@ -68,14 +68,16 @@ module Arke::Exchange
       raise "ACCOUNT:#{id} amount_s is nil" if order.amount_s.nil?
       raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
 
-      order = {
+      type = order.type == "market" ? "market" : "limit"
+
+      params = {
         "account-id": @account_id,
         "symbol":     order.market.downcase,
-        "type":       "#{order.side}-limit",
+        "type":       "#{order.side}-#{type}",
         "amount":     order.amount_s,
-        "price":      order.price_s,
       }
-      authenticated_request("/v1/order/orders/place", "POST", order)
+      params["price"] = order.price_s if type == "limit"
+      authenticated_request("/v1/order/orders/place", "POST", params)
     end
 
     def fetch_openorders(market)

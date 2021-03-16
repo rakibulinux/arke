@@ -125,7 +125,7 @@ DEPENDENCIES
   irb (~> 1.0)
   mime-types (~> 3.3)
   pry (~> 0.12)
-  rack (~> 2)
+  rack (~> 2.2)
   rbtree (~> 0.4.2)
   rspec (~> 3.9)
   shoulda-matchers (~> 4.1.2)

@@ -26,8 +26,9 @@ group :development, :test do
   gem 'shoulda-matchers', '~> 4.1.2'
   gem "rspec", "~> 3.9"
   gem "irb", "~> 1.0"
-  gem "rack", "~> 2"
   gem "mime-types", "~> 3.3"
 end
 
 gem 'simplecov', require: false, group: :test
+
+gem "rack", "~> 2.2"

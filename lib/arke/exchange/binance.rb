@@ -239,11 +239,17 @@ module Arke::Exchange
       raw_order = {
         symbol:        order.market.upcase,
         side:          order.side.upcase,
-        type:          "LIMIT",
         time_in_force: "GTC",
         quantity:      "%f" % amount,
-        price:         order.price_s,
       }
+
+      if order.type == "market"
+        raw_order[:type] = "MARKET"
+      else
+        raw_order[:type] = "LIMIT"
+        raw_order[:price] = order.price_s
+      end
+
       logger.debug { "Binance order: #{raw_order}" }
       @client.create_order!(raw_order)
     end
