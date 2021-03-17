@@ -306,11 +306,11 @@ module Arke::Exchange
         trd = msg["trade"]
         logger.debug { "ACCOUNT:#{id} trade received: #{trd}" }
 
-        if trd["order_id"]
+        if trd["order_id"] # Opendax >= 2.3
           amount = trd["amount"].to_f
           side = trd["side"].to_sym
-          notify_private_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, side, amount, trd["price"].to_f, trd["total"], trd["order_id"]), true)
-        else
+          notify_private_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, side, amount, trd["price"].to_f, trd["total"], trd["order_id"]), false)
+        else # Opendax < 2.3
           amount = trd["volume"].to_f
           notify_private_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :buy, amount, trd["price"].to_f, trd["total"], trd["bid_id"]), false)
           notify_private_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :sell, amount, trd["price"].to_f, trd["total"], trd["ask_id"]), false)
