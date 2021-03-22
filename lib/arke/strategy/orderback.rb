@@ -24,6 +24,7 @@ module Arke::Strategy
       @spread_asks = params["spread_asks"].to_d
       @side_asks = %w[asks both].include?(@side)
       @side_bids = %w[bids both].include?(@side)
+      @limit_by_target_balance = params["limit_by_target_balance"] ? true : false
 
       @enable_orderback = params["enable_orderback"] ? true : false
       @min_order_back_amount = params["min_order_back_amount"].to_f
@@ -194,12 +195,12 @@ module Arke::Strategy
       source_base_free = source.account.balance(source.base)["free"]
       target_base_total = target.account.balance(target.base)["total"]
 
-      if source_base_free < limit_bids_base_applied
+      if source_base_free < limit_bids_base_applied && @limit_by_target_balance
         limit_bids_base_applied = source_base_free
         logger.warn("#{source.base} balance on #{source.account.driver} is #{source_base_free} lower than the limit set to #{limit[:limit_bids_base]}")
       end
 
-      if target_base_total < limit_asks_base_applied
+      if target_base_total < limit_asks_base_applied && @limit_by_target_balance
         limit_asks_base_applied = target_base_total
         logger.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower than the limit set to #{limit[:limit_asks_base]}")
       end
