@@ -227,12 +227,7 @@ module Arke
     end
 
     def fetch_openorders(strategy)
-      actions = []
-      (GRACE_TIME / strategy.target.account.delay).ceil.times do
-        actions << Action.new(:noop, strategy.target)
-      end
-      actions << Action.new(:fetch_openorders, strategy.target)
-      strategy.target.account.executor.push(strategy.id, actions)
+      strategy.target.account.executor.fetch_openorders(strategy.target, GRACE_TIME)
     end
 
     # Stops workers and strategy execution

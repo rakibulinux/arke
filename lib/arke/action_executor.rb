@@ -13,6 +13,7 @@ module Arke
       @queues = {}
       @delays = {}
       @timers = {}
+      @enabled = true
     end
 
     def schedule_timers(queue_id, offset, periods)
@@ -22,7 +23,7 @@ module Arke
         delays.each_with_index do |period, i|
           @timers[queue_id] ||= []
           @timers[queue_id] << EM::Synchrony.add_periodic_timer(period) do
-            if @queues[queue_id]
+            if @queues[queue_id] && @enabled
               idx = ((@queues[queue_id].size / delays.size) * i).to_i
               action = @queues[queue_id].delete_at(idx)
               schedule(action)
@@ -68,6 +69,22 @@ module Arke
     def stop
       logger.debug { "ACCOUNT:#{id} Closed queue for #{account}" }
       @timers.each_value(&:cancel)
+    end
+
+    #
+    # Disable the executor during the fetch of open orders
+    # Let some time before the call to make sure pending orders are process by the platform
+    #
+    def fetch_openorders(destination, grace_time)
+      return unless @enabled
+
+      @enabled = false
+      logger.info { "ACCOUNT:#{id} Fetching open orders, disabling executor for #{grace_time} secs" }
+      Fiber.new do
+        EM::Synchrony.sleep(grace_time)
+        destination.fetch_openorders
+        @enabled = true
+      end.resume
     end
 
     private
