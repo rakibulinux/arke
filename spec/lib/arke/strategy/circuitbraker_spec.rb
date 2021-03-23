@@ -85,6 +85,65 @@ describe Arke::Strategy::Circuitbraker do
     end
   end
 
+  context "with fx" do
+    let(:fx) { ::Arke::Fx::Static.new(fx_config) }
+
+    let(:fx_config) do
+      {
+        "type" => "static",
+        "rate" => rate,
+      }
+    end
+
+    let(:rate) { 10.0 }
+
+    before(:each) do
+      strategy.fx = fx
+    end
+
+    context "orders are out of bounds" do
+      it "cancels them" do
+        order14 = Arke::Order.new("BTCUSD", 1394.5, 1, :sell, "limit", 14)
+        order15 = Arke::Order.new("BTCUSD", 1350, 1, :sell, "limit", 15)
+        order16 = Arke::Order.new("BTCUSD", 1379.5, 1, :buy, "limit", 16)
+        order17 = Arke::Order.new("BTCUSD", 1409.5, 1, :buy, "limit", 17)
+
+        target.add_order(order14)
+        target.add_order(order15)
+        target.add_order(order16)
+        target.add_order(order17)
+
+        expect(executor).to receive(:push).with(
+          "circuitbraker-test",
+          [
+            Arke::Action.new(:order_stop, target, order: order15, priority: "1_000_000_045.543".to_d),
+            Arke::Action.new(:order_stop, target, order: order17, priority: "1_000_000_030.0268".to_d),
+            Arke::Action.new(:order_stop, target, order: order14, priority: "1_000_000_001.043".to_d),
+            Arke::Action.new(:order_stop, target, order: order16, priority: "1_000_000_000.0268".to_d),
+          ]
+        )
+        strategy.call
+      end
+    end
+
+    context "no orders are out of bounds" do
+      it "does nothing" do
+        order14 = Arke::Order.new("BTCUSD", 1395.6, 1, :sell, "limit", 14)
+        order15 = Arke::Order.new("BTCUSD", 1400, 1, :sell, "limit", 15)
+        order16 = Arke::Order.new("BTCUSD", 1379.3, 1, :buy, "limit", 16)
+        order17 = Arke::Order.new("BTCUSD", 1359.5, 1, :buy, "limit", 17)
+
+        target.add_order(order14)
+        target.add_order(order15)
+        target.add_order(order16)
+        target.add_order(order17)
+
+        expect(executor).to_not receive(:push)
+        strategy.call
+      end
+    end
+  end
+
   context "no open orders" do
     it "does nothing" do
       expect(executor).to_not receive(:push)

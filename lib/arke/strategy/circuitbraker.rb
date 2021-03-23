@@ -29,6 +29,16 @@ module Arke::Strategy
       end
     end
 
+    def apply_fx(price)
+      if fx
+        raise "FX Rate is not ready" unless fx.rate
+
+        price * fx.rate
+      else
+        price
+      end
+    end
+
     def call
       raise "This strategy supports only one exchange source" if sources.size > 1
 
@@ -38,6 +48,9 @@ module Arke::Strategy
       top_ask = source.orderbook[:sell].first&.first
       top_bid = source.orderbook[:buy].first&.first
       raise "Source order book is empty" if top_ask.nil? || top_bid.nil?
+
+      top_ask = apply_fx(top_ask)
+      top_bid = apply_fx(top_bid)
 
       limit_best_sell = apply_spread(:sell, top_ask, @spread_asks)
       limit_best_buy = apply_spread(:buy, top_bid, @spread_bids)
