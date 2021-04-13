@@ -78,6 +78,13 @@ module Arke::Strategy
     end
 
     def notify_private_trade_with_trust(trade)
+      if trade.market.upcase != target.id.upcase
+        logger.debug { "ID:#{id} orderback not triggered because #{trade.market.upcase} != #{target.id.upcase}" }
+        return
+      end
+
+      logger.info { "ID:#{id} trade received: #{trade}" }
+
       order = Arke::Order.new(trade.market, trade.price, trade.volume, trade.type, @orderback_type)
       order_back(trade, order)
     end
