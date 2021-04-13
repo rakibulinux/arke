@@ -174,7 +174,7 @@ module Arke::Exchange
     end
 
     def get_balances
-      post_private("Balance").body["result"].map do |b|
+      Array(post_private("Balance").body["result"]).map do |b|
         {
           "currency" => b.first,
           "free"     => b.last.to_d,
@@ -213,7 +213,7 @@ module Arke::Exchange
       nonce = opts["nonce"] = generate_nonce()
       params = opts.map {|param| param.join("=") }.join("&")
 
-      @rest_conn.post do |req|
+      res = @rest_conn.post do |req|
         req.url(url)
         req.headers = {
           "api-key"      => @api_key,
@@ -222,6 +222,12 @@ module Arke::Exchange
         }
         req.body = params
       end
+
+      if !res.body["error"].nil? && !res.body["error"].empty?
+        raise "Kraken call to #{method} failed: %s" % [res.body["error"].join(", ")]
+      end
+
+      res
     end
 
     def generate_nonce

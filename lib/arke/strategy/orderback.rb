@@ -89,7 +89,7 @@ module Arke::Strategy
       end
 
       if trade.market.upcase != target.id.upcase
-        logger.info { "ID:#{id} orderback not triggered because #{trade.market.upcase} != #{target.id.upcase}" }
+        logger.debug { "ID:#{id} orderback not triggered because #{trade.market.upcase} != #{target.id.upcase}" }
         return
       end
 
