@@ -18,7 +18,7 @@ module Arke
 
     def to_s
       id_s = id ? "id:#{id} " : ""
-      "<Order #{id_s}#{market}:#{type}:#{side} price:#{price} amount:#{amount}>"
+      "<Order %s%s:%s:%s price:%f amount:%f>" % [id_s, market, type, side, price, amount]
     end
     alias inspect to_s
 

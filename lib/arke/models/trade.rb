@@ -3,6 +3,7 @@
 module Arke
   Trade = Struct.new(:id, :market, :type, :volume, :price, :total, :order_id)
   PublicTrade = Struct.new(:id, :market, :exchange, :taker_type, :amount, :price, :total, :created_at) do
+  PriceLevel = Struct.new(:price, :amount)
 
     def build_data
       {
