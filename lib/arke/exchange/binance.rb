@@ -263,7 +263,13 @@ module Arke::Exchange
     end
 
     def get_balances
-      balances = @client.account_info["balances"]
+      info = @client.account_info
+      balances = info["balances"]
+      unless balances
+        logger.error "ACCOUNT:#{id} Failed to fetch balance: #{info["msg"]}"
+        return []
+      end
+
       balances.map do |data|
         {
           "currency" => data["asset"],

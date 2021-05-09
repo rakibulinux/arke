@@ -98,7 +98,7 @@ module Arke
 
         # Initialize executors & fx classes
         @strategies.each do |strategy|
-          strategy.target.account.executor.create_queue(strategy.id, strategy.delay)
+          strategy.target&.account&.executor&.create_queue(strategy.id, strategy.delay)
           strategy.sources.each do |source|
             source.account.executor.create_queue(strategy.id)
           end
@@ -146,7 +146,7 @@ module Arke
     end
 
     def tick(strategy)
-      unless strategy.target.account.ws
+      if strategy.target && !strategy.target.account.ws
         logger.warn { "ID:#{strategy.id} Skipping strategy execution since the websocket is not connected" }
         return
       end
@@ -227,7 +227,7 @@ module Arke
     end
 
     def fetch_openorders(strategy)
-      strategy.target.account.executor.fetch_openorders(strategy.target, GRACE_TIME)
+      strategy.target.account.executor.fetch_openorders(strategy.target, GRACE_TIME) if strategy.target
     end
 
     # Stops workers and strategy execution

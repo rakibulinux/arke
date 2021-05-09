@@ -20,14 +20,14 @@ module Arke::Strategy
       @debug_infos = {}
       @period = (config["period"] || DEFAULT_PERIOD).to_f
       @period_random_delay = config["period_random_delay"].to_f
-      @delay = Array(config["delay"] || target.account.delay)
+      @sources = sources
+      @target = target
+      @delay = Array(config["delay"] || target&.account&.delay || source&.account&.delay)
       params = @config["params"] || {}
       @linked_strategy_id = params["linked_strategy_id"]
       @side = SIDES.include?(params["side"]) ? params["side"] : "both"
       @max_amount_per_order = params["max_amount_per_order"]&.to_d
       @trades = []
-      @sources = sources
-      @target = target
       @reactor = reactor
       logger.info { "ID:#{id} ----====[ #{self.class.to_s.split('::').last} Strategy ]====----" }
     end
