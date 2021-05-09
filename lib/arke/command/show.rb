@@ -49,6 +49,10 @@ module Arke
           return puts "  secret not configured".yellow unless account.secret
 
           account.get_balances.each do |b|
+            unless b.is_a?(Hash)
+              ::Arke::Log.error "Unexpected balance object: #{b}"
+              next
+            end
             if b["total"] && (zero? || b["total"].to_f.positive?)
               puts ("  %-8s: %0.4f (free: %0.4f locked: %0.4f)" % [b["currency"], b["total"], b["free"], b["locked"]]).green
             end

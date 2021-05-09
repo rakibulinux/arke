@@ -38,7 +38,11 @@ module Arke::Exchange
 
     def set_account
       path = "/v1/account/accounts"
-      @account_id = authenticated_request(path, "GET").body["data"].first["id"]
+      data = authenticated_request(path, "GET").body["data"]
+      spot_account = data.find {|d| d["type"] == "spot" }
+      raise "Spot account not found: #{data}" unless spot_account
+
+      @account_id = spot_account["id"]
     end
 
     def get_balances
