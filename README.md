@@ -175,7 +175,7 @@ An soon as an order is matched, the strategy creates an order on the source exch
 | `spread_asks`           | Spread for asks side (in percentage)                         |
 | `limit_asks_base`       | Sum of amounts of orders of ask side                         |
 | `limit_bids_base`       | Sum of amounts of orders of bid side                         |
-| `limit_by_target_balance` | Limit bids and asks amount according to the target account balances (default: `false`)|
+| `limit_by_source_balance` | Limit bids and asks amount according to the source account balances (default: `false`)|
 | `balance_base_perc`     | Ratio for sum of amounts of orders of ask side based on base currency balance   |
 | `balance_quote_perc`    | Ratio for sum of amounts of orders of bid side based on quote currency balance  |
 | `levels_size`           | Minimum price difference between orders                      |
