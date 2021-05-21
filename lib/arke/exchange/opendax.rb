@@ -110,6 +110,14 @@ module Arke::Exchange
 
       response = post(req)
       return unless response.body&.is_a?(Hash)
+
+      if response.body["error"] == "order is already closed"
+        notify_deleted_order(order)
+        logger.warn { "ACCOUNT:#{id} order #{order.id} was already closed" }
+        return
+      end
+
+      raise response.body["error"].to_s if response.body["error"]
       raise response.body["errors"].to_s if response.body["errors"]
       return unless %w[cancel rejected done].include?(response.body["state"])
 
