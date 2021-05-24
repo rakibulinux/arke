@@ -12,6 +12,7 @@ module Arke::Plugin
       @limit_bids_base = params["limit_bids_base"]&.to_d
       @balance_base_perc = params["balance_base_perc"]&.to_d
       @balance_quote_perc = params["balance_quote_perc"]&.to_d
+      @disable_balance_check = account.opts["disable_balance_check"] ? true : false
 
       super("LimitBalance (#{@account.id})", params)
     end
@@ -41,6 +42,18 @@ module Arke::Plugin
       limit_asks_base_applied = @limit_asks_base
       limit_bids_base_applied = @limit_bids_base
 
+      if @disable_balance_check
+        return {
+          mid_price: mid_price,
+          top_bid_price: top_bid_price,
+          top_ask_price: top_ask_price,
+          limit_bids_base: limit_bids_base_applied,
+          limit_asks_base: limit_asks_base_applied,
+          limit_bids_quote: nil,
+          limit_asks_quote: nil
+        }
+      end
+
       # Adjust bids/asks limit by balance ratio.
       if !@balance_quote_perc.nil? && @balance_quote_perc > 0
         limit_bids_quote = quote_balance * @balance_quote_perc
@@ -62,7 +75,6 @@ module Arke::Plugin
       end
 
       limit_asks_quote = target_base_total * mid_price
-
       {
         mid_price: mid_price,
         top_bid_price: top_bid_price,

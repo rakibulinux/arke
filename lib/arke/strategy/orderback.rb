@@ -25,6 +25,7 @@ module Arke::Strategy
       @side_asks = %w[asks both].include?(@side)
       @side_bids = %w[bids both].include?(@side)
       @limit_by_source_balance = params["limit_by_source_balance"] ? true : false
+      @disable_balance_check = target.account.opts["disable_balance_check"] ? true : false
 
       @enable_orderback = params["enable_orderback"] ? true : false
       @min_order_back_amount = params["min_order_back_amount"].to_f
@@ -196,20 +197,25 @@ module Arke::Strategy
       ob_agg = source.orderbook.aggregate(price_points_bids, price_points_asks, target.min_amount)
       ob = ob_agg.to_ob
 
-      limit_asks_quote = source.account.balance(source.quote)["free"]
-      limit_bids_quote = target.account.balance(target.quote)["total"]
+      if @disable_balance_check
+        limit_asks_quote = nil
+        limit_bids_quote = nil
+      else
+        limit_asks_quote = source.account.balance(source.quote)["free"]
+        limit_bids_quote = target.account.balance(target.quote)["total"]
 
-      source_base_free = source.account.balance(source.base)["free"]
-      target_base_total = target.account.balance(target.base)["total"]
+        source_base_free = source.account.balance(source.base)["free"]
+        target_base_total = target.account.balance(target.base)["total"]
 
-      if source_base_free < limit_bids_base_applied && @limit_by_source_balance
-        limit_bids_base_applied = source_base_free
-        logger.warn("#{source.base} balance on #{source.account.driver} is #{source_base_free} lower than the limit set to #{limit[:limit_bids_base]}")
-      end
+        if source_base_free < limit_bids_base_applied && @limit_by_source_balance
+          limit_bids_base_applied = source_base_free
+          logger.warn("#{source.base} balance on #{source.account.driver} is #{source_base_free} lower than the limit set to #{limit[:limit_bids_base]}")
+        end
 
-      if target_base_total < limit_asks_base_applied && @limit_by_source_balance
-        limit_asks_base_applied = target_base_total
-        logger.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower than the limit set to #{limit[:limit_asks_base]}")
+        if target_base_total < limit_asks_base_applied && @limit_by_source_balance
+          limit_asks_base_applied = target_base_total
+          logger.warn("#{target.base} balance on #{target.account.driver} is #{target_base_total} lower than the limit set to #{limit[:limit_asks_base]}")
+        end
       end
 
       ob_adjusted = ob.adjust_volume(
