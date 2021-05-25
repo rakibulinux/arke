@@ -101,7 +101,7 @@ strategies:
 | `key`    | API key                                                      |
 | `secret` | Secret key                                                   |
 | `delay`  | Minimum delay to respect between requests to this exchange (in second) |
-
+| `disable_balance_check` | Indicates to strategies to not limit the orders creation by the account balance |
 
 ### Strategies configuration
 
