@@ -60,10 +60,10 @@ module Arke::Strategy
     end
 
     def trigger_orders(s1, s2, top_ask, top_bid, amount)
-      bid = Arke::Order.new(s2.id, top_ask.price, amount, "buy", "limit")
+      bid = Arke::Order.new(s2.id, top_ask.price, amount, :buy, "limit")
       bid.apply_requirements(s2.account)
 
-      ask = Arke::Order.new(s1.id, top_bid.price, amount, "sell", "limit")
+      ask = Arke::Order.new(s1.id, top_bid.price, amount, :sell, "limit")
       ask.apply_requirements(s1.account)
 
       # Adjust order amount from other market constraints
@@ -84,13 +84,13 @@ module Arke::Strategy
       end
 
       # Final balances check
-      b2 = b2.account.balance(b2.quote)
+      b2 = s2.account.balance(s2.quote)
       if b2.nil? || b2["free"] < bid.amount * bid.price
         logger.warn("ID:#{id} Not enough %s to execute %s %s: %s" % [b2.quote, s2.account.id, s2.id, bid.to_s])
         return
       end
 
-      b1 = b1.account.balance(b1.base)
+      b1 = s1.account.balance(s1.base)
       if b1.nil? || b1["free"] < ask.amount
         logger.warn("ID:#{id} Not enough %s to execute %s %s: %s" % [b1.quote, s1.account.id, s1.id, ask.to_s])
         return
@@ -170,7 +170,7 @@ module Arke::Strategy
                 next
               end
 
-              trigger_orders
+              trigger_orders(s1, s2, top_ask, top_bid, amount)
 
             end
           end
