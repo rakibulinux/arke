@@ -157,7 +157,7 @@ module Arke::Strategy
               m1_base = s1.account.balance(s1.base)["free"]
               m2_quote = s2.account.balance(s2.quote)["free"]
 
-              amount = [top_bid.amount, m1_base].min
+              amount = [top_bid.amount, top_ask.amount, m1_base].min
 
               if top_ask.amount * top_ask.price > m2_quote
                 amount = m2_quote / top_ask.price

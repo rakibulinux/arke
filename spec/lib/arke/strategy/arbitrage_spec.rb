@@ -160,45 +160,325 @@ describe Arke::Strategy::Arbitrage do
     let(:orderbook1) do
       [nil, [
         # Asks
-        [nil, 99.987000, -251],
         [nil, 99.986000, -239],
         [nil, 99.985000, -23],
         # Bids
         [nil, 99.984000, 20],
         [nil, 99.983000, 1],
-        [nil, 99.982000, 1],
-        [nil, 99.981000, 1],
       ]]
     end
 
     let(:orderbook2) do
       [nil, [
         # Asks
-        [nil, 99.987000, -251],
         [nil, 99.986000, -239],
         [nil, 99.985000, -23],
         # Bids
         [nil, 99.984000, 20],
         [nil, 99.983000, 1],
-        [nil, 99.982000, 1],
-        [nil, 99.981000, 1],
       ]]
     end
 
     it do
-      strategy.call
+      EM.synchrony do
+        strategy.call
+        EM.stop
+      end
     end
   end
 
-  # context "amount capped by the bid (in base) WITHOUT reaching the min order amount" do
-  # end
+  context "amount capped by the bid (in base) WITHOUT reaching the min order amount" do
+    let(:orderbook1) do
+      [nil, [
+        # Asks
+        [nil, 110.987, -251],
+        [nil, 110.986, -239],
+        # Bids
+        [nil, 110.984, 2],
+        [nil, 110.983, 1],
+      ]]
+    end
 
-  # context "amount capped by the bid (in base) WITH reaching the min order amount" do
-  # end
+    let(:orderbook2) do
+      [nil, [
+        # Asks
+        [nil, 99.986, -239],
+        [nil, 99.985, -23],
+        # Bids
+        [nil, 99.984, 20],
+        [nil, 99.983, 1],
+      ]]
+    end
 
-  # context "amount capped by the ask (in quote) WITHOUT reaching the min order amount" do
-  # end
+    it do
+      expect(source1.account.executor).to receive(:push).with("arbitrage-BTCUSD", [
+        ::Arke::Action.new(:order_create, source1, order: ::Arke::Order.new("BTCUSD", "110.984".to_d, "2".to_d, :sell, "limit"))
+      ])
 
-  # context "amount capped by the ask (in quote) WITH reaching the min order amount" do
-  # end
+      expect(source2.account.executor).to receive(:push).with("arbitrage-BTCUSD", [
+        ::Arke::Action.new(:order_create, source2, order: ::Arke::Order.new("btcusd", "99.985".to_d, "2".to_d, :buy, "limit"))
+      ])
+
+      EM.synchrony do
+        strategy.call
+        EM.stop
+      end
+    end
+  end
+
+  context "amount capped by the bid balance (in base) WITHOUT reaching the min order amount" do
+    let(:balances1) do
+      [
+        {
+          "currency" => "BTC",
+          "total"    => 2,
+          "free"     => 2,
+          "locked"   => 0
+        },
+        {
+          "currency" => "USD",
+          "total"    => 10_000,
+          "free"     => 10_000,
+          "locked"   => 0,
+        }
+      ]
+    end
+  
+    let(:orderbook1) do
+      [nil, [
+        # Asks
+        [nil, 110.987, -251],
+        [nil, 110.986, -239],
+        # Bids
+        [nil, 110.984, 20],
+        [nil, 110.983, 1],
+      ]]
+    end
+
+    let(:orderbook2) do
+      [nil, [
+        # Asks
+        [nil, 99.986, -239],
+        [nil, 99.985, -23],
+        # Bids
+        [nil, 99.984, 20],
+        [nil, 99.983, 1],
+      ]]
+    end
+
+    it do
+      expect(source1.account.executor).to receive(:push).with("arbitrage-BTCUSD", [
+        ::Arke::Action.new(:order_create, source1, order: ::Arke::Order.new("BTCUSD", "110.984".to_d, "2".to_d, :sell, "limit"))
+      ])
+
+      expect(source2.account.executor).to receive(:push).with("arbitrage-BTCUSD", [
+        ::Arke::Action.new(:order_create, source2, order: ::Arke::Order.new("btcusd", "99.985".to_d, "2".to_d, :buy, "limit"))
+      ])
+
+      EM.synchrony do
+        strategy.call
+        EM.stop
+      end
+    end
+  end
+
+  context "amount capped by the bid (in base) WITH reaching the min order amount" do
+    let(:balances1) do
+      [
+        {
+          "currency" => "BTC",
+          "total"    => 0.01,
+          "free"     => 0.01,
+          "locked"   => 0
+        },
+        {
+          "currency" => "USD",
+          "total"    => 10_000,
+          "free"     => 10_000,
+          "locked"   => 0,
+        }
+      ]
+    end
+
+    let(:orderbook1) do
+      [nil, [
+        # Asks
+        [nil, 110.987, -251],
+        [nil, 110.986, -239],
+        # Bids
+        [nil, 110.984, 20],
+        [nil, 110.983, 1],
+      ]]
+    end
+
+    let(:orderbook2) do
+      [nil, [
+        # Asks
+        [nil, 99.986, -239],
+        [nil, 99.985, -23],
+        # Bids
+        [nil, 99.984, 20],
+        [nil, 99.983, 1],
+      ]]
+    end
+
+    it do
+      EM.synchrony do
+        strategy.call
+        EM.stop
+      end
+    end
+  end
+
+  context "amount capped by the ask (in quote) WITHOUT reaching the min order amount" do
+    let(:orderbook1) do
+      [nil, [
+        # Asks
+        [nil, 110.987, -251],
+        [nil, 110.986, -239],
+        # Bids
+        [nil, 110.984, 20],
+        [nil, 110.983, 1],
+      ]]
+    end
+
+    let(:orderbook2) do
+      [nil, [
+        # Asks
+        [nil, 99.987, -251],
+        [nil, 99.986, -239],
+        [nil, 99.985, -2],
+        # Bids
+        [nil, 99.984, 20],
+        [nil, 99.983, 1],
+        [nil, 99.982, 1],
+        [nil, 99.981, 1],
+      ]]
+    end
+
+    it do
+      expect(source1.account.executor).to receive(:push).with("arbitrage-BTCUSD", [
+        ::Arke::Action.new(:order_create, source1, order: ::Arke::Order.new("BTCUSD", "110.984".to_d, "2".to_d, :sell, "limit"))
+      ])
+
+      expect(source2.account.executor).to receive(:push).with("arbitrage-BTCUSD", [
+        ::Arke::Action.new(:order_create, source2, order: ::Arke::Order.new("btcusd", "99.985".to_d, "2".to_d, :buy, "limit"))
+      ])
+
+      EM.synchrony do
+        strategy.call
+        EM.stop
+      end
+    end
+  end
+
+  context "amount capped by the ask balance (in quote) WITHOUT reaching the min order amount" do
+    let(:balances2) do
+      [
+        {
+          "currency" => "btc",
+          "total"    => 3,
+          "free"     => 3,
+          "locked"   => 0
+        },
+        {
+          "currency" => "usd",
+          "total"    => 199.97,
+          "free"     => 199.97,
+          "locked"   => 0,
+        }
+      ]
+    end
+  
+    let(:orderbook1) do
+      [nil, [
+        # Asks
+        [nil, 110.987, -251],
+        [nil, 110.986, -239],
+        # Bids
+        [nil, 110.984, 20],
+        [nil, 110.983, 1],
+      ]]
+    end
+
+    let(:orderbook2) do
+      [nil, [
+        # Asks
+        [nil, 99.987, -251],
+        [nil, 99.986, -239],
+        [nil, 99.985, -23],
+        # Bids
+        [nil, 99.984, 20],
+        [nil, 99.983, 1],
+        [nil, 99.982, 1],
+        [nil, 99.981, 1],
+      ]]
+    end
+
+    it do
+      expect(source1.account.executor).to receive(:push).with("arbitrage-BTCUSD", [
+        ::Arke::Action.new(:order_create, source1, order: ::Arke::Order.new("BTCUSD", "110.984".to_d, "2".to_d, :sell, "limit"))
+      ])
+
+      expect(source2.account.executor).to receive(:push).with("arbitrage-BTCUSD", [
+        ::Arke::Action.new(:order_create, source2, order: ::Arke::Order.new("btcusd", "99.985".to_d, "2".to_d, :buy, "limit"))
+      ])
+
+      EM.synchrony do
+        strategy.call
+        EM.stop
+      end
+    end
+  end
+
+  context "amount capped by the ask (in quote) WITH reaching the min order amount" do
+    let(:balances2) do
+      [
+        {
+          "currency" => "btc",
+          "total"    => 3,
+          "free"     => 3,
+          "locked"   => 0
+        },
+        {
+          "currency" => "usd",
+          "total"    => 1.9997,
+          "free"     => 1.9997,
+          "locked"   => 0,
+        }
+      ]
+    end
+
+    let(:orderbook1) do
+      [nil, [
+        # Asks
+        [nil, 110.987, -251],
+        [nil, 110.986, -239],
+        # Bids
+        [nil, 110.984, 20],
+        [nil, 110.983, 1],
+      ]]
+    end
+
+    let(:orderbook2) do
+      [nil, [
+        # Asks
+        [nil, 99.987, -251],
+        [nil, 99.986, -239],
+        [nil, 99.985, -2],
+        # Bids
+        [nil, 99.984, 20],
+        [nil, 99.983, 1],
+        [nil, 99.982, 1],
+        [nil, 99.981, 1],
+      ]]
+    end
+
+    it do
+      EM.synchrony do
+        strategy.call
+        EM.stop
+      end
+    end
+  end
 end
