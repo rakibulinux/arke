@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "byebug"
-
 module Arke::Strategy
   class Arbitrage < Base
     include ::Arke::Helpers::Spread
