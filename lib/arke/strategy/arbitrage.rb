@@ -101,10 +101,6 @@ module Arke::Strategy
 
       s1.account.executor.push(id, [Arke::Action.new(:order_create, s1, order: ask)])
       s2.account.executor.push(id, [Arke::Action.new(:order_create, s2, order: bid)])
-
-      EM::Synchrony.add_timer(2) do
-        EM.stop
-      end
     end
 
     def call
