@@ -32,6 +32,25 @@ accounts:
         locked: 0
 
 strategies:
+- id: skew-ETHUSD
+  type: skew
+  params:
+    spread_ask: 0.003
+    spread_bid: 0.003
+    levels_price_step: 5
+    levels_size: 1
+    levels_price_func: linear
+    levels_count: 6
+    target_base_balance_in_quote: 1000
+    max_skew_perc: 0.5
+
+  target:
+    account_id: bitfaker-target
+    market_id: ethusd
+  sources:
+  - account_id: bitfaker-source
+    market_id: ETHUSD
+
 - id: copy-ETHUSD
   type: copy
   enabled: true
