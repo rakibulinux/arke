@@ -175,7 +175,7 @@ describe Arke::Exchange::Rubykube do
       end
 
       let(:trade_executed) do
-        OpenStruct.new("data": {"trade" => {"ask_id" => order_id, "at" => 1_546_605_232, "bid_id" => order_id, "id" => order_id, "kind" => "ask", "market" => "ethusd", "price" => "1", "volume" => "1.0"}}.to_json)
+        OpenStruct.new("data": {"trade" => {"at" => 1_546_605_232, "order_id" => order_id, "side" => "ask", "market" => "ethusd", "price" => "1", "amount" => "1.0", "total" => "1.0"}}.to_json)
       end
 
       before do
@@ -195,7 +195,7 @@ describe Arke::Exchange::Rubykube do
       end
 
       it "sends a callback on executed trade" do
-        expect(rubykube).to receive(:notify_private_trade).twice
+        expect(rubykube).to receive(:notify_private_trade).once
         rubykube.send(:ws_read_message, :private, trade_executed)
       end
     end

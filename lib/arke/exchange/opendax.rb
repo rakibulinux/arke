@@ -317,11 +317,9 @@ module Arke::Exchange
         if trd["order_id"] # Opendax >= 2.3
           amount = trd["amount"].to_f
           side = trd["side"].to_sym
-          notify_private_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, side, amount, trd["price"].to_f, trd["total"], trd["order_id"]), true)
+          notify_private_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, side, amount, trd["price"].to_f, trd["total"], trd["order_id"]))
         else # Opendax < 2.3
-          amount = trd["volume"].to_f
-          notify_private_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :buy, amount, trd["price"].to_f, trd["total"], trd["bid_id"]), false)
-          notify_private_trade(Arke::Trade.new(trd["id"], trd["market"].upcase, :sell, amount, trd["price"].to_f, trd["total"], trd["ask_id"]), false)
+          raise "order_id not found in trade event, arke supports only Opendax >= 2.3"
         end
         return
       end

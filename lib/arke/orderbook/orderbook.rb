@@ -202,5 +202,21 @@ module Arke::Orderbook
         @book[k].merge!(ob[k]) {|_price, amount, ob_amount| amount + ob_amount }
       end
     end
+
+    def merge_reverse!(ob)
+      ob[:buy].each do |price, amount|
+        @book[:sell][1.to_d / price] = amount
+      end
+      ob[:sell].each do |price, amount|
+        @book[:buy][1.to_d / price] = amount
+      end
+    end
+
+    def reverse
+      ob = Orderbook.new(@market)
+      ob.merge_reverse!(self)
+      ob
+    end
+
   end
 end

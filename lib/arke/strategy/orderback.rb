@@ -67,52 +67,14 @@ module Arke::Strategy
     end
 
     def register_callbacks
-      target.account.register_on_private_trade_cb(&method(:notify_private_trade))
+      target.register_on_private_trade_cb(&method(:notify_private_trade))
     end
 
-    def notify_private_trade(trade, trust_trade_info=false)
-      if trust_trade_info
-        notify_private_trade_with_trust(trade)
-      else
-        notify_private_trade_without_trust(trade)
-      end
-    end
-
-    def notify_private_trade_with_trust(trade)
-      if trade.market.upcase != target.id.upcase
-        logger.debug { "ID:#{id} orderback not triggered because #{trade.market.upcase} != #{target.id.upcase}" }
-        return
-      end
-
+    def notify_private_trade(trade)
       logger.info { "ID:#{id} trade received: #{trade}" }
 
       order = Arke::Order.new(trade.market, trade.price, trade.volume, trade.type, @orderback_type)
       order_back(trade, order)
-    end
-
-    def notify_private_trade_without_trust(trade)
-      if @enable_orderback == false
-        logger.info { "ID:#{id} orderback not triggered because it's not enabled in configuration" }
-        return
-      end
-
-      if trade.market.upcase != target.id.upcase
-        logger.debug { "ID:#{id} orderback not triggered because #{trade.market.upcase} != #{target.id.upcase}" }
-        return
-      end
-
-      logger.info { "ID:#{id} trade received: #{trade}" }
-
-      order_buy = target.open_orders.get_by_id(:buy, trade.order_id)
-      order_sell = target.open_orders.get_by_id(:sell, trade.order_id)
-
-      if order_buy && order_sell
-        logger.error "ID:#{id} one order made a trade ?! order id:#{trade.order_id}"
-        return
-      end
-      order_back(trade, order_buy) if order_buy
-      order_back(trade, order_sell) if order_sell
-      logger.error { "ID:#{id} order not found for trade: #{trade}" } if !order_buy && !order_sell
     end
 
     def order_back(trade, order)
@@ -122,7 +84,7 @@ module Arke::Strategy
       if fx
         unless fx.rate
           logger.error "ID:#{id} FX Rate is not ready, delaying the orderback by 1 sec"
-          EM::Synchrony.add_timer(1) { order_back(trade, order) }
+          EM::Synchrony.add_timer(@orderback_grace_time) { order_back(trade, order) }
           return
         end
         price /= fx.rate

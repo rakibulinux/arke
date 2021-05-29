@@ -4,10 +4,10 @@ class Arke::Market
   include Arke::Helpers::Flags
 
   attr_reader :base, :quote, :amount_precision, :price_precision
-  attr_reader :min_amount, :account, :id, :orderbook
+  attr_reader :min_amount, :account, :id, :reverse
   attr_accessor :open_orders
 
-  def initialize(market_id, account, mode=0x0)
+  def initialize(market_id, account, mode=0x0, reverse=false)
     raise "missing market_id" unless market_id
 
     @id = market_id
@@ -20,7 +20,9 @@ class Arke::Market
     @min_amount = market_config["min_amount"]
     @open_orders = Arke::Orderbook::OpenOrders.new(id)
     @orderbook = Arke::Orderbook::Orderbook.new(id)
+    @reverse = reverse
     apply_flags(mode)
+    @private_trades_cb = []
     register_callbacks
   end
 
@@ -47,14 +49,24 @@ class Arke::Market
     @orderbook = @account.update_orderbook(id)
   end
 
+  def orderbook
+    @reverse ? @orderbook.reverse : @orderbook
+  end
+
   # Return the current state of the orderbook received by websocket
   def realtime_orderbook
-    account.books[id]&.fetch(:book)
+    book = account.books[id]&.fetch(:book)
+    @reverse ? book.reverse : book
+  end
+
+  def register_on_private_trade_cb(&cb)
+    @private_trades_cb << cb
   end
 
   def register_callbacks
     account.register_on_created_order(&method(:add_order))
     account.register_on_deleted_order(&method(:remove_order))
+    account.register_on_private_trade_cb(&method(:on_private_trade))
   end
 
   def add_order(order)
@@ -70,6 +82,20 @@ class Arke::Market
     if order.market.upcase == id.upcase && @open_orders.exist?(order.side, order.price, order.id)
       @open_orders.remove_order(order.id)
     end
+  end
+
+  def on_private_trade(trade, trust_trade_info=false)
+    if trade.market.upcase != id.upcase
+      logger.debug { "ID:#{id} markets ids don't match #{trade.market.upcase} != #{target.id.upcase}, ignoring trade..." }
+      return
+    end
+    if @reverse
+      price = 1.to_d / trade.price
+      amount = trade.total
+      total = trade.volume
+      trade = ::Arke::Trade.new(trade.id, trade.market, trade.type, amount, price, total, trade.order_id)
+    end
+    @private_trades_cb.each {|cb| cb&.call(trade, trust_trade_info) }
   end
 
   def fetch_balances

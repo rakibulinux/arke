@@ -147,8 +147,8 @@ module Arke::Exchange
       @public_trades_cb.each {|cb| cb&.call(trade) }
     end
 
-    def notify_private_trade(trade, trust_trade_info=false)
-      @private_trades_cb.each {|cb| cb&.call(trade, trust_trade_info) }
+    def notify_private_trade(trade)
+      @private_trades_cb.each {|cb| cb&.call(trade) }
     end
 
     def notify_created_order(order)
