@@ -40,7 +40,7 @@ module Arke
         market_id = config["market"]["id"]
         logger.warn "market:id in configuration will be deprecated in favor of market_id"
       end
-      @markets << Market.new(market_id, get_account(config["account_id"]), mode)
+      @markets << Market.new(market_id, get_account(config["account_id"]), mode, config["reverse"])
       @markets.last
     end
 

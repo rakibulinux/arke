@@ -83,7 +83,7 @@ module Arke::Strategy
       price = remove_spread(order.side, order.price, spread)
       if fx
         unless fx.rate
-          logger.error "ID:#{id} FX Rate is not ready, delaying the orderback by 1 sec"
+          logger.error "ID:#{id} FX Rate is not ready, delaying the orderback by #{@orderback_grace_time} sec"
           EM::Synchrony.add_timer(@orderback_grace_time) { order_back(trade, order) }
           return
         end
@@ -101,7 +101,6 @@ module Arke::Strategy
         logger.info { "ID:#{id} ordering back..." }
         grouped_trades = group_trades(@trades)
         orders = []
-        actions = []
         grouped_trades.each do |k, v|
           order = Arke::Order.new(source.id, k[0].to_f, v, k[1].to_sym, @orderback_type)
           if order.amount > @min_order_back_amount
@@ -113,10 +112,7 @@ module Arke::Strategy
           end
         end
 
-        orders.each do |order|
-          actions << Arke::Action.new(:order_create, source, order: order)
-        end
-        source.account.executor.push(id, actions)
+        source.create_orders(orders, id)
       rescue StandardError => e
         logger.error "ID:#{id} Error in orderback trigger: #{e}\n#{e.backtrace.join("\n")}"
       ensure

@@ -5,8 +5,8 @@ describe Arke::Strategy::Orderback do
   let!(:strategy) { Arke::Strategy::Orderback.new([source], target, config, nil) }
   let(:account_source) { Arke::Exchange.create(account_config) }
   let(:account_target) { Arke::Exchange.create(account_config) }
-  let(:source) { Arke::Market.new(config["sources"].first["market_id"], account_source, Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS) }
-  let(:target) { Arke::Market.new(config["target"]["market_id"], account_target, Arke::Helpers::Flags::DEFAULT_TARGET_FLAGS) }
+  let(:source) { Arke::Market.new(config["sources"].first["market_id"], account_source, Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS, config["sources"].first["reverse"]) }
+  let(:target) { Arke::Market.new(config["target"]["market_id"], account_target, Arke::Helpers::Flags::DEFAULT_TARGET_FLAGS, config["target"]["reverse"]) }
   let(:side) { "both" }
   let(:spread_asks) { 0.01 }
   let(:spread_bids) { 0.02 }
@@ -16,6 +16,20 @@ describe Arke::Strategy::Orderback do
   let(:orderback_type) { nil }
   let(:enable_orderback) { "true" }
   let(:fx_config) { nil }
+
+  let(:config_sources) do
+    [
+      "account_id" => 1,
+      "market_id"  => "xbtusd",
+    ]
+  end
+
+  let(:config_target) do
+    {
+      "account_id" => 1,
+      "market_id"  => "BTCUSD",
+    }
+  end
 
   let(:config) do
     {
@@ -36,14 +50,8 @@ describe Arke::Strategy::Orderback do
         "enable_orderback"      => enable_orderback,
       },
       "fx"      => fx_config,
-      "target"  => {
-        "account_id" => 1,
-        "market_id"  => "BTCUSD",
-      },
-      "sources" => [
-        "account_id" => 1,
-        "market_id"  => "xbtusd",
-      ],
+      "target"  => config_target,
+      "sources" => config_sources,
     }
   end
 
@@ -65,7 +73,6 @@ describe Arke::Strategy::Orderback do
   end
 
   context "running both sides" do
-    let(:side) { "both" }
     it "outputs a target orberbook" do
       expect(target_bids.to_hash).to eq(
         135.9554.to_d => 0.95982849262347e-2.to_d,
@@ -524,6 +531,41 @@ describe Arke::Strategy::Orderback do
     context "orderback_type: invalid" do
       it "should have the RuntimeError: orderback_type must be `limit` or `market`" do
         expect { Arke::Strategy::Orderback.new([source], target, config.merge("params" => config["params"].merge("orderback_type" => "invalid")), nil) }.to raise_error(RuntimeError, /orderback_type must be `limit` or `market`/)
+      end
+    end
+  end
+
+  context "reverse the source market" do
+    let(:orderback_grace_time) { 0.01 }
+    let(:config_target) do
+      {
+        "account_id" => 1,
+        "market_id"  => "BTCUSD",
+      }
+    end
+    let(:config_sources) do
+      [
+        "account_id" => 1,
+        "market_id"  => "xbtusd",
+        "reverse"    => true,
+      ]
+    end
+    it "reverses the trades and orders back" do
+      trade1 = ::Arke::Trade.new(42, "BTCUSD", :sell, 0.1, 200, nil, 14)
+      trade2 = ::Arke::Trade.new(43, "BTCUSD", :sell, 0.2, 200, nil, 14)
+      trade3 = ::Arke::Trade.new(44, "BTCUSD", :sell, 0.3, 200, nil, 15)
+
+      orderb = ::Arke::Order.new("xbtusd", "0.00505".to_d, "118.811881".to_d, :sell, "market")
+      actions = [
+        ::Arke::Action.new(:order_create, source, order: orderb)
+      ]
+      source.account.executor = double(:executor)
+      expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
+      EM.synchrony do
+        strategy.target.on_private_trade(trade1)
+        strategy.target.on_private_trade(trade2)
+        strategy.target.on_private_trade(trade3)
+        EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
       end
     end
   end

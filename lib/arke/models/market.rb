@@ -4,7 +4,7 @@ class Arke::Market
   include Arke::Helpers::Flags
 
   attr_reader :base, :quote, :amount_precision, :price_precision
-  attr_reader :min_amount, :account, :id, :reverse
+  attr_reader :min_amount, :account, :id, :reverse, :logger
   attr_accessor :open_orders
 
   def initialize(market_id, account, mode=0x0, reverse=false)
@@ -12,6 +12,7 @@ class Arke::Market
 
     @id = market_id
     @account = account
+    @logger = Arke::Log
     market_config = account.market_config(@id)
     @base = market_config["base_unit"]
     @quote = market_config["quote_unit"]
@@ -71,10 +72,10 @@ class Arke::Market
 
   def add_order(order)
     if order.market.upcase == id.upcase
-      Arke::Log.debug { "Order created market:#{id} order:#{order}" }
+      logger.debug { "Order created market:#{id} order:#{order}" }
       @open_orders.add_order(order)
     else
-      Arke::Log.debug { "Order skipped market:#{id} order:#{order}" }
+      logger.debug { "Order skipped market:#{id} order:#{order}" }
     end
   end
 
@@ -84,18 +85,32 @@ class Arke::Market
     end
   end
 
-  def on_private_trade(trade, trust_trade_info=false)
+  def create_orders(orders, requestor_id)
+    actions = []
+    orders.each do |order|
+      if @reverse
+        price = 1.to_d / order.price
+        amount = order.price * order.amount
+        side = order.side.to_sym == :sell ? :buy : :sell
+        order = ::Arke::Order.new(id, price, amount, side, order.type)
+      end
+      actions << Arke::Action.new(:order_create, self, order: order)
+    end
+    account.executor.push(requestor_id, actions)
+  end
+
+  def on_private_trade(trade)
     if trade.market.upcase != id.upcase
-      logger.debug { "ID:#{id} markets ids don't match #{trade.market.upcase} != #{target.id.upcase}, ignoring trade..." }
+      logger.debug { "ID:#{id} markets ids don't match #{trade.market.upcase} != #{id.upcase}, ignoring trade..." }
       return
     end
     if @reverse
       price = 1.to_d / trade.price
-      amount = trade.total
+      amount = trade.price * trade.volume
       total = trade.volume
       trade = ::Arke::Trade.new(trade.id, trade.market, trade.type, amount, price, total, trade.order_id)
     end
-    @private_trades_cb.each {|cb| cb&.call(trade, trust_trade_info) }
+    @private_trades_cb.each {|cb| cb&.call(trade) }
   end
 
   def fetch_balances
