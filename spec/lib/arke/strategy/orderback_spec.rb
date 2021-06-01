@@ -550,12 +550,13 @@ describe Arke::Strategy::Orderback do
         "reverse"    => true,
       ]
     end
-    it "reverses the trades and orders back" do
+
+    it "reverses the trades and orders back sell" do
       trade1 = ::Arke::Trade.new(42, "BTCUSD", :sell, 0.1, 200, nil, 14)
       trade2 = ::Arke::Trade.new(43, "BTCUSD", :sell, 0.2, 200, nil, 14)
       trade3 = ::Arke::Trade.new(44, "BTCUSD", :sell, 0.3, 200, nil, 15)
 
-      orderb = ::Arke::Order.new("xbtusd", "0.00505".to_d, "118.811881".to_d, :sell, "market")
+      orderb = ::Arke::Order.new("xbtusd", "0.005050000024997500123737626".to_d, "118.8118806".to_d, :sell, "market")
       actions = [
         ::Arke::Action.new(:order_create, source, order: orderb)
       ]
@@ -568,5 +569,25 @@ describe Arke::Strategy::Orderback do
         EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
       end
     end
+
+    it "reverses the trades and orders back buy" do
+      trade1 = ::Arke::Trade.new(42, "BTCUSD", :buy, 0.1, 200, nil, 14)
+      trade2 = ::Arke::Trade.new(43, "BTCUSD", :buy, 0.2, 200, nil, 14)
+      trade3 = ::Arke::Trade.new(44, "BTCUSD", :buy, 0.3, 200, nil, 15)
+
+      orderb = ::Arke::Order.new("xbtusd", "0.004900000015680000050176".to_d, "122.4489792".to_d, :buy, "market")
+      actions = [
+        ::Arke::Action.new(:order_create, source, order: orderb)
+      ]
+      source.account.executor = double(:executor)
+      expect(source.account.executor).to receive(:push).with("orderback-BTCUSD", actions)
+      EM.synchrony do
+        strategy.target.on_private_trade(trade1)
+        strategy.target.on_private_trade(trade2)
+        strategy.target.on_private_trade(trade3)
+        EM::Synchrony.add_timer(orderback_grace_time * 2) { EM.stop }
+      end
+    end
+
   end
 end
