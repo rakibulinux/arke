@@ -138,4 +138,84 @@ describe Arke::Orderbook::Generator do
       )
     end
   end
+
+  context "buy_pressure shape" do
+    let(:shape) { "buy_pressure" }
+
+    it do
+      ob, pps = gen.generate(params)
+      expect(ob.book[:sell].to_hash).to eq(
+        100.to_d => 1,
+        101.to_d => 2,
+        102.to_d => 3,
+        103.to_d => 4,
+        104.to_d => 5
+      )
+      expect(pps[:asks]).to eq(
+        [
+          ::Arke::PricePoint.new(101),
+          ::Arke::PricePoint.new(102),
+          ::Arke::PricePoint.new(103),
+          ::Arke::PricePoint.new(104),
+          ::Arke::PricePoint.new(105)
+        ]
+      )
+      expect(ob.book[:buy].to_hash).to eq(
+        99.to_d => 5,
+        98.to_d => 4,
+        97.to_d => 3,
+        96.to_d => 2,
+        95.to_d => 1
+      )
+      expect(pps[:bids]).to eq(
+        [
+          ::Arke::PricePoint.new(98),
+          ::Arke::PricePoint.new(97),
+          ::Arke::PricePoint.new(96),
+          ::Arke::PricePoint.new(95),
+          ::Arke::PricePoint.new(94)
+        ]
+      )
+    end
+  end
+
+  context "sell_pressure shape" do
+    let(:shape) { "sell_pressure" }
+
+    it do
+      ob, pps = gen.generate(params)
+      expect(ob.book[:sell].to_hash).to eq(
+        100.to_d => 5,
+        101.to_d => 4,
+        102.to_d => 3,
+        103.to_d => 2,
+        104.to_d => 1
+      )
+      expect(pps[:asks]).to eq(
+        [
+          ::Arke::PricePoint.new(101),
+          ::Arke::PricePoint.new(102),
+          ::Arke::PricePoint.new(103),
+          ::Arke::PricePoint.new(104),
+          ::Arke::PricePoint.new(105)
+        ]
+      )
+      expect(ob.book[:buy].to_hash).to eq(
+        99.to_d => 1,
+        98.to_d => 2,
+        97.to_d => 3,
+        96.to_d => 4,
+        95.to_d => 5
+      )
+      expect(pps[:bids]).to eq(
+        [
+          ::Arke::PricePoint.new(98),
+          ::Arke::PricePoint.new(97),
+          ::Arke::PricePoint.new(96),
+          ::Arke::PricePoint.new(95),
+          ::Arke::PricePoint.new(94)
+        ]
+      )
+    end
+  end
 end

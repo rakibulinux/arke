@@ -35,6 +35,10 @@ module Arke::Orderbook
         shape(method(:amount_v))
       when "w"
         shape(method(:amount_w))
+      when "buy_pressure"
+        shape(method(:amount_buy_pressure))
+      when "sell_pressure"
+        shape(method(:amount_sell_pressure))
       when "custom"
         shape(method(:amount_custom))
       else
@@ -61,7 +65,7 @@ module Arke::Orderbook
     def shape(a)
       current_ask_price = @best_ask_price
       @levels_count.times do |n|
-        order = Arke::Order.new(@market, current_ask_price, a.call(n), :sell)
+        order = Arke::Order.new(@market, current_ask_price, a.call(n, :sell), :sell)
         @asks[order.price] = order.amount
         @volume_asks_base += order.amount
         @volume_asks_quote += order.amount * order.price
@@ -71,7 +75,7 @@ module Arke::Orderbook
 
       current_bid_price = @best_bid_price
       @levels_count.times do |n|
-        order = Arke::Order.new(@market, current_bid_price, a.call(n), :buy)
+        order = Arke::Order.new(@market, current_bid_price, a.call(n, :buy), :buy)
         @bids[order.price] = order.amount
         @volume_bids_base += order.amount
         @volume_bids_quote += order.amount * order.price
@@ -86,15 +90,15 @@ module Arke::Orderbook
       a.to_d * (1 + (rand - 0.5) * @random)
     end
 
-    def amount_custom(n)
+    def amount_custom(n, _)
       amount(n + 1 > @levels.size ? @levels.last : @levels[n])
     end
 
-    def amount_v(n)
+    def amount_v(n, _)
       amount(n + 1)
     end
 
-    def amount_w(n)
+    def amount_w(n, _)
       case n
       when 0
         amount(1)
@@ -104,5 +108,14 @@ module Arke::Orderbook
         amount(n - 1)
       end
     end
+
+    def amount_buy_pressure(n, side)
+      side == :sell ? amount(n + 1) : amount(@levels_count - n)
+    end
+
+    def amount_sell_pressure(n, side)
+      side == :buy ? amount(n + 1) : amount(@levels_count - n)
+    end
+
   end
 end
