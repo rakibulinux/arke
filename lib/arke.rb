@@ -66,6 +66,7 @@ require "arke/strategy/orderback"
 require "arke/strategy/circuitbraker"
 require "arke/strategy/candle_sampling"
 require "arke/strategy/simple_copy"
+require "arke/strategy/skew"
 
 require "arke/exchange/base"
 require "arke/exchange/binance"
