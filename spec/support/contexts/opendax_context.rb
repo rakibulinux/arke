@@ -115,8 +115,13 @@ shared_context "mocked finex" do
     authorized_header = {"X-Auth-Apikey"=> @authorized_api_key}
 
     stub_request(:post, %r{finex/market/orders$})
+    .to_return(status: 403, body: "", headers: {})
+
+    stub_request(:post, %r{finex/market/orders$})
       .with(headers: authorized_header)
-      .to_return(status: 201, body: {}.to_json, headers: {})
+      .to_return(status: 201, body: {
+        "uuid" => "ce854300-d038-11eb-973b-321c1e15108c"
+      }.to_json, headers: {})
 
     stub_request(:get, %r{finex/public/markets$})
       .to_return(

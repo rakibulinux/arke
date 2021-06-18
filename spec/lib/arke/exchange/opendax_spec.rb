@@ -121,7 +121,7 @@ describe Arke::Exchange::Opendax do
           )
 
         cb = double("on_deleted_order callback", call: true)
-        rubykube.register_on_deleted_order(&cb.method(:call))
+        opendax.register_on_deleted_order(&cb.method(:call))
         expect(cb).to receive(:call).once.with(order)
         market.stop_order(order)
       end
@@ -142,7 +142,7 @@ describe Arke::Exchange::Opendax do
       end
     end
 
-    context "rubykube#process_message" do
+    context "opendax#process_message" do
       let(:order) { Arke::Order.new("ethusd", 1, 1, :buy) }
       let(:updated_order) { Arke::Order.new("ETHUSD", 1.0, 0.5, :buy) }
       let(:order_partially_fullfilled) do
@@ -169,7 +169,7 @@ describe Arke::Exchange::Opendax do
         )
       end
 
-      let(:order_id) { rubykube.create_order(order).id }
+      let(:order_id) { opendax.create_order(order).id }
       let(:order_cancelled) do
         OpenStruct.new("data": {"order" => {"id" => order_id, "at" => 1_546_605_232, "market" => "ethusd", "kind" => "bid", "price" => "1", "state" => "cancel", "remaining_volume" => "1.0", "origin_volume" => "1.0"}}.to_json)
       end
@@ -179,28 +179,28 @@ describe Arke::Exchange::Opendax do
       end
 
       before do
-        rubykube.create_order(order).id
+        opendax.create_order(order).id
       end
 
       it "updates order when partially fullfilled" do
         market
-        rubykube.send(:ws_read_message, :private, order_partially_fullfilled)
+        opendax.send(:ws_read_message, :private, order_partially_fullfilled)
         expect(market.open_orders[:buy][1].length).to eq(1)
         expect(market.open_orders[:buy][1][order_id]).to eq(updated_order)
       end
 
       it "removes order when cancelled" do
-        rubykube.send(:ws_read_message, :private, order_cancelled)
+        opendax.send(:ws_read_message, :private, order_cancelled)
         expect(market.open_orders[:buy].length).to eq(0)
       end
 
       it "sends a callback on executed trade" do
-        expect(rubykube).to receive(:notify_private_trade).twice
-        rubykube.send(:ws_read_message, :private, trade_executed)
+        expect(opendax).to receive(:notify_private_trade).twice
+        opendax.send(:ws_read_message, :private, trade_executed)
       end
     end
 
-    context "rubykube#cancel_all_orders" do
+    context "opendax#cancel_all_orders" do
       let(:order) { Arke::Order.new("ethusd", 1, 1, :buy, "limit", 12) }
       let(:order_second) { Arke::Order.new("ethusd", 1, 1, :sell, "limit", 13) }
 
@@ -217,10 +217,10 @@ describe Arke::Exchange::Opendax do
     end
   end
 
-  context "rubykube#market_config after peatio 2.2.14" do
-    include_context "mocked rubykube"
+  context "opendax#market_config after peatio 2.2.14" do
+    include_context "mocked opendax"
     it "generates market configuration" do
-      expect(rubykube.market_config("btcusd")).to eq(
+      expect(opendax.market_config("btcusd")).to eq(
         "id"               => "btcusd",
         "base_unit"        => "btc",
         "quote_unit"       => "usd",
@@ -233,7 +233,7 @@ describe Arke::Exchange::Opendax do
     end
   end
 
-  context "rubykube#market_config before peatio 2.2.14" do
+  context "opendax#market_config before peatio 2.2.14" do
     it "generates market configuration" do
       stub_request(:get, %r{peatio/public/markets})
         .to_return(
@@ -254,7 +254,7 @@ describe Arke::Exchange::Opendax do
           ].to_json,
           headers: {}
         )
-      expect(rubykube.market_config("btcusd")).to eq(
+      expect(opendax.market_config("btcusd")).to eq(
         "id"               => "btcusd",
         "base_unit"        => "btc",
         "quote_unit"       => "usd",
@@ -267,7 +267,7 @@ describe Arke::Exchange::Opendax do
     end
   end
 
-  context "rubykube#market_config misconfiguration" do
+  context "opendax#market_config misconfiguration" do
     it "doesn't raise error for missing non required fields" do
       stub_request(:get, %r{peatio/public/markets})
         .to_return(
@@ -284,7 +284,7 @@ describe Arke::Exchange::Opendax do
           ].to_json,
           headers: {}
         )
-      expect(rubykube.market_config("btcusd")).to eq(
+      expect(opendax.market_config("btcusd")).to eq(
         "id"               => "btcusd",
         "base_unit"        => "btc",
         "quote_unit"       => "usd",
@@ -310,7 +310,7 @@ describe Arke::Exchange::Opendax do
           ].to_json,
           headers: {}
         )
-      expect { rubykube.market_config("btcusd") }.to raise_error("Market btcusd not found")
+      expect { opendax.market_config("btcusd") }.to raise_error("Market btcusd not found")
     end
 
     it "raises error if base_unit is missing" do
@@ -328,7 +328,7 @@ describe Arke::Exchange::Opendax do
           ].to_json,
           headers: {}
         )
-      expect { rubykube.market_config("btcusd") }.to raise_error(/base_unit/)
+      expect { opendax.market_config("btcusd") }.to raise_error(/base_unit/)
     end
 
     it "raises error if quote_unit is missing" do
@@ -346,7 +346,7 @@ describe Arke::Exchange::Opendax do
           ].to_json,
           headers: {}
         )
-      expect { rubykube.market_config("btcusd") }.to raise_error(/quote_unit/)
+      expect { opendax.market_config("btcusd") }.to raise_error(/quote_unit/)
     end
 
     it "raises error if amount_precision is missing" do
@@ -364,7 +364,7 @@ describe Arke::Exchange::Opendax do
           ].to_json,
           headers: {}
         )
-      expect { rubykube.market_config("btcusd") }.to raise_error(/amount_precision/)
+      expect { opendax.market_config("btcusd") }.to raise_error(/amount_precision/)
     end
 
     it "raises error if price_precision is missing" do
@@ -382,7 +382,7 @@ describe Arke::Exchange::Opendax do
           ].to_json,
           headers: {}
         )
-      expect { rubykube.market_config("btcusd") }.to raise_error(/price_precision/)
+      expect { opendax.market_config("btcusd") }.to raise_error(/price_precision/)
     end
   end
 
@@ -455,6 +455,21 @@ describe Arke::Exchange::Opendax do
       expect(opendax.update_orderbook("ethusd")[:sell].to_hash).to eq(
         252.32.to_d => 0.1.to_d,
         252.92.to_d => 0.90403.to_d,
+        253.08.to_d => 0.73563.to_d
+      )
+    end
+
+    it "supports bulk events updates" do
+      opendax.send(:ws_read_private_message, snapshot)
+      opendax.send(:ws_read_private_message, "ethusd.ob-inc" => {"asks" => [["252.32", "0.1"], ["252.33", "0.2"], ["252.92", ""]], "sequence" => 6112})
+      expect(opendax.update_orderbook("ethusd")[:buy].to_hash).to eq(
+        249.16.to_d => 0.20603.to_d,
+        248.69.to_d => 0.09944.to_d,
+        248.66.to_d => 0.05057.to_d
+      )
+      expect(opendax.update_orderbook("ethusd")[:sell].to_hash).to eq(
+        252.32.to_d => 0.1.to_d,
+        252.33.to_d => 0.2.to_d,
         253.08.to_d => 0.73563.to_d
       )
     end

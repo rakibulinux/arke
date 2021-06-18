@@ -16,6 +16,7 @@ describe Arke::Exchange::Opendax do
 
   context "mocked opendax" do
     include_context "mocked opendax"
+    include_context "mocked finex"
     before(:each) { order.apply_requirements(finex) }
 
     context "finex#create_order" do
@@ -27,16 +28,16 @@ describe Arke::Exchange::Opendax do
 
       it "doesn't updates open_orders after create" do
         ord = finex.create_order(order)
-        assert_requested(:post, "http://www.devkube.com/api/v2/peatio/market/orders", times: 1) do |req|
+        assert_requested(:post, "http://www.devkube.com/api/v2/finex/market/orders", times: 1) do |req|
           expect(JSON.parse(req.body)).to eq(
-            "market"   => "ethusd",
-            "volume"   => "1.0000",
-            "price"    => "1.00",
-            "side"     => "buy",
-            "ord_type" => "limit"
+            "market" => "ethusd",
+            "amount" => "1.0000",
+            "price"  => "1.00",
+            "side"   => "buy",
+            "type"   => "limit"
           )
         end
-        expect(ord.id).to be_between(1, 1000)
+        expect(ord.id).to be_nil
         expect(market.open_orders.contains?(order.side, order.price)).to eq(false)
       end
     end
@@ -98,25 +99,11 @@ describe Arke::Exchange::Opendax do
       end
 
       it "cancels an order already closed and notifies because we may have missed the confirmation from the websocket" do
-        stub_request(:post, %r{peatio/market/orders/\d+/cancel})
+        stub_request(:post, %r{finex/market/orders/cancel/\d+})
           .with(headers: {"X-Auth-Apikey" => @authorized_api_key})
           .to_return(
-            status:  201,
-            body:    {
-              "id"               => 51_384,
-              "side"             => "sell",
-              "ord_type"         => "limit",
-              "price"            => "178.92",
-              "avg_price"        => "0.0",
-              "state"            => "cancel",
-              "market"           => "ethusd",
-              "created_at"       => "2020-01-30T14:08:55+01:00",
-              "updated_at"       => "2020-01-30T14:08:55+01:00",
-              "origin_volume"    => "1.0",
-              "remaining_volume" => "1.0",
-              "executed_volume"  => "0.0",
-              "trades_count"     => 0,
-            }.to_json,
+            status:  422,
+            body:    {"error" => "order is already closed"}.to_json,
             headers: {}
           )
 
@@ -127,7 +114,7 @@ describe Arke::Exchange::Opendax do
       end
 
       it "raises if we try to cancel a non existing order" do
-        stub_request(:post, %r{peatio/market/orders/\d+/cancel})
+        stub_request(:post, %r{finex/market/orders/cancel/\d+})
           .with(headers: {"X-Auth-Apikey" => @authorized_api_key})
           .to_return(
             status:  201,
@@ -169,17 +156,19 @@ describe Arke::Exchange::Opendax do
         )
       end
 
-      let(:order_id) { finex.create_order(order).id }
+      let(:order_id) { 51 }
       let(:order_cancelled) do
-        OpenStruct.new("data": {"order" => {"id" => order_id, "at" => 1_546_605_232, "market" => "ethusd", "kind" => "bid", "price" => "1", "state" => "cancel", "remaining_volume" => "1.0", "origin_volume" => "1.0"}}.to_json)
+        OpenStruct.new("data": {"order" => {"id" => order_id, "at" => 1_546_605_232, "market" => "ethusd",
+"kind" => "bid", "price" => "1", "state" => "cancel", "remaining_volume" => "1.0", "origin_volume" => "1.0"}}.to_json)
       end
 
       let(:trade_executed) do
-        OpenStruct.new("data": {"trade" => {"ask_id" => order_id, "at" => 1_546_605_232, "bid_id" => order_id, "id" => order_id, "kind" => "ask", "market" => "ethusd", "price" => "1", "volume" => "1.0"}}.to_json)
+        OpenStruct.new("data": {"trade" => {"ask_id" => order_id, "at" => 1_546_605_232, "bid_id" => order_id,
+"id" => order_id, "kind" => "ask", "market" => "ethusd", "price" => "1", "volume" => "1.0"}}.to_json)
       end
 
       before do
-        finex.create_order(order).id
+        finex.create_order(order)
       end
 
       it "updates order when partially fullfilled" do
@@ -210,6 +199,17 @@ describe Arke::Exchange::Opendax do
       end
 
       it "cancels all open orders orders" do
+        stub_request(:post, %r{finex/market/orders/cancel})
+        .with(
+          body:    "{\"market\":\"ethusd\"}",
+          headers: {"X-Auth-Apikey"=> @authorized_api_key}
+        )
+        .to_return(
+          status:  201,
+          body:    {}.to_json,
+          headers: {}
+        )
+
         market.cancel_all_orders
         expect(market.open_orders[:buy].length).to eq(1)
         expect(market.open_orders[:sell].length).to eq(1)
@@ -235,7 +235,7 @@ describe Arke::Exchange::Opendax do
 
   context "finex#market_config before peatio 2.2.14" do
     it "generates market configuration" do
-      stub_request(:get, %r{peatio/public/markets})
+      stub_request(:get, %r{finex/public/markets})
         .to_return(
           status:  200,
           body:    [
@@ -269,7 +269,7 @@ describe Arke::Exchange::Opendax do
 
   context "finex#market_config misconfiguration" do
     it "doesn't raise error for missing non required fields" do
-      stub_request(:get, %r{peatio/public/markets})
+      stub_request(:get, %r{finex/public/markets})
         .to_return(
           status:  200,
           body:    [
@@ -297,7 +297,7 @@ describe Arke::Exchange::Opendax do
     end
 
     it "raises error if id is missing" do
-      stub_request(:get, %r{peatio/public/markets})
+      stub_request(:get, %r{finex/public/markets})
         .to_return(
           status:  200,
           body:    [
@@ -314,7 +314,7 @@ describe Arke::Exchange::Opendax do
     end
 
     it "raises error if base_unit is missing" do
-      stub_request(:get, %r{peatio/public/markets})
+      stub_request(:get, %r{finex/public/markets})
         .to_return(
           status:  200,
           body:    [
@@ -332,7 +332,7 @@ describe Arke::Exchange::Opendax do
     end
 
     it "raises error if quote_unit is missing" do
-      stub_request(:get, %r{peatio/public/markets})
+      stub_request(:get, %r{finex/public/markets})
         .to_return(
           status:  200,
           body:    [
@@ -350,7 +350,7 @@ describe Arke::Exchange::Opendax do
     end
 
     it "raises error if amount_precision is missing" do
-      stub_request(:get, %r{peatio/public/markets})
+      stub_request(:get, %r{finex/public/markets})
         .to_return(
           status:  200,
           body:    [
@@ -368,7 +368,7 @@ describe Arke::Exchange::Opendax do
     end
 
     it "raises error if price_precision is missing" do
-      stub_request(:get, %r{peatio/public/markets})
+      stub_request(:get, %r{finex/public/markets})
         .to_return(
           status:  200,
           body:    [
@@ -529,13 +529,13 @@ describe Arke::Exchange::Opendax do
         "currency" => "btc",
         "free"     => 0.998,
         "locked"   => 0.002,
-        "total"    => 1,
+        "total"    => 1
       )
       expect(finex.balance("eth")).to eq(
         "currency" => "eth",
         "free"     => 1_000_000_000,
         "locked"   => 0,
-        "total"    => 1_000_000_000,
+        "total"    => 1_000_000_000
       )
       expect(finex.balance("trst")).to be_nil
     end

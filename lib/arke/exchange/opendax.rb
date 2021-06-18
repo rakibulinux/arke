@@ -287,24 +287,31 @@ module Arke::Exchange
       msg.each do |key, content|
         case key
         when /([^.]+)\.ob-snap/
-          @books[Regexp.last_match(1)] = {
-            book:     create_or_update_orderbook(Arke::Orderbook::Orderbook.new(Regexp.last_match(1)), content),
+          market_id = Regexp.last_match(1)
+          @books[market_id] = {
+            book:     create_or_update_orderbook(Arke::Orderbook::Orderbook.new(market_id), content),
             sequence: content["sequence"],
           }
         when /([^.]+)\.ob-inc/
-          if @books[Regexp.last_match(1)].nil?
-            return logger.error { "Received a book increment before snapshot on market #{Regexp.last_match(1)}" }
+          market_id = Regexp.last_match(1)
+          if @books[market_id].nil?
+            return logger.error { "Received a book increment before snapshot on market #{market_id}" }
           end
 
-          if content["sequence"] != @books[Regexp.last_match(1)][:sequence] + 1
-            logger.error { "Sequence out of order (previous: #{@books[Regexp.last_match(1)][:sequence]} current:#{content['sequence']}, reconnecting websocket..." }
+          if content["sequence"] != @books[market_id][:sequence] + 1
+            logger.error { "Sequence out of order (previous: #{@books[market_id][:sequence]} current:#{content['sequence']}, reconnecting websocket..." }
             return @ws.close
           end
-          bids = content["bids"]
-          asks = content["asks"]
-          create_or_update_orderbook(@books[Regexp.last_match(1)][:book], {"bids" => [bids]}) if bids && !bids.empty?
-          create_or_update_orderbook(@books[Regexp.last_match(1)][:book], {"asks" => [asks]}) if asks && !asks.empty?
-          @books[Regexp.last_match(1)][:sequence] = content["sequence"]
+          bids = content["bids"] || []
+          bids = [bids] if bids.first.is_a?(String) || bids.first.is_a?(Numeric)
+
+          asks = content["asks"] || []
+          asks = [asks] if asks.first.is_a?(String) || asks.first.is_a?(Numeric)
+
+          create_or_update_orderbook(@books[market_id][:book], {"bids" => bids}) unless bids.empty?
+          create_or_update_orderbook(@books[market_id][:book], {"asks" => asks}) unless asks.empty?
+
+          @books[market_id][:sequence] = content["sequence"]
         end
       end
     end
