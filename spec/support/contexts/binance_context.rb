@@ -13,8 +13,10 @@ shared_context "mocked binance" do
         status:  200,
         body:    {
           "lastUpdateId" => 320_927_259,
-          "bids"         => [["135.87000000", "36.43875000", []], ["135.85000000", "0.57176000", []], ["135.84000000", "6.62227000", []]],
-          "asks"         => [["135.91000000", "0.00070000", []], ["135.93000000", "8.00000000", []], ["135.95000000", "1.11699000", []]]
+          "bids"         => [["135.87000000", "36.43875000", []], ["135.85000000", "0.57176000", []],
+                             ["135.84000000", "6.62227000", []]],
+          "asks"         => [["135.91000000", "0.00070000", []], ["135.93000000", "8.00000000", []],
+                             ["135.95000000", "1.11699000", []]]
         }.to_json,
         headers: {
           "content-type" => "application/json;charset=utf-8",
@@ -34,7 +36,7 @@ shared_context "mocked binance" do
       .with(headers: authorized_headers)
       .to_return(status: 200, body: "", headers: {})
 
-    stub_request(:get, "https://api.binance.com/api/v1/exchangeInfo")
+    stub_request(:get, "https://api.binance.com/api/v3/exchangeInfo")
       .to_return(
         status:  200,
         body:    {
@@ -53,17 +55,23 @@ shared_context "mocked binance" do
                                 "baseAssetPrecision"    => 8,
                                 :quoteAsset             => "USDT",
                                 :quotePrecision         => 8,
-                                :orderTypes             => %w[LIMIT LIMIT_MAKER MARKET STOP_LOSS_LIMIT TAKE_PROFIT_LIMIT],
+                                :orderTypes             => %w[LIMIT LIMIT_MAKER MARKET STOP_LOSS_LIMIT
+                                                              TAKE_PROFIT_LIMIT],
                                 :icebergAllowed         => true,
                                 :isSpotTradingAllowed   => true,
                                 :isMarginTradingAllowed => true,
                                 :filters                => [
-                                  {"filterType": "PRICE_FILTER", "minPrice": "0.01000000", "maxPrice": "10000000.00000000", "tickSize": "0.01000000"},
-                                  {"filterType": "PERCENT_PRICE", "multiplierUp": "5", "multiplierDown": "0.2", "avgPriceMins": 5},
-                                  {"filterType": "LOT_SIZE", "minQty": "0.00001000", "maxQty": "10000000.00000000", "stepSize": "0.00001000"},
-                                  {"filterType": "MIN_NOTIONAL", "minNotional": "10.00000000", "applyToMarket": true, "avgPriceMins": 5},
+                                  {"filterType": "PRICE_FILTER", "minPrice": "0.01000000",
+"maxPrice": "10000000.00000000", "tickSize": "0.01000000"},
+                                  {"filterType": "PERCENT_PRICE", "multiplierUp": "5", "multiplierDown": "0.2",
+"avgPriceMins": 5},
+                                  {"filterType": "LOT_SIZE", "minQty": "0.00001000", "maxQty": "10000000.00000000",
+"stepSize": "0.00001000"},
+                                  {"filterType": "MIN_NOTIONAL", "minNotional": "10.00000000", "applyToMarket": true,
+"avgPriceMins": 5},
                                   {"filterType": "ICEBERG_PARTS", "limit": 10},
-                                  {"filterType": "MARKET_LOT_SIZE", "minQty": "0.00000000", "maxQty": "52400.00000000", "stepSize": "0.00000000"},
+                                  {"filterType": "MARKET_LOT_SIZE", "minQty": "0.00000000",
+"maxQty": "52400.00000000", "stepSize": "0.00000000"},
                                   {"filterType": "MAX_NUM_ALGO_ORDERS", "maxNumAlgoOrders": 5}
                                 ]},
                                {
@@ -88,12 +96,17 @@ shared_context "mocked binance" do
                                  "isSpotTradingAllowed":       true,
                                  "isMarginTradingAllowed":     true,
                                  "filters":                    [
-                                   {"filterType": "PRICE_FILTER", "minPrice": "0.01000000", "maxPrice": "1000000.00000000", "tickSize": "0.01000000"},
-                                   {"filterType": "PERCENT_PRICE", "multiplierUp": "5", "multiplierDown": "0.2", "avgPriceMins": 5},
-                                   {"filterType": "LOT_SIZE", "minQty": "0.00000100", "maxQty": "9000.00000000", "stepSize": "0.00000100"},
-                                   {"filterType": "MIN_NOTIONAL", "minNotional": "10.00000000", "applyToMarket": true, "avgPriceMins": 5},
+                                   {"filterType": "PRICE_FILTER", "minPrice": "0.01000000",
+"maxPrice": "1000000.00000000", "tickSize": "0.01000000"},
+                                   {"filterType": "PERCENT_PRICE", "multiplierUp": "5", "multiplierDown": "0.2",
+"avgPriceMins": 5},
+                                   {"filterType": "LOT_SIZE", "minQty": "0.00000100", "maxQty": "9000.00000000",
+"stepSize": "0.00000100"},
+                                   {"filterType": "MIN_NOTIONAL", "minNotional": "10.00000000", "applyToMarket": true,
+"avgPriceMins": 5},
                                    {"filterType": "ICEBERG_PARTS", "limit": 10},
-                                   {"filterType": "MARKET_LOT_SIZE", "minQty": "0.00000000", "maxQty": "3200.00000000", "stepSize": "0.00000000"},
+                                   {"filterType": "MARKET_LOT_SIZE", "minQty": "0.00000000",
+"maxQty": "3200.00000000", "stepSize": "0.00000000"},
                                    {"filterType": "MAX_NUM_ALGO_ORDERS", "maxNumAlgoOrders": 5}
                                  ]
                                },
@@ -120,15 +133,20 @@ shared_context "mocked binance" do
                                  "isSpotTradingAllowed":       true,
                                  "isMarginTradingAllowed":     true,
                                  "filters":                    [
-                                   {"filterType": "PRICE_FILTER", "minPrice": "0.00010000", "maxPrice": "1000.00000000", "tickSize": "0.00010000"},
-                                   {"filterType": "PERCENT_PRICE", "multiplierUp": "5", "multiplierDown": "0.2", "avgPriceMins": 5},
-                                   {"filterType": "LOT_SIZE", "minQty": "0.01000000", "maxQty": "900000.00000000", "stepSize": "0.01000000"},
-                                   {"filterType": "MIN_NOTIONAL", "minNotional": "10.00000000", "applyToMarket": true, "avgPriceMins": 5},
+                                   {"filterType": "PRICE_FILTER", "minPrice": "0.00010000",
+"maxPrice": "1000.00000000", "tickSize": "0.00010000"},
+                                   {"filterType": "PERCENT_PRICE", "multiplierUp": "5", "multiplierDown": "0.2",
+"avgPriceMins": 5},
+                                   {"filterType": "LOT_SIZE", "minQty": "0.01000000", "maxQty": "900000.00000000",
+"stepSize": "0.01000000"},
+                                   {"filterType": "MIN_NOTIONAL", "minNotional": "10.00000000", "applyToMarket": true,
+"avgPriceMins": 5},
                                    {"filterType": "ICEBERG_PARTS", "limit": 10},
-                                   {"filterType": "MARKET_LOT_SIZE", "minQty": "0.00000000", "maxQty": "162995.23117443", "stepSize": "0.00000000"},
+                                   {"filterType": "MARKET_LOT_SIZE", "minQty": "0.00000000",
+"maxQty": "162995.23117443", "stepSize": "0.00000000"},
                                    {"filterType": "MAX_NUM_ORDERS", "maxNumOrders": 200},
                                    {"filterType": "MAX_NUM_ALGO_ORDERS", "maxNumAlgoOrders": 5}
-                                  ],
+                                 ],
                                  "permissions":                %w[
                                    SPOT
                                    MARGIN
@@ -196,5 +214,39 @@ shared_context "mocked binance" do
                  headers: {
                    "content-type" => "application/json;charset=utf-8",
                  })
+
+    stub_request(:get, "https://api.binance.com/api/v3/depth?limit=1000&symbol=ETHUSDT")
+      .with(
+        headers: {
+          "Accept-Encoding" => "gzip, compressed",
+          "User-Agent"      => "Faraday v0.15.4"
+        }
+      )
+      .to_return(status: 200, body: {
+        "lastUpdateId" => 2,
+        "bids"         => [
+          %w[2 1]
+        ],
+        "asks"         => [
+          %w[6 1]
+        ]
+      }.to_json, headers: {})
+
+    stub_request(:get, "https://api.binance.com/api/v3/depth?limit=1000&symbol=BTCUSDT")
+      .with(
+        headers: {
+          "Accept-Encoding" => "gzip, compressed",
+          "User-Agent"      => "Faraday v0.15.4"
+        }
+      )
+      .to_return(status: 200, body: {
+        "lastUpdateId" => 2,
+        "bids"         => [
+          %w[20 1]
+        ],
+        "asks"         => [
+          %w[60 1]
+        ]
+      }.to_json, headers: {})
   end
 end

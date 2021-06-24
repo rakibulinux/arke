@@ -9,10 +9,27 @@ module Arke::Exchange
     WS_ORDERBOOK_MIN_CACHE_SIZE = 200
     WS_ORDERBOOK_MAX_CACHE_SIZE = 500
 
-    def initialize(opts)
+    Error = Class.new(StandardError)
+    ConnectionError = Class.new(Error)
+    class ResponseError < Error
+      def initialize(msg)
+        super msg.to_s
+      end
+    end
+
+    def initialize(config)
       super
       @host ||= "https://api.binance.com"
-      @client = ::Binance::Client::REST.new(api_key: @api_key, secret_key: @secret, adapter: @adapter)
+
+      @connection = Faraday.new(url: @host, request: {params_encoder: Arke::Helpers::FlatParamsEncoder}) do |conn|
+        conn.options.timeout = 10
+        conn.response :json
+        conn.response :logger if @debug
+        conn.ssl[:verify] = config["verify_ssl"] unless config["verify_ssl"].nil?
+        # conn.adapter :net_http_persistent, pool_size: 5, idle_timeout: 20
+        conn.adapter(@adapter)
+      end
+
       @min_notional = {}
       @min_quantity = {}
       @amount_precision = {}
@@ -185,7 +202,8 @@ module Arke::Exchange
     def fetch_orderbook(market)
       orderbook = Arke::Orderbook::Orderbook.new(market)
       limit = @opts["limit"] || 1000
-      snapshot = @client.depth(symbol: market.upcase, limit: limit)
+      snapshot = @connection.get("/api/v3/depth", symbol: market, limit: limit).body
+
       Array(snapshot["bids"]).each do |order|
         orderbook.update(
           build_order(order, :buy)
@@ -197,26 +215,6 @@ module Arke::Exchange
         )
       end
       [snapshot["lastUpdateId"], orderbook]
-    end
-
-    # def ws_subscribe_orderbook(market)
-    #   stream = "#{market.downcase}@depth"
-    #   add_market_to_listen(market)
-    #   sub = {
-    #     "method": "SUBSCRIBE",
-    #     "params": [stream],
-    #     "id": (Time.now.to_f * 1e6).to_i
-    #   }
-    #   @ws_stream_ids[sub[:id]] = stream
-    #   ws_write_message(:public, JSON.generate(sub))
-    # end
-
-    def markets
-      return @markets if @markets.present?
-
-      @client.exchange_info["symbols"]
-             .filter {|s| s["status"] == "TRADING" }
-             .map {|s| s["symbol"] }
     end
 
     def get_amount(order)
@@ -237,7 +235,7 @@ module Arke::Exchange
       raise "ACCOUNT:#{id} price_s is nil" if order.price_s.nil? && order.type == "limit"
 
       raw_order = {
-        symbol:   order.market.upcase,
+        symbol:   order.market,
         side:     order.side.upcase,
         quantity: "%f" % amount,
       }
@@ -247,23 +245,24 @@ module Arke::Exchange
       else
         raw_order[:type] = "LIMIT"
         raw_order[:price] = order.price_s
-        raw_order[:time_in_force] = "GTC"
+        raw_order[:timeInForce] = "GTC"
       end
       logger.debug { "Binance order: #{raw_order}" }
-      @client.create_order!(raw_order)
+
+      rest_api(:post, "/api/v3/order", raw_order)
     end
 
     def stop_order(order)
       raise "Trying to cancel an order without id #{order}" if order.id.nil? || order.id == 0
 
-      @client.cancel_order!({
-        symbol: order.market,
+      rest_api(:delete, "/api/v3/order", {
+        symbol:  order.market,
         orderId: order.id,
       })
     end
 
     def get_balances
-      balances = @client.account_info["balances"]
+      balances = rest_api(:get, "/api/v3/account")["balances"]
       balances.map do |data|
         {
           "currency" => data["asset"],
@@ -275,7 +274,7 @@ module Arke::Exchange
     end
 
     def fetch_openorders(market)
-      @client.open_orders(symbol: market).map do |o|
+      rest_api(:get, "/api/v3/openOrders", symbol: market).map do |o|
         raise "Unexpected response: #{o} (check the market ID)" unless o.is_a?(Hash)
 
         remaining_volume = o["origQty"].to_f - o["executedQty"].to_f
@@ -296,7 +295,7 @@ module Arke::Exchange
     end
 
     def get_symbol_info(market)
-      @exchange_info ||= @client.exchange_info["symbols"]
+      @exchange_info ||= @connection.get("/api/v3/exchangeInfo").body["symbols"]
       @exchange_info&.find {|s| s["symbol"] == market }
     end
 
@@ -334,5 +333,57 @@ module Arke::Exchange
         "price_precision"  => price_precision
       }
     end
+
+
+    def get_deposit_address(currency)
+      rest_api(:get, "/sapi/v1/capital/deposit/address", coin: currency)
+    end
+
+    # Private methods
+
+    private
+
+    def headers
+      {
+        "Content-Type" => "application/json",
+        "X-MBX-APIKEY" => @api_key
+      }
+    end
+
+    def signature(query)
+      OpenSSL::HMAC.hexdigest(
+        OpenSSL::Digest.new("sha256"),
+        @secret,
+        query
+      )
+    end
+
+    def timestamp
+      DateTime.now.strftime("%Q")
+    end
+
+    def query(params=[])
+      {timestamp: timestamp}.merge(params).map {|k, v| "#{k}=#{v}" }.join("&")
+    end
+
+    def rest_api(verb, endpoint_url, params={})
+      # Is it ok to compact params here?
+      q = query(params.compact)
+      q = "#{q}&signature=#{signature(q)}"
+
+      args = ["#{endpoint_url}?#{q}", nil, headers]
+
+      response = @connection.send(verb, *args)
+      response.assert_success!
+      response.body
+    rescue Faraday::Error => e
+      case e
+      when Faraday::ConnectionFailed, Faraday::TimeoutError
+        raise ConnectionError, e
+      else
+        raise ConnectionError, e.response.body
+      end
+    end
+
   end
 end

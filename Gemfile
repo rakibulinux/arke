@@ -13,7 +13,6 @@ gem 'eventmachine', '~> 1.2'
 gem 'em-synchrony', '~> 1.0'
 
 ## Exchanges
-gem 'binance', '~> 1.2'
 gem 'bitx', '~> 0.2.2'
 
 group :development, :test do
@@ -32,3 +31,7 @@ end
 gem 'simplecov', require: false, group: :test
 
 gem "rack", "~> 2.2"
+
+gem "net-http-persistent", "~> 4.0"
+
+gem "better-faraday", "~> 1.0"
