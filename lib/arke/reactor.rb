@@ -7,7 +7,6 @@ module Arke
     include Arke::Helpers::Flags
     attr_reader :logger
 
-    GRACE_TIME = 3.0
     FETCH_OPEN_ORDERS_PERIOD = 600
 
     def initialize(strategies_configs, accounts_configs, dry_run)
@@ -227,7 +226,7 @@ module Arke
     end
 
     def fetch_openorders(strategy)
-      strategy.target.account.executor.fetch_openorders(strategy.target, GRACE_TIME)
+      strategy.target.account.executor.fetch_openorders(strategy.target)
     end
 
     # Stops workers and strategy execution

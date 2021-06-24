@@ -77,7 +77,6 @@ class Arke::Market
   end
 
   def fetch_openorders
-    open_orders.clear
     account.fetch_openorders(id).each do |order|
       open_orders.add_order(order) unless order.nil?
     end
