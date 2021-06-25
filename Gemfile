@@ -32,3 +32,7 @@ end
 gem 'simplecov', require: false, group: :test
 
 gem "rack", "~> 2.2"
+
+gem "thin", "~> 1.8"
+
+gem "prometheus-client", "~> 2.1"

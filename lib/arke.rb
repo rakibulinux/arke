@@ -18,6 +18,8 @@ require "bigdecimal/util"
 require "binance"
 require "bitx"
 require "rack"
+require "thin"
+require "prometheus/middleware/exporter"
 
 module Arke; end
 

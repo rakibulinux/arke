@@ -77,10 +77,26 @@ module Arke
       strategy
     end
 
+    def run_metrics_server!
+      registry = Prometheus::Client::Registry.new
+      app = Rack::Builder.new do |builder|
+        builder.use Rack::CommonLogger
+        builder.use Rack::ShowExceptions
+        builder.use Rack::Deflater
+        builder.use Prometheus::Middleware::Exporter, registry: registry
+        builder.run ->(_) { [404, {"Content-Type" => "text/html"}, ["Not found\n"]] }
+      end
+      thin = Rack::Handler.get("thin")
+      thin.run(app, Port: 4242)
+    end
+
     def run
       EM.synchrony do
+        run_metrics_server!
+
         trap("INT") { stop }
         trap("TERM") { stop }
+
         # Fetch open orders if needed
         @markets.each(&:start)
 
