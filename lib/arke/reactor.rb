@@ -5,13 +5,14 @@ module Arke
   class Reactor
     class StrategyNotFound < StandardError; end
     include Arke::Helpers::Flags
-    attr_reader :logger
+    attr_reader :logger, :metrics
 
     FETCH_OPEN_ORDERS_PERIOD = 600
 
     def initialize(strategies_configs, accounts_configs, dry_run)
       @dry_run = dry_run
       @logger = Arke::Log
+      @metrics = {}
       init_accounts(accounts_configs)
       init_strategies(strategies_configs)
     end
@@ -28,6 +29,7 @@ module Arke
         account = @accounts[config["id"]] = Arke::Exchange.create(config)
         executor = ActionExecutor.new(account, purge_on_push: true)
         account.executor = executor
+        account.metrics = @metrics
       end
     end
 
@@ -88,6 +90,9 @@ module Arke
       end
       thin = Rack::Handler.get("thin")
       thin.run(app, Port: 4242)
+
+      @metrics[:ws_connect_counter] = Prometheus::Client::Counter.new(:websocket_connect_counter, docstring: "Websocket connection counter", labels: [:id, :scope])
+      @metrics.each {|_, v| registry.register(v) }
     end
 
     def run

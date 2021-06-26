@@ -8,7 +8,7 @@ module Arke::Exchange
 
     attr_reader :delay, :driver, :opts, :id, :ws, :host, :key, :secret, :logger, :books
     attr_reader :bulk_order_support
-    attr_accessor :timer, :executor
+    attr_accessor :timer, :executor, :metrics
 
     DEFAULT_DELAY = 1
     WEBSOCKET_CONNECTION_RETRY_DELAY = 2
@@ -79,6 +79,8 @@ module Arke::Exchange
           ws_connect(ws_id)
         end.resume
       end
+
+      metrics[:ws_connect_counter].increment(labels: {id: id, scope: ws_id}) if metrics
     end
 
     def ws_connect_public

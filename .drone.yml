@@ -30,7 +30,7 @@ steps:
     when:
       branch:
         - "master"
-        - "integration/*"
+        - "build/*"
 
   - name: tag-stable
     image: quay.io/openware/sdk-citools:2.6.5
@@ -59,6 +59,10 @@ steps:
       - chmod 0600 ~/.ssh/id_rsa
       - git remote add gitolite git@git.openware.com:arke
       - GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git push -f gitolite HEAD:$DRONE_BRANCH
+    when:
+      branch:
+        - "master"
+        - "*-stable"
 
   - name: docker-build
     image: plugins/docker
@@ -73,7 +77,7 @@ steps:
       branch:
         - "master"
         - "*-stable"
-        - "integration/*"
+        - "build/*"
 
   - name: sdk-postbuild
     image: quay.io/openware/sdk-citools:2.6.7
