@@ -83,6 +83,8 @@ module Arke::Exchange
       # when "conf"
       when "error"
         Arke::Log.info "Event: #{msg} ignored"
+      else
+        # Ignore
       end
     end
 
@@ -137,6 +139,8 @@ module Arke::Exchange
       # when "conf"
       when "error"
         Arke::Log.info "Event: #{msg['event']} ignored"
+      else
+        # Ignore
       end
     end
 

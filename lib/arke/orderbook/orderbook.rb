@@ -90,7 +90,7 @@ module Arke::Orderbook
 
     # Limit the total orderbook amount to not exceed limit_bids_quote and limit_asks_quote
     def adjust_volume(limit_bids_base, limit_asks_base, limit_bids_quote=nil, limit_asks_quote=nil)
-      if limit_bids_base && (limit_bids_base < @volume_bids_base)
+      if limit_bids_base
         volume_bids_base = 0.0
         volume_bids_quote = 0.0
         bids = ::RBTree.new
@@ -115,7 +115,7 @@ module Arke::Orderbook
         bids = self[:buy]
       end
 
-      if limit_asks_base && (limit_asks_base < @volume_asks_base)
+      if limit_asks_base
         volume_asks_base = 0.0
         volume_asks_quote = 0.0
         asks = ::RBTree.new

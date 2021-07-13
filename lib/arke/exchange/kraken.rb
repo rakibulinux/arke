@@ -145,8 +145,7 @@ module Arke::Exchange
     def ws_read_public_message(msg)
       return unless msg.is_a?(Array)
 
-      case msg[2]
-      when "trade"
+      if msg[2] == "trade"
         parse_trade(msg)
       end
     end

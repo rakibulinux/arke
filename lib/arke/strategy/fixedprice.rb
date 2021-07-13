@@ -51,7 +51,13 @@ module Arke::Strategy
       assert_currency_found(target.account, target.quote)
 
       delta = rand(0..@random_delta) - (@random_delta / 2)
-      top_ask = top_bid = @price + delta
+
+      if fx
+        top_ask = top_bid = fx.convert(@price + delta)
+      else
+        top_ask = top_bid = @price + delta
+      end
+
       price_points_asks = (@side_asks ? price_points(:asks, top_ask, @levels_count, @levels_price_func, @levels_price_step) : nil) || []
       price_points_bids = (@side_bids ? price_points(:bids, top_bid, @levels_count, @levels_price_func, @levels_price_step) : nil) || []
       volume_asks_base = 0.to_d

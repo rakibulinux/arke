@@ -136,20 +136,20 @@ describe ::Arke::Orderbook::Orderbook do
       expect(book.volume_asks_quote).to eq(1.2.to_d)
     end
 
-    it "does nothing if the orderbook volume is lower than the provided limit" do
+    it "increases the volume if the orderbook volume is lower than the provided limit" do
       book = orderbook.aggregate(price_points_buy, price_points_sell, 0.1)
                       .to_ob
                       .adjust_volume(4, 6)
       expect(book[:buy].to_hash).to eq(
-        6.0.to_d => 0.1.to_d,
-        8.5.to_d => 2.0.to_d
+        6.0.to_d => "0.1904761904761905".to_d,
+        8.5.to_d => "3.8095238095238095".to_d
       )
       expect(book[:sell].to_hash).to eq(
-        3.5.to_d => 2.to_d,
-        8.0.to_d => 1.to_d
+        3.5.to_d => 4,
+        8.0.to_d => 2
       )
-      expect(book.volume_bids_base).to eq(2.1.to_d)
-      expect(book.volume_asks_base).to eq(3.to_d)
+      expect(book.volume_bids_base).to eq(4)
+      expect(book.volume_asks_base).to eq(6)
     end
 
     it "does nothing if the limits are nil" do

@@ -64,7 +64,7 @@ module Arke::Plugin
         limit_asks_base_applied = target_base_total if @limit_asks_base.nil?
       end
 
-      # Adjust bids/asks limit if it exeeded the target (balance).
+      # Adjust bids/asks limit if it exceeded the target (balance).
       if target_base_total < limit_asks_base_applied
         limit_asks_base_applied = target_base_total
         @logger.warn("#{@base} balance on #{@account.driver} is #{target_base_total} lower than the limit set to #{@limit_asks_base}")

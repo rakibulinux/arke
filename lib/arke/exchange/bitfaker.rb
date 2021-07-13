@@ -65,11 +65,12 @@ module Arke::Exchange
       @balances
     end
 
-    def market_config(_market)
+    def market_config(market)
+      base, quote = market.include?("/") ? market.split("/") : [market[0..2], market[3..5]]
       {
-        "id"               => "BTCUSD",
-        "base_unit"        => "BTC",
-        "quote_unit"       => "USD",
+        "id"               => market,
+        "base_unit"        => base,
+        "quote_unit"       => quote,
         "min_price"        => 0.0,
         "max_price"        => 0.0,
         "min_amount"       => 0.1,

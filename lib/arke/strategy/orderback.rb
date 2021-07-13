@@ -186,7 +186,13 @@ module Arke::Strategy
       assert_currency_found(target.account, target.base)
       assert_currency_found(target.account, target.quote)
 
-      limit = @plugins[:limit_balance].call(source.orderbook)
+      if fx
+        orderbook = fx.apply_ob(source.orderbook)
+      else
+        orderbook = source.orderbook
+      end
+
+      limit = @plugins[:limit_balance].call(orderbook)
       limit_bids_base_applied = limit[:limit_bids_base]
       limit_asks_base_applied = limit[:limit_asks_base]
       top_bid_price = limit[:top_bid_price]
@@ -194,7 +200,7 @@ module Arke::Strategy
 
       price_points_asks = @side_asks ? price_points(:asks, top_ask_price, @levels_count, @levels_price_func, @levels_price_step) : nil
       price_points_bids = @side_bids ? price_points(:bids, top_bid_price, @levels_count, @levels_price_func, @levels_price_step) : nil
-      ob_agg = source.orderbook.aggregate(price_points_bids, price_points_asks, target.min_amount)
+      ob_agg = orderbook.aggregate(price_points_bids, price_points_asks, target.min_amount)
       ob = ob_agg.to_ob
 
       if @disable_balance_check

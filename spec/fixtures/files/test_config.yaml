@@ -25,18 +25,10 @@ strategies:
     side: both
   target:
     account_id: 1
-    market:
-      id: 10
-      market: 'ETHUSD'
-      min_ask_amount: 0.01
-      min_bid_amount: 0.01
+    market_id: 'ETHUSD'
   sources:
     - account_id: 2
-      market:
-        id: 11
-        market: 'ETHUSD'
-        min_ask_amount: 0.01
-        min_bid_amount: 0.01
+      market_id: 'ETHUSD'
 - type: copy
   debug: true
   enabled: true
@@ -51,15 +43,7 @@ strategies:
     side: both
   target:
     account_id: 1
-    market:
-      id: 20
-      market: 'BTCUSD'
-      min_ask_amount: 0.01
-      min_bid_amount: 0.01
+    market_id: 'BTCUSD'
   sources:
     - account_id: 2
-      market:
-        id: 21
-        market: 'BTCUSD'
-        min_ask_amount: 0.01
-        min_bid_amount: 0.01
+      market_id: 'BTCUSD'

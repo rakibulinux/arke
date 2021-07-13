@@ -193,7 +193,7 @@ An soon as an order is matched, the strategy creates an order on the source exch
 ##### Fixedprice strategy
 
 This strategy creates an orderbook on a market without using any source market.
-It creates an order arround the reference *price* with a random value *random_delta* added or substracted to this price.
+It creates an order around the reference *price* with a random value *random_delta* added or substracted to this price.
 
 | Field             | Description                                                  |
 | ----------------- | ------------------------------------------------------------ |

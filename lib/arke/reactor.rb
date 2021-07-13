@@ -199,10 +199,6 @@ module Arke
       end
       return unless desired_orderbook
 
-      if strategy.fx
-        desired_orderbook, price_levels = strategy.fx.apply(desired_orderbook, price_levels)
-      end
-
       logger.debug { "ID:#{strategy.id} Current Orderbook\n#{strategy.target.open_orders}" }
       logger.debug { "ID:#{strategy.id} Desired Orderbook\n#{desired_orderbook}" }
       return if @dry_run

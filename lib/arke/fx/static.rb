@@ -14,19 +14,14 @@ module Arke::Fx
       raise "invalid rate" if rate <= 0
     end
 
-    def start; end
+    def call
+      # Do nothing
+    end
 
+    # Apply the conversion rate to a full orderbook and price levels
     def apply(ob, price_levels)
-      raise "FX: Rate is not ready" if rate.nil?
-
-      fx_ob = ::Arke::Orderbook::Orderbook.new(ob.market)
+      fx_ob = apply_ob(ob)
       fx_price_levels = {}
-
-      ob.book.each do |k, _v|
-        ob.book[k].each do |price, amount|
-          fx_ob[k][price * rate] = amount
-        end
-      end
 
       price_levels.each do |k, v|
         fx_price_levels[k] = v.map do |pl|
@@ -35,6 +30,27 @@ module Arke::Fx
       end
 
       [fx_ob, fx_price_levels]
+    end
+
+    # Apply the conversion rate to a full orderbook
+    def apply_ob(ob)
+      raise "FX: Rate is not ready" if rate.nil?
+
+      fx_ob = ::Arke::Orderbook::Orderbook.new(ob.market)
+
+      ob.book.each do |k, _v|
+        ob.book[k].each do |price, amount|
+          fx_ob[k][price * rate] = amount
+        end
+      end
+
+      fx_ob
+    end
+
+    def convert(price)
+      raise "FX: Rate is not ready" if rate.nil?
+
+      price * rate
     end
   end
 end

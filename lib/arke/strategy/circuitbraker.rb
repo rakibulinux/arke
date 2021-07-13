@@ -29,16 +29,6 @@ module Arke::Strategy
       end
     end
 
-    def apply_fx(price)
-      if fx
-        raise "FX Rate is not ready" unless fx.rate
-
-        price * fx.rate
-      else
-        price
-      end
-    end
-
     def call
       raise "This strategy supports only one exchange source" if sources.size > 1
 

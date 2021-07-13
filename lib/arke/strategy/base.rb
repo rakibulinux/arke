@@ -49,5 +49,13 @@ module Arke::Strategy
     def source
       sources.first
     end
+
+    def apply_fx(price)
+      if fx
+        fx.convert(price)
+      else
+        price
+      end
+    end
   end
 end

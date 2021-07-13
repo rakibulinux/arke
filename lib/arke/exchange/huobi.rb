@@ -168,18 +168,18 @@ module Arke::Exchange
         ws_read_public_message(object)
       when :private
         ws_read_private_message(object)
+      else
+        logger.error { "ACCOUNT:#{id} Unexpected websocket id #{ws_id} websocket message: #{data}" }
       end
     end
 
     def ws_read_public_message(msg)
-      case msg["op"]
-      when "ping"
+      if msg["op"] == "ping"
         ws_write_message(:public, JSON.dump("op" => "pong", "ts" => msg["ts"]))
         return
       end
 
-      case msg["ch"]
-      when /market\.([^.]+)\.trade\.detail/
+      if msg["ch"] =~ /market\.([^.]+)\.trade\.detail/
         parse_trade(msg, $1)
       end
     end

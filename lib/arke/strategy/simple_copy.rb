@@ -85,7 +85,7 @@ module Arke::Strategy
       assert_currency_found(target.account, target.base)
       assert_currency_found(target.account, target.quote)
 
-      mp = mid_price()
+      mp = apply_fx(mid_price())
       set_liquidity_limits()
 
       opts = {

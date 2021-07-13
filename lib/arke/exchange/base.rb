@@ -116,6 +116,8 @@ module Arke::Exchange
         ws_read_public_message(object)
       when :private
         ws_read_private_message(object)
+      else
+        logger.error { "ACCOUNT:#{id} Unexpected websocket id #{ws_id} websocket message: #{msg.data}" }
       end
     end
 

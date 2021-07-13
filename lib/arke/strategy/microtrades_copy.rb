@@ -56,23 +56,15 @@ module Arke::Strategy
       logger.info { "ID:#{id} Expiration set in #{current_delay} sec" }
     end
 
-    def call; end
-
-    def get_price(price)
-      if fx
-        raise "FX Rate is not ready" unless fx.rate
-
-        price * fx.rate
-      else
-        price
-      end
+    def call
+      # Do nothing
     end
 
     # TODO: 3- add the support of 2 different accounts
     def trigger_microtrade(trade)
       orders_f = Fiber.new do
         amount = rand(@min_amount.to_f..@max_amount.to_f)
-        price = get_price(trade.price)
+        price = apply_fx(trade.price)
         ob = target.update_orderbook
         best_buy = ob.best_price(:buy).to_d
         best_sell = ob.best_price(:sell).to_d

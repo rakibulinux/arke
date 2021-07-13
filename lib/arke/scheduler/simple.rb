@@ -77,7 +77,7 @@ module Arke::Scheduler
 
         desired.each do |price, amount|
           price = apply_precision(price, @target.price_precision)
-          amount = apply_precision(amount, @target.amount_precision, side == :sell ? @target.min_amount : @target.min_amount)
+          amount = apply_precision(amount, @target.amount_precision, @target.min_amount)
           if price.positive? && amount.positive?
             list.push(::Arke::Action.new(:order_create, @target, order: ::Arke::Order.new(@market, price, amount, side)))
           end

@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
-
 describe Arke::Strategy::Orderback do
   let!(:strategy) { Arke::Strategy::Orderback.new([source], target, config, nil) }
-  let(:account) { Arke::Exchange.create(account_config) }
-  let(:source) { Arke::Market.new(config["sources"].first["market_id"], account, Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS) }
-  let(:target) { Arke::Market.new(config["target"]["market_id"], account, Arke::Helpers::Flags::DEFAULT_TARGET_FLAGS) }
+  let(:account_source) { Arke::Exchange.create(account_config_source) }
+  let(:account_target) { Arke::Exchange.create(account_config_target) }
+  let(:source) {
+    Arke::Market.new(config["sources"].first["market_id"], account_source, Arke::Helpers::Flags::DEFAULT_SOURCE_FLAGS)
+  }
+  let(:target) { Arke::Market.new(config["target"]["market_id"], account_target, Arke::Helpers::Flags::DEFAULT_TARGET_FLAGS) }
   let(:side) { "both" }
   let(:spread_asks) { 0.01 }
   let(:spread_bids) { 0.02 }
@@ -35,21 +37,59 @@ describe Arke::Strategy::Orderback do
         "enable_orderback"      => enable_orderback,
       },
       "fx"      => fx_config,
-      "target"  => {
-        "account_id" => 1,
-        "market_id"  => "BTCUSD",
-      },
       "sources" => [
         "account_id" => 1,
         "market_id"  => "xbtusd",
       ],
+      "target"  => {
+        "account_id" => 2,
+        "market_id"  => "BTCUSD",
+      },
     }
   end
 
-  let(:account_config) do
+  let(:account_config_source) do
     {
       "id"     => 1,
       "driver" => "bitfaker",
+      "params" => {
+        "balances" => [
+          {
+            "currency" => "xbt",
+            "total"    => 4_723_846.89208129,
+            "free"     => 4_723_846.89208129,
+            "locked"   => 0
+          },
+          {
+            "currency" => "usd",
+            "total"    => 4_763_368.68006011,
+            "free"     => 4_763_368.68006011,
+            "locked"   => 100
+          }
+        ]
+      }
+    }
+  end
+  let(:account_config_target) do
+    {
+      "id"     => 2,
+      "driver" => "bitfaker",
+      "params" => {
+        "balances" => [
+          {
+            "currency" => "btc",
+            "total"    => 4_723_846.89208129,
+            "free"     => 4_723_846.89208129,
+            "locked"   => 0
+          },
+          {
+            "currency" => "usd",
+            "total"    => 4_763_368.68006011,
+            "free"     => 4_763_368.68006011,
+            "locked"   => 100
+          }
+        ]
+      }
     }
   end
   let(:target_orderbook) { strategy.call }
@@ -556,7 +596,10 @@ describe Arke::Strategy::Orderback do
     end
 
     context "orderback_type: limit" do
-      let!(:strategy) { Arke::Strategy::Orderback.new([source], target, config.merge("params" => config["params"].merge("orderback_type" => "limit")), nil) }
+      let!(:strategy) {
+        Arke::Strategy::Orderback.new([source], target,
+                                      config.merge("params" => config["params"].merge("orderback_type" => "limit")), nil)
+      }
 
       it "triggers a buy back with `limit` order type to the source market" do
         validate_orderback_type("limit")
@@ -564,7 +607,10 @@ describe Arke::Strategy::Orderback do
     end
 
     context "orderback_type: market" do
-      let!(:strategy) { Arke::Strategy::Orderback.new([source], target, config.merge("params" => config["params"].merge("orderback_type" => "market")), nil) }
+      let!(:strategy) {
+        Arke::Strategy::Orderback.new([source], target,
+                                      config.merge("params" => config["params"].merge("orderback_type" => "market")), nil)
+      }
 
       it "triggers a buy back with `market` order type to the source market" do
         validate_orderback_type("market")
@@ -573,7 +619,10 @@ describe Arke::Strategy::Orderback do
 
     context "orderback_type: invalid" do
       it "should have the RuntimeError: orderback_type must be `limit` or `market`" do
-        expect { Arke::Strategy::Orderback.new([source], target, config.merge("params" => config["params"].merge("orderback_type" => "invalid")), nil) }.to raise_error(RuntimeError, /orderback_type must be `limit` or `market`/)
+        expect {
+          Arke::Strategy::Orderback.new([source], target,
+                                        config.merge("params" => config["params"].merge("orderback_type" => "invalid")), nil)
+        }.to raise_error(RuntimeError, /orderback_type must be `limit` or `market`/)
       end
     end
   end

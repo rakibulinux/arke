@@ -35,6 +35,8 @@ module Arke::Exchange
       when :private
         streams = %w[order trade]
         streams << "balances" if @finex
+      else
+        raise "ACCOUNT:#{id} Unexpected websocket id #{ws_id}"
       end
 
       if flag?(LISTEN_PUBLIC_ORDERBOOK) && !@markets_to_listen.empty?
