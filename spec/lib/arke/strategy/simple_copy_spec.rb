@@ -16,21 +16,21 @@ describe Arke::Strategy::SimpleCopy do
 
   let(:account_config) do
     {
-      "id"     => 1,
+      "id" => 1,
       "driver" => "bitfaker",
       "params" => {
         "balances" => [
           {
             "currency" => "btc",
-            "total"    => 3,
-            "free"     => 3,
-            "locked"   => 0
+            "total" => 3,
+            "free" => 3,
+            "locked" => 0
           },
           {
             "currency" => "usd",
-            "total"    => 10_000,
-            "free"     => 10_000,
-            "locked"   => 0
+            "total" => 10_000,
+            "free" => 10_000,
+            "locked" => 0
           }
         ]
       }
@@ -38,20 +38,20 @@ describe Arke::Strategy::SimpleCopy do
   end
   let(:config) do
     {
-      "type"    => "simple_copy",
-      "params"  => {
-        "spread_bids"  => spread_bids,
-        "spread_asks"  => spread_asks,
-        "levels_size"  => levels_size,
+      "type" => "simple_copy",
+      "params" => {
+        "spread_bids" => spread_bids,
+        "spread_asks" => spread_asks,
+        "levels_size" => levels_size,
         "levels_count" => levels_count,
       },
-      "target"  => {
-        "driver"    => "bitfaker",
+      "target" => {
+        "driver" => "bitfaker",
         "market_id" => "BTCUSD",
       },
       "sources" => [
         "account_id" => 1,
-        "market_id"  => "BTCUSD",
+        "market_id" => "BTCUSD",
       ],
     }
   end
@@ -63,7 +63,7 @@ describe Arke::Strategy::SimpleCopy do
 
   context "mid_price" do
     it "calculates mid_price from the source orderbook" do
-      expect(strategy.mid_price).to eq(138.82)
+      expect(strategy.sources.first.mid_price).to eq(138.82)
     end
   end
 
@@ -72,6 +72,51 @@ describe Arke::Strategy::SimpleCopy do
       strategy.set_liquidity_limits
       expect(strategy.limit_asks_base).to eq("2.4".to_d)
       expect(strategy.limit_bids_quote).to eq(8_000)
+    end
+  end
+
+  context "fx" do
+    let!(:config) do
+      {
+        "type" => "simple_copy",
+        "params" => {
+          "spread_bids" => spread_bids,
+          "spread_asks" => spread_asks,
+          "levels_size" => levels_size,
+          "levels_count" => levels_count,
+        },
+        "fx" => {
+          "type" => "finex",
+          "pair" => "btcusd"
+        },
+        "target" => {
+          "driver" => "bitfaker",
+          "market_id" => "BTCUSD",
+        },
+        "sources" => [
+          "account_id" => 1,
+          "market_id" => "BTCUSD",
+        ],
+      }
+    end
+
+    let(:finex_service) do
+      Arke::Fx::Service::Finex.instance
+    end
+
+    before(:each) do
+      if config["fx"]
+        type = config["fx"]["type"]
+        fx_klass = Arke::Fx.const_get(type.capitalize)
+        strategy.fx = fx_klass.new(config["fx"])
+      end
+    end
+
+    it "get price from finex" do
+      finex_service.send(:ws_read_message, [3, "forex", ["btcusd", "54321", 1_614_137_576_241, 1_614_137_576_241]])
+      strategy.call
+      expect(54_321.to_d).to eq(finex_service.rate("btcusd"))
+      expect(strategy.fx.rate).to eq(finex_service.rate("btcusd"))
     end
   end
 end

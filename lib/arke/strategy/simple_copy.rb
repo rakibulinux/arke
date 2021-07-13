@@ -35,6 +35,7 @@ module Arke::Strategy
       config_markets
     end
 
+
     def check_config
       raise "levels_price_step must be higher than zero" if @levels_price_step <= 0
       raise "levels_count must be minimum 1" if @levels_count < 1
@@ -52,14 +53,6 @@ module Arke::Strategy
         s.apply_flags(::Arke::Helpers::Flags::LISTEN_PUBLIC_ORDERBOOK)
         s.account.add_market_to_listen(s.id)
       end
-    end
-
-    def mid_price
-      top_ask = source.orderbook[:sell].first
-      top_bid = source.orderbook[:buy].first
-      raise "Source orderbook is empty" if top_ask.nil? || top_bid.nil?
-
-      (top_ask.first + top_bid.first) / 2
     end
 
     def set_liquidity_limits
@@ -85,7 +78,18 @@ module Arke::Strategy
       assert_currency_found(target.account, target.base)
       assert_currency_found(target.account, target.quote)
 
-      mp = apply_fx(mid_price())
+      if fx
+        raise "FX Rate is not ready" unless fx.rate
+
+        if sources.size == 0
+          mp = fx.rate
+        else
+          mp = apply_fx(source.mid_price())
+        end
+      else
+        mp = source.mid_price()
+      end
+
       set_liquidity_limits()
 
       opts = {

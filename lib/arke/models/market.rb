@@ -90,4 +90,12 @@ class Arke::Market
   def cancel_all_orders
     account.cancel_all_orders(id)
   end
+
+  def mid_price
+    top_ask = @orderbook[:sell].first
+    top_bid = @orderbook[:buy].first
+    raise "Market orderbook is empty" if top_ask.nil? || top_bid.nil?
+
+    (top_ask.first + top_bid.first) / 2
+  end
 end

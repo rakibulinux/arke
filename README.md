@@ -289,16 +289,25 @@ Detail of the `fx` section to configure for a strategy:
 | `type`       | "static"       | The type of the forex class to use, which is "static" here  |
 | `rate`       | float          | Static value of the rate to apply to prices of the strategy |
 
-##### Dynamic forex conversion rate configuration
+##### Fixer forex conversion rate configuration
 
 Detail of the `fx` section to configure for a strategy:
 
 | Field           | Value   | Description                                                                    |
 | --------------- | ------- | ------------------------------------------------------------------------------ |
-| `type`          | "fixer" | The type of the forex class to use, the supported value is "fixer" for dynamic |
+| `type`          | "fixer" |   |
 | `api_key`       | string  | Fixer api key                                                                  |
 | `currency_from` | string  | Currency code                                                                  |
 | `currency_to`   | string  | Currency code                                                                  |
 | `period`        | seconds | Refresh period in seconds, default: 3600                                       |
 | `https`         | boolean | Enable https communication (default true)                                      |
 
+##### Finex forex conversion rate configuration
+
+Detail of the `fx` section to configure for a strategy:
+
+| Field           | Value   | Description                                                                    |
+| --------------- | ------- | ------------------------------------------------------------------------------ |
+| `type`          | "finex" |   |
+| `host`          | "localhost:8080" | Host and port of the finex forex microservice |
+| `pair`          | "usdeur" | Forex pair to subscribe to price feed.  |
