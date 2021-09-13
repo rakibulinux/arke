@@ -96,7 +96,7 @@ module Arke::Exchange
         logger.warn { "ACCOUNT:#{id} Failed to create order #{order} status:#{response.status}(#{response.reason_phrase}) body:#{response.body}" }
       end
 
-      if order.type == "limit" && response.env.status == 201 && response.env.body["id"]
+      if order.type == "limit" && response.env.status == 201 && response.env.body["id"] && response.env.body["id"] != 0
         order.id = response.env.body["id"]
       end
       order
