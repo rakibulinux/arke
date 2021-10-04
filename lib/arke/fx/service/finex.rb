@@ -33,7 +33,10 @@ module Arke::Fx::Service
     end
 
     def ws_connect
-      @ws = Faye::WebSocket::Client.new(ws_url)
+      options = {}
+      options[:tls] = {verify_peer: false} unless @verify_ssl
+      @ws = Faye::WebSocket::Client.new(ws_url, [], options)
+
       @ws.on(:open) do |_e|
         @ws_connected = true
         logger.info { "FINEX-FX: Websocket connected" }

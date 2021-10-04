@@ -21,7 +21,7 @@ module Arke::Exchange
         conn.response :json
         conn.response :logger if @debug
         conn.adapter(@adapter)
-        conn.ssl[:verify] = config["verify_ssl"] unless config["verify_ssl"].nil?
+        conn.ssl[:verify] = false unless @verify_ssl
       end
       apply_flags(FORCE_MARKET_LOWERCASE)
     end

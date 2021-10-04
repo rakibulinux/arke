@@ -32,6 +32,7 @@ steps:
       branch:
         - "master"
         - "integration/*"
+        - "fix/*"
 
   - name: tag-stable
     image: quay.io/openware/sdk-citools:2.6.5
@@ -75,6 +76,7 @@ steps:
         - "master"
         - "*-stable"
         - "integration/*"
+        - "fix/*"
 
   - name: sdk-postbuild
     image: quay.io/openware/sdk-citools:2.6.7

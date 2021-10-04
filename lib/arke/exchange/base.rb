@@ -38,6 +38,7 @@ module Arke::Exchange
         public:  EM::Queue.new,
         private: EM::Queue.new,
       }
+      @verify_ssl = opts["verify_ssl"].nil? ? true : opts["verify_ssl"]
       load_platform_markets(opts["driver"]) if opts[:load_platform_markets]
       update_forced_balances(opts["balances"]) if opts["balances"]
     end
@@ -56,8 +57,10 @@ module Arke::Exchange
                   {}
                 end
 
-      @ws = Faye::WebSocket::Client.new(@ws_url, [], headers: headers)
+      options = {headers: headers}
+      options[:tls] = {verify_peer: false} unless @verify_ssl
 
+      @ws = Faye::WebSocket::Client.new(@ws_url, [], options)
       @ws.on(:open) do |_e|
         @ws_connected = true
         @ws_queues[ws_id].pop do |msg|
