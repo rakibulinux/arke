@@ -4,7 +4,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 ruby '~> 2.6'
 
 gem 'clamp', '~> 1.3.1'
-gem 'rbtree', '~> 0.4.2'
+gem 'rbtree', '~> 0.4.4'
 gem 'colorize', '~> 0.8.1'
 gem 'faraday', '~> 0.15.4'
 gem 'faraday_middleware', '~> 0.13.1'

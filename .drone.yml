@@ -5,7 +5,7 @@ type: docker
 
 steps:
   - name: test
-    image: ruby:2.6.5
+    image: ruby:2.6
     commands:
       - gem update bundler
       - bundle --jobs $(nproc)
