@@ -6,6 +6,8 @@ steps:
   - name: test
     image: ruby:2.6.5
     commands:
+      - apt-get update
+      - apt-get install -y libsecp256k1-dev
       - gem update bundler
       - bundle --jobs $(nproc)
       - bundle exec rspec spec

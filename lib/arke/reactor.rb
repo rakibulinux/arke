@@ -82,13 +82,14 @@ module Arke
       EM.synchrony do
         trap("INT") { stop }
         trap("TERM") { stop }
-        # Fetch open orders if needed
-        @markets.each(&:start)
 
         # Connect Private Web Sockets
         @accounts.each do |_id, account|
           account.ws_connect_private if account.flag?(WS_PRIVATE)
         end
+
+        # Fetch open orders if needed
+        @markets.each(&:start)
 
         # Setup balance fetcher
         update_balances

@@ -15,7 +15,7 @@ module Arke
     # Takes +dirver+ - +String+
     # Resolves correct Exchange class by it's name
     def self.exchange_class(driver)
-      Arke::Exchange.const_get(driver.capitalize)
+      Arke::Exchange.const_get(driver.split(/[_-]/).map(&:capitalize).join)
     end
   end
 end

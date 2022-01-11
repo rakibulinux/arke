@@ -11,6 +11,9 @@ gem 'faraday_middleware', '~> 0.13.1'
 gem 'faye', '~> 1.2'
 gem 'eventmachine', '~> 1.2'
 gem 'em-synchrony', '~> 1.0'
+gem 'ruby-ethereum', '~> 0.10.0'
+gem 'eth', '~> 0.4.17'
+
 
 ## Exchanges
 gem 'binance', '~> 1.2'
@@ -27,6 +30,7 @@ group :development, :test do
   gem "rspec", "~> 3.9"
   gem "irb", "~> 1.0"
   gem "mime-types", "~> 3.3"
+  gem "em-websocket"
 end
 
 gem 'simplecov', require: false, group: :test
