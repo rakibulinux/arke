@@ -34,14 +34,14 @@ module Arke::Exchange
 
     def initialize(config)
       super
-      @ws_url = config["ws"] ||= "wss://%s/api/v1/finex/ws" % [URI.parse(config["host"]).hostname]
       @reqid = 0
       @req_ctx = {}
       @timeout = config["timeout"] || DEFAULT_TIMEOUT
       @markets = []
       @balances = nil
-      @kong_key = config["kong_key"]
-      @go_true_url = config["go_true_url"]
+      @ws_url = config["ws"] ||= "wss://%s/api/v1/finex/ws" % [URI.parse(config["host"]).hostname]
+      @kong_key = config["kong_key"] || "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTYyNzIwODU0MCwiZXhwIjoxOTc0MzYzNzQwLCJhdWQiOiIiLCJzdWIiOiIiLCJyb2xlIjoiYW5vbiJ9.sUHErUOiKZ3nHQIxy-7jND6B80Uzf9G4NtMLmL6HXPQ"
+      @go_true_url = config["go_true_url"] || "https://%s/api/v1/auth" % [URI.parse(config["host"]).hostname]
       @verify_ssl = config["verify_ssl"].nil? ? true : config["verify_ssl"]
       apply_flags(WS_PRIVATE)
 
