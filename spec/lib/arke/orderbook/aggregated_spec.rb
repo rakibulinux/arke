@@ -184,16 +184,16 @@ describe Arke::Orderbook::Aggregated do
     it "aggregates sell orders according to given price points" do
       agg_ob, volume_base, volume_quote = orderbook.aggregate_side(:sell, price_points_sell)
       expect(agg_ob.to_hash).to eq(
-        (125_932_600_000_000_013_862.to_d * 1e-16) => {high_price: 12_593.26.to_d, low_price: 12_593.26.to_d, volume: 0.009085.to_d, weighted_price: (125_932_600_000_000_013_862.to_d * 1e-16)},
-        12_593.40.to_d                             => {high_price: 12_593.4.to_d, low_price: 12_593.4.to_d, volume: 0.1.to_d, weighted_price: 12_593.4.to_d},
-        12_593.48.to_d                             => {high_price: 12_593.48.to_d, low_price: 12_593.48.to_d, volume: 0.108702.to_d, weighted_price: 12_593.48.to_d},
-        12_593.60.to_d                             => {high_price: 12_593.6.to_d, low_price: 12_593.6.to_d, volume: 0.1.to_d, weighted_price: 12_593.6.to_d},
-        12_594.00.to_d                             => {high_price: 12_594.0.to_d, low_price: 12_594.0.to_d, volume: 0.1.to_d, weighted_price: 12_594.0.to_d},
-        12_594.50.to_d                             => {high_price: 12_594.5.to_d, low_price: 12_594.5.to_d, volume: 0.1.to_d, weighted_price: 12_594.5.to_d},
-        (125_947_914_644_014_041_555.to_d * 1e-16) => {high_price: 12_595.0.to_d, low_price: 12_594.79.to_d, volume: 0.147562.to_d, weighted_price: (125_947_914_644_014_041_555.to_d * 1e-16)},
-        (1_259_526_913_890_984_318.to_d * 1e-14)   => {high_price: 12_595.27.to_d, low_price: 12_595.04.to_d, volume: 1.003507.to_d, weighted_price: (1_259_526_913_890_984_318.to_d * 1e-14)},
-        12_596.92.to_d                             => {high_price: 12_596.92.to_d, low_price: 12_596.92.to_d, volume: 0.5.to_d, weighted_price: 12_596.92.to_d},
-        (125_997_825_767_581_638_047.to_d * 1e-16) => {high_price: 12_600.0.to_d, low_price: 12_597.68.to_d, volume: 7.940784.to_d, weighted_price: (125_997_825_767_581_638_047.to_d * 1e-16)}
+        (125_932_600_000_000_013_862.to_d * 1e-16) => {high_price: 12_593.26.to_d, low_price: 12_593.26.to_d, volume: "0.009085".to_d, weighted_price: (125_932_600_000_000_013_862.to_d * 1e-16)},
+        12_593.40.to_d                             => {high_price: 12_593.4.to_d, low_price: 12_593.4.to_d, volume: "0.1".to_d, weighted_price: 12_593.4.to_d},
+        12_593.48.to_d                             => {high_price: 12_593.48.to_d, low_price: 12_593.48.to_d, volume: "0.108702".to_d, weighted_price: 12_593.48.to_d},
+        12_593.60.to_d                             => {high_price: 12_593.6.to_d, low_price: 12_593.6.to_d, volume: "0.1".to_d, weighted_price: 12_593.6.to_d},
+        12_594.00.to_d                             => {high_price: 12_594.0.to_d, low_price: 12_594.0.to_d, volume: "0.1".to_d, weighted_price: 12_594.0.to_d},
+        12_594.50.to_d                             => {high_price: 12_594.5.to_d, low_price: 12_594.5.to_d, volume: "0.1".to_d, weighted_price: 12_594.5.to_d},
+        (125_947_914_644_014_041_555.to_d * 1e-16) => {high_price: 12_595.0.to_d, low_price: 12_594.79.to_d, volume: "0.147562".to_d, weighted_price: (125_947_914_644_014_041_555.to_d * 1e-16)},
+        (1_259_526_913_890_984_318.to_d * 1e-14)   => {high_price: 12_595.27.to_d, low_price: 12_595.04.to_d, volume: "1.003507".to_d, weighted_price: (1_259_526_913_890_984_318.to_d * 1e-14)},
+        12_596.92.to_d                             => {high_price: 12_596.92.to_d, low_price: 12_596.92.to_d, volume: "0.5".to_d, weighted_price: 12_596.92.to_d},
+        (125_997_825_767_581_638_047.to_d * 1e-16) => {high_price: 12_600.0.to_d, low_price: 12_597.68.to_d, volume: "7.940784".to_d, weighted_price: (125_997_825_767_581_638_047.to_d * 1e-16)}
       )
       expect(volume_base).to eq(10_109_639_999_999_999_999.to_d * 1e-18)
       expect(volume_quote).to eq(12_736_946_148_490_999_901.to_d * 1e-14)

@@ -140,7 +140,7 @@ describe Arke::Exchange::Huobi do
 
     it "creates an order on Huobi" do
       order.apply_requirements(huobi)
-      expect { huobi.create_order(order) }.to_not raise_error(Exception)
+      expect { huobi.create_order(order) }.to_not raise_error
     end
   end
 

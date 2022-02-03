@@ -152,7 +152,6 @@ describe Arke::Exchange::Valr do
           body: "{\"orderId\":\"da99bd40-41a2-42dd-8601-bc99edc31df2\",\"pair\":\"BTCZAR\"}",
           headers: {
             "Accept"           => "application/json",
-            "User-Agent"       => "Faraday v0.15.4",
             "X-Valr-Api-Key"   => "abcdef",
             "X-Valr-Signature" => "6a2c253885eff940bc320f327477228ba7c492ce15e93393a84cc79aa8ab46d9aff04b981aaa31163d873b149b76f7492384f8952715ad25f6daf4730d96d1e5",
             "X-Valr-Timestamp" => "1576353032322571"
@@ -172,7 +171,6 @@ describe Arke::Exchange::Valr do
             body:    "{\"pair\":\"ETHZAR\",\"side\":\"SELL\",\"quantity\":\"0.074650\",\"price\":\"150000.000000\"}",
             headers: {
               "Accept"           => "application/json",
-              "User-Agent"       => "Faraday v0.15.4",
               "X-Valr-Api-Key"   => "abcdef",
               "X-Valr-Signature" => "21d0e13adb241f9cb303eff248db3f5c60ad9d0d78afbdde50969a57ecc5f90105b7af974b89aa1dbff5f9eb4bf0b9b4bea04ca2149ad29724afa1f8f2215a2a",
               "X-Valr-Timestamp" => "1576353032322571"
@@ -196,7 +194,6 @@ describe Arke::Exchange::Valr do
             body:    "{\"pair\":\"ETHZAR\",\"side\":\"SELL\",\"baseAmount\":\"0.074650\"}",
             headers: {
               "Accept"           => "application/json",
-              "User-Agent"       => "Faraday v0.15.4",
               "X-Valr-Api-Key"   => "abcdef",
               "X-Valr-Signature" => "44a425a387709023ee8f843b84d5d7c3cc7b90792c50f47c56ce6f2c27de8786821917cceddc787502c1630ce5007f54b67df722be12a84a958610c5fc94c896",
               "X-Valr-Timestamp" => "1576353032322571"
@@ -219,7 +216,6 @@ describe Arke::Exchange::Valr do
             body:    "{\"pair\":\"ETHZAR\",\"side\":\"BUY\",\"baseAmount\":\"0.074650\"}",
             headers: {
               "Accept"           => "application/json",
-              "User-Agent"       => "Faraday v0.15.4",
               "X-Valr-Api-Key"   => "abcdef",
               "X-Valr-Signature" => "8b331540b0fc79b57f903291cc2898f3851ba3824a6cb6e96e0b3db0c87637c6889ce1bbbbff97e3bc40ee802f3127ea63882ca9ee1c5ac1b6ac5c371c12e669",
               "X-Valr-Timestamp" => "1576353032322571"

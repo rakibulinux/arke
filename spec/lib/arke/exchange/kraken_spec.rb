@@ -34,8 +34,8 @@ describe Arke::Exchange::Kraken do
         market.update_orderbook
         expect(market.orderbook.book[:buy].size).to eq(100)
         expect(market.orderbook.book[:sell].size).to eq(100)
-        expect(market.orderbook.book[:buy].first).to eq([7203.3.to_d, 5.413.to_d])
-        expect(market.orderbook.book[:sell].first).to eq([7203.4.to_d, 13.209.to_d])
+        expect(market.orderbook.book[:buy].first).to eq(["7203.3".to_d, "5.413".to_d])
+        expect(market.orderbook.book[:sell].first).to eq(["7203.4".to_d, "13.209".to_d])
       end
     end
 
@@ -121,7 +121,7 @@ describe Arke::Exchange::Kraken do
             {"currency" => "XETC", "free" => 0.0000000000.to_d, "locked" => 0, "total" => 0.0000000000.to_d},
             {"currency" => "XZEC", "free" => 1.0000000000.to_d, "locked" => 0, "total" => 1.0000000000.to_d},
             {"currency" => "XXMR", "free" => 21.4354237300.to_d, "locked" => 0, "total" => 21.4354237300.to_d},
-            {"currency" => "USDT", "free" => 0.00007280.to_d, "locked" => 0, "total" => 0.00007280.to_d},
+            {"currency" => "USDT", "free" => "0.728e-4".to_d, "locked" => 0, "total" => "0.728e-4".to_d},
             {"currency" => "DASH", "free" => 0.1324000000.to_d, "locked" => 0, "total" => 0.1324000000.to_d},
             {"currency" => "BCH", "free" => 0.1032644153.to_d, "locked" => 0, "total" => 0.1032644153.to_d},
             {"currency" => "BSV", "free" => 0.0000000000.to_d, "locked" => 0, "total" => 0.0000000000.to_d}
@@ -197,9 +197,9 @@ describe Arke::Exchange::Kraken do
 
       it "notifies public trade to registered callbacks" do
         callback = double(:callback)
-        expect(callback).to receive(:call).with(Arke::PublicTrade.new("1582445053.916545", "ethusd", "kraken", :sell, 0.03490924.to_d, 271.69.to_d, 9.4844914156.to_d, 1_582_445_053_916_545.to_d / 1e6))
-        expect(callback).to receive(:call).with(Arke::PublicTrade.new("1582445053.923872", "ethusd", "kraken", :sell, 0.00009052.to_d, 271.69.to_d, 0.0245933788.to_d, 1_582_445_053_923_872.to_d / 1e6))
-        expect(callback).to receive(:call).with(Arke::PublicTrade.new("1582445053.925416", "ethusd", "kraken", :sell, 0.00000024.to_d, 271.69.to_d, 0.0000652056.to_d, 1_582_445_053_925_416.to_d / 1e6))
+        expect(callback).to receive(:call).with(Arke::PublicTrade.new("1582445053.916545", "ethusd", "kraken", :sell, "0.03490924".to_d, "271.69".to_d, "9.4844914156".to_d, 1_582_445_053_916_545.to_d / 1e6))
+        expect(callback).to receive(:call).with(Arke::PublicTrade.new("1582445053.923872", "ethusd", "kraken", :sell, "0.00009052".to_d, "271.69".to_d, "0.0245933788".to_d, 1_582_445_053_923_872.to_d / 1e6))
+        expect(callback).to receive(:call).with(Arke::PublicTrade.new("1582445053.925416", "ethusd", "kraken", :sell, "0.00000024".to_d, "271.69".to_d, "0.0000652056".to_d, 1_582_445_053_925_416.to_d / 1e6))
         kraken.register_on_public_trade_cb(&callback.method(:call))
         kraken.ws_read_message(:public, trade_event)
       end

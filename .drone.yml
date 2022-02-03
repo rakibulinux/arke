@@ -1,10 +1,11 @@
 ---
 kind: pipeline
 name: default
+type: docker
 
 steps:
   - name: test
-    image: ruby:2.6.5
+    image: ruby:3.0
     commands:
       - apt-get update
       - apt-get install -y libsecp256k1-dev
@@ -106,10 +107,10 @@ steps:
 volumes:
   - name: gem-cache
     host:
-      path: /var/cache/drone/arke-gem
+      path: /var/cache/drone/arke-gem-3
   - name: bundler-cache
     host:
-      path: /var/cache/drone/arke-bundler
+      path: /var/cache/drone/arke-bundler-3
 
 trigger:
   event:

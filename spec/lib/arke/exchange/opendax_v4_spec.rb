@@ -12,7 +12,7 @@ describe Arke::Exchange::OpendaxV4 do
   let!(:default_opendax_v4) {
     Arke::Exchange::OpendaxV4.new(
       "ws"          => "ws://localhost:5050",
-      "key"         => "Uwg8wqlxueiLCsbTXjlogviL8hdd60",
+      "key"         => "4576fdf6bde1fe670b17ee667d4da85ca3a4383219757a977dfa8cfe3b5c89ee",
       "secret"      => "OwpadzSYOSkzweoJkjPrFeVgjOwOuxVHk8FXIlffdWw",
       "go_true_url" => "http://localhost:9999"
     )
@@ -21,7 +21,7 @@ describe Arke::Exchange::OpendaxV4 do
   def new_odax(port)
     Arke::Exchange::OpendaxV4.new(
       "ws"      => "ws://localhost:#{port}",
-      "key"     => "Uwg8wqlxueiLCsbTXjlogviL8hdd60",
+      "key"     => "4576fdf6bde1fe670b17ee667d4da85ca3a4383219757a977dfa8cfe3b5c89ee",
       "secret"  => "OwpadzSYOSkzweoJkjPrFeVgjOwOuxVHk8FXIlffdWw",
       "timeout" => timeout
     )
@@ -428,8 +428,9 @@ describe Arke::Exchange::OpendaxV4 do
 
       it "should generate signature" do
         hash = default_opendax_v4.send(:sign_eth_message, "ec041668-37aa-4497-94e6-892dcdb0ef24")
+        expect(Base64.encode64(hash)).to eq("a8hR2tLR7DOnE6mvFo4eHRvc5s1SOaKUKy6gAwTlBms=\n")
         signature = default_opendax_v4.send(:generate_signature, hash)
-        expect(signature).to eq "0xb5d0fb6dcdc6ccfe2f1c93a06efba4242f5641c11bf36d3d8788af99c175d06600e82cfc6c03503bf71b9eb9fcb421b124b219a4969149e35e9a73cbafe457af1b"
+        expect(signature).to eq("0xb5d0fb6dcdc6ccfe2f1c93a06efba4242f5641c11bf36d3d8788af99c175d06600e82cfc6c03503bf71b9eb9fcb421b124b219a4969149e35e9a73cbafe457af1b")
       end
     end
   end

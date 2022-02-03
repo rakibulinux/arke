@@ -27,7 +27,7 @@ describe Arke::Exchange::Bitfinex do
         "quote_unit"       => "ust",
         "min_price"        => nil,
         "max_price"        => nil,
-        "min_amount"       => 0.0006.to_d,
+        "min_amount"       => "0.0006".to_d,
         "amount_precision" => 8.to_d,
         "price_precision"  => 5.to_d
       )

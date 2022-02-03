@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-require 'pry'
 
 module Arke::Exchange
   class OpendaxV4 < Base
@@ -428,19 +427,19 @@ module Arke::Exchange
     end
 
     def generate_signature(hash)
-      private_key = Ethereum::PrivateKey.new(@api_key)
+      private_key = Arke::Ethereum::PrivateKey.new(@api_key)
 
       # Sigh hash with private key
-      vrs = Ethereum::Secp256k1.recoverable_sign(hash, private_key.encode(:bin))
+      v, r, s = Arke::Ethereum::Secp256k1.recoverable_sign(hash, private_key.encode(:bin))
       # Form signature from R and S values
-      raw_sig = Ethereum::Utils.zpad_int(vrs[1]) + Ethereum::Utils.zpad_int(vrs[2])
+      raw_sig = Arke::Ethereum::Utils.zpad_int(r) + Arke::Ethereum::Utils.zpad_int(s)
 
-      "0x" + raw_sig.unpack("H*")[0] + vrs[0].to_s(16)
+      "0x" + raw_sig.unpack("H*")[0] + v.to_s(16)
     end
 
     def sign_eth_message(token)
       message = "\x19Ethereum Signed Message:\n#{token.length}#{token}"
-      Ethereum::Utils.keccak256(message)
+      Arke::Ethereum::Utils.keccak256(message)
     end
   end
 end

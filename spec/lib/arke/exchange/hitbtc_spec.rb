@@ -85,7 +85,7 @@ describe Arke::Exchange::Hitbtc do
 
     it "creates order" do
       order.apply_requirements(hitbtc)
-      expect { hitbtc.create_order(order) }.to_not raise_error(Exception)
+      expect { hitbtc.create_order(order) }.to_not raise_error
     end
   end
 end

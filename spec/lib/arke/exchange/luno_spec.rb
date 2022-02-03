@@ -65,7 +65,7 @@ describe Arke::Exchange::Luno do
 
     it "creates order" do
       order.apply_requirements(luno)
-      expect { luno.create_order(order) }.to_not raise_error(Exception)
+      expect { luno.create_order(order) }.to_not raise_error
     end
   end
 

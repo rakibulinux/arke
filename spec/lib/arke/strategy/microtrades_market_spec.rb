@@ -135,8 +135,8 @@ describe Arke::Strategy::MicrotradesMarket do
       expect(strategy).to receive(:rand).exactly(:twice).and_return(600)
       linked_strategy.target.start
 
-      expect(linked_strategy.target.open_orders.total_side_amount(:buy)).to eq(285.56554348.to_d)
-      expect(linked_strategy.target.open_orders.total_side_amount(:sell)).to eq(700.37113197.to_d)
+      expect(linked_strategy.target.open_orders.total_side_amount(:buy)).to eq("285.56554348".to_d)
+      expect(linked_strategy.target.open_orders.total_side_amount(:sell)).to eq("700.371131970000001".to_d)
 
       expect(strategy.get_amount(:buy)).to eq 420.222679
       expect(strategy.get_amount(:sell)).to eq 171.339326
@@ -147,8 +147,8 @@ describe Arke::Strategy::MicrotradesMarket do
       expect(strategy).to receive(:rand).exactly(:twice).and_return(100)
       linked_strategy.target.start
 
-      expect(linked_strategy.target.open_orders.total_side_amount(:buy)).to eq(285.56554348.to_d)
-      expect(linked_strategy.target.open_orders.total_side_amount(:sell)).to eq(700.37113197.to_d)
+      expect(linked_strategy.target.open_orders.total_side_amount(:buy)).to eq("285.56554348".to_d)
+      expect(linked_strategy.target.open_orders.total_side_amount(:sell)).to eq("700.371131970000001".to_d)
 
       expect(strategy.get_amount(:buy)).to eq 100
       expect(strategy.get_amount(:sell)).to eq 100
