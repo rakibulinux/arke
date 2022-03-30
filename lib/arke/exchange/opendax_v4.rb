@@ -67,7 +67,7 @@ module Arke::Exchange
 
       @ws.on(:open) do |_e|
         @ws_connected = true
-        subscribe_public if flag?(LISTEN_PUBLIC_TRADES) && !@markets_to_listen.empty?
+        subscribe_public if flag?(LISTEN_PUBLIC_ORDERBOOK) && !@markets_to_listen.empty?
 
         Fiber.new do
           EM::Synchrony.add_periodic_timer(53) do
@@ -85,14 +85,14 @@ module Arke::Exchange
       end
 
       @ws.on(:close) do |e|
-        reason = e.reason.empty? ? @ws.instance_variable_get(:@event_buffers)["error"].map(&:message).join("\n") : e.reason
+        reason = e.reason.empty? ? (@ws.instance_variable_get(:@event_buffers)||{})["error"]&.map(&:message)&.join("\n") : e.reason
         logger.error "ACCOUNT:#{id} Websocket #{ws_id} disconnected: #{e.code} Reason: #{reason}"
         @ws = nil
         Fiber.new do
           EM::Synchrony.sleep(WEBSOCKET_CONNECTION_RETRY_DELAY)
           ws_connect(ws_id)
         end.resume
-        fb.resume unless @ws_connected
+        fb.resume if fb.alive? && !@ws_connected
         @ws_connected = false
       end
       Fiber.yield
@@ -104,9 +104,9 @@ module Arke::Exchange
         streams << "#{id}.ob-inc"
       end
 
-      EM.next_tick {
-        @ws.send(:public, JSON.dump([MSG_TYPE_REQUEST, reqid, METHOD_SUBSCRIBE, ["public", streams.join(",")]]))
-      }
+      EM.next_tick do
+        ws_write_message(:public, JSON.dump([MSG_TYPE_REQUEST, reqid, METHOD_SUBSCRIBE, ["public", streams]]))
+      end
     end
 
     def generate_headers(ws_id)
