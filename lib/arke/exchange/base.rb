@@ -30,6 +30,7 @@ module Arke::Exchange
       @timer = nil
       @private_trades_cb = []
       @public_trades_cb = []
+      @public_obinc_cb = []
       @created_order_cb = []
       @deleted_order_cb = []
       @bulk_order_support = false
@@ -135,6 +136,10 @@ module Arke::Exchange
       @public_trades_cb << cb
     end
 
+    def register_on_orderbook_increment_cb(&cb)
+      @public_obinc_cb << cb
+    end
+
     def register_on_created_order(&cb)
       @created_order_cb << cb
     end
@@ -145,6 +150,10 @@ module Arke::Exchange
 
     def notify_public_trade(trade)
       @public_trades_cb.each {|cb| cb&.call(trade) }
+    end
+
+    def notify_orderbook_increment(inc)
+      @public_obinc_cb.each {|cb| cb&.call(inc) }
     end
 
     def notify_private_trade(trade, trust_trade_info=false)

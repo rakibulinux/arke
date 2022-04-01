@@ -196,6 +196,8 @@ module Arke::Exchange
           return @ws.close
         end
 
+        notify_orderbook_increment(args)
+
         bids = args[3]
         asks = args[2]
         create_or_update_orderbook(@books[market][:book], {"bids" => bids}) if bids && !bids.empty?

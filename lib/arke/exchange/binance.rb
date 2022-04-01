@@ -92,6 +92,8 @@ module Arke::Exchange
         return @books.clear
       end
 
+      notify_orderbook_increment([market, first_update_id, asks, bids])
+
       bids.each do |order|
         @books[market][:book].update(
           build_order(order, :buy)
