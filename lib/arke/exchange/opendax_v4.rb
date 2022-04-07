@@ -191,18 +191,20 @@ module Arke::Exchange
           return logger.error { "Received a book increment before snapshot on market #{market}" }
         end
 
-        if args[1] != @books[market][:sequence] + 1
-          logger.error { "Sequence out of order (previous: #{@books[market][:sequence]} current:#{args[1]}, reconnecting websocket..." }
+        sequence = args[1]
+        if sequence != @books[market][:sequence] + 1
+          logger.error { "Sequence out of order (previous: #{@books[market][:sequence]} current:#{sequence}, reconnecting websocket..." }
           return @ws.close
         end
 
-        notify_orderbook_increment(args)
-
-        bids = args[3]
         asks = args[2]
+        bids = args[3]
+
+        notify_orderbook_increment([id,  market, sequence, asks, bids])
+
         create_or_update_orderbook(@books[market][:book], {"bids" => bids}) if bids && !bids.empty?
         create_or_update_orderbook(@books[market][:book], {"asks" => asks}) if asks && !asks.empty?
-        @books[market][:sequence] = args[1]
+        @books[market][:sequence] = sequence
 
       when "markets"
         @markets = args

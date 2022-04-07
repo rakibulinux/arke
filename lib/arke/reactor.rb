@@ -134,6 +134,12 @@ module Arke
             report_fatal(e, strategy.id)
           end.resume
         end
+
+        # Running in dapr environement, start the http server
+        unless ENV['APP_PORT'].to_s.empty?
+          ::Arke::Server.set :markets, @markets
+          ::Arke::Server.run!
+        end
       end
     end
 

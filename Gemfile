@@ -24,3 +24,7 @@ group :development, :test do
 end
 
 gem "simplecov", require: false, group: :test
+
+gem "sinatra", "~> 2.2"
+
+gem "thin", "~> 1.8"
