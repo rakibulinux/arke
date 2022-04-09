@@ -18,6 +18,8 @@ require "rack"
 require "simplecov"
 require "byebug"
 
+ENV['APP_PORT'] = '4567' # FIXME: remove this dependency!
+
 SimpleCov.start "rails"
 require "arke"
 

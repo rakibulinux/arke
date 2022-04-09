@@ -49,11 +49,11 @@ module Arke::Exchange
         init: true,
         inc:  []
       }
-      last_update_id, ob = fetch_orderbook(stream, market)
+      sequence, ob = fetch_orderbook(stream, market)
       @books[market_id][:book] = ob
       @books[market_id][:init] = false
       @books[market_id][:inc].each do |data|
-        next if data["u"] <= last_update_id
+        next if data["u"] <= sequence
 
         handle_orderbook_update(data)
       end
