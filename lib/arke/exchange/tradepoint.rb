@@ -49,13 +49,13 @@ module Arke::Exchange
         init: true,
         inc:  []
       }
-      sequence, ob = fetch_orderbook(stream, market)
+      snap_sequence, ob = fetch_orderbook(stream, market)
       @books[market_id][:book] = ob
       @books[market_id][:init] = false
-      @books[market_id][:inc].each do |data|
-        next if data["u"] <= sequence
-
-        handle_orderbook_update(data)
+      @books[market_id][:sequence] = snap_sequence
+      @books[market_id][:inc].each do |inc_sequence, bids, asks|
+        next if inc_sequence <= snap_sequence
+        handle_ob_inc(stream, market, inc_sequence, bids, asks)
       end
       logger.info { "ACCOUNT:#{id} stream #{stream} orderbook #{market} initialized" }
     end
@@ -72,18 +72,9 @@ module Arke::Exchange
         req.url URI.join(@dapr.url_prefix, "/v1.0/invoke/exchange-arke/method/orderbook")
         req.body = body
         req.headers = headers
-      end
+      end.body
       orderbook = Arke::Orderbook::Orderbook.new(market)
-      Array(bids).each do |order|
-        orderbook.update(
-          build_order(order, :buy)
-        )
-      end
-      Array(asks).each do |order|
-        orderbook.update(
-          build_order(order, :sell)
-        )
-      end
+      create_or_update_orderbook(orderbook, asks, bids)
       [sequence, orderbook]
     end
 
@@ -107,7 +98,7 @@ module Arke::Exchange
       end
     end
 
-    def create_or_update_orderbook(orderbook, bids, asks)
+    def create_or_update_orderbook(orderbook, asks, bids)
       (bids || []).each do |price, amount|
         amount = amount.to_d
         if amount == 0
@@ -129,12 +120,19 @@ module Arke::Exchange
     def handle_ob_inc(stream, market, sequence, asks, bids)
       market_id = [stream, market].join(":")
 
-      if sequence != @books[market_id][:sequence] + 1
-        logger.error { "Sequence out of order (previous: #{@books[market_id][:sequence]} current:#{sequence}, reconnecting websocket..." }
+      if @books[market_id][:init]
+        @books[market_id][:inc] << [sequence, asks, bids]
         return
       end
-      create_or_update_orderbook(@books[market_id][:book], bids, asks)
-      @books[market_id][:sequence] = args[1]
+
+      prev_sequence = @books[market_id][:sequence]
+
+      if sequence != prev_sequence + 1
+        logger.error { "Sequence out of order (previous: #{prev_sequence} current:#{sequence}, reconnecting websocket..." }
+        return
+      end
+      create_or_update_orderbook(@books[market_id][:book], asks, bids)
+      @books[market_id][:sequence] = sequence
     end
   end
 end
