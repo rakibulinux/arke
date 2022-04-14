@@ -133,7 +133,7 @@ describe Arke::Exchange::Tradepoint do
 
         expect(tp.books["alpha.yellow.org:btcusd"][:sequence]).to eq(nil)
         expect(tp.books["alpha.yellow.org:btcusd"][:book]).to eq(nil)
-        EM.stop
+        EM.next_tick { EM.stop }
       end
     end
 
@@ -166,16 +166,18 @@ describe Arke::Exchange::Tradepoint do
     it "re-init the orderbook if an increment sequence received after init doesn't match the following number" do
       EM.run do
         tp.ws_connect_public
-        tp.handle_ob_inc("alpha.yellow.org", "btcusd", 13, [["0.4251346e5","0.89242e0"]], [])
-        expect(tp.books["alpha.yellow.org:btcusd"][:sequence]).to eq(13)
+        EM.next_tick do
+          tp.handle_ob_inc("alpha.yellow.org", "btcusd", 13, [["0.4251346e5","0.89242e0"]], [])
+          expect(tp.books["alpha.yellow.org:btcusd"][:sequence]).to eq(13)
 
-        expect {
-          tp.handle_ob_inc("alpha.yellow.org", "btcusd", 15, [["0.4250346e5","0.89254e0"]], [["0.4226536e5","0.1301298e2"]])
-        }.to raise_error(::Arke::Exchange::Tradepoint::OrderbookSequenceError)
+          expect {
+            tp.handle_ob_inc("alpha.yellow.org", "btcusd", 15, [["0.4250346e5","0.89254e0"]], [["0.4226536e5","0.1301298e2"]])
+          }.to raise_error(::Arke::Exchange::Tradepoint::OrderbookSequenceError)
 
-        expect(tp.books["alpha.yellow.org:btcusd"][:sequence]).to eq(nil)
-        expect(tp.books["alpha.yellow.org:btcusd"][:book]).to eq(nil)
-        EM.stop
+          expect(tp.books["alpha.yellow.org:btcusd"][:sequence]).to eq(nil)
+          expect(tp.books["alpha.yellow.org:btcusd"][:book]).to eq(nil)
+          EM.next_tick { EM.stop }
+        end
       end
     end
 

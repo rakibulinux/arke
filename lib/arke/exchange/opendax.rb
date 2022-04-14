@@ -279,24 +279,28 @@ module Arke::Exchange
       msg.each do |key, content|
         case key
         when /([^.]+)\.ob-snap/
-          @books[Regexp.last_match(1)] = {
-            book:     create_or_update_orderbook(Arke::Orderbook::Orderbook.new(Regexp.last_match(1)), content),
+          market = Regexp.last_match(1)
+          @books[market] = {
+            book:     create_or_update_orderbook(Arke::Orderbook::Orderbook.new(market), content),
             sequence: content["sequence"],
           }
         when /([^.]+)\.ob-inc/
-          if @books[Regexp.last_match(1)].nil?
-            return logger.error { "Received a book increment before snapshot on market #{Regexp.last_match(1)}" }
+          market = Regexp.last_match(1)
+          if @books[market].nil?
+            return logger.error { "Received a book increment before snapshot on market #{market}" }
           end
 
-          if content["sequence"] != @books[Regexp.last_match(1)][:sequence] + 1
-            logger.error { "Sequence out of order (previous: #{@books[Regexp.last_match(1)][:sequence]} current:#{content['sequence']}, reconnecting websocket..." }
+          sequence = content["sequence"]
+          if sequence != @books[market][:sequence] + 1
+            logger.error { "Sequence out of order (previous: #{@books[market][:sequence]} current:#{content['sequence']}, reconnecting websocket..." }
             return @ws.close
           end
-          bids = content["bids"]
-          asks = content["asks"]
-          create_or_update_orderbook(@books[Regexp.last_match(1)][:book], {"bids" => [bids]}) if bids && !bids.empty?
-          create_or_update_orderbook(@books[Regexp.last_match(1)][:book], {"asks" => [asks]}) if asks && !asks.empty?
-          @books[Regexp.last_match(1)][:sequence] = content["sequence"]
+          bids = content["bids"].to_a.empty? ? [] : [content["bids"]]
+          asks = content["asks"].to_a.empty? ? [] : [content["asks"]]
+          create_or_update_orderbook(@books[market][:book], {"bids" => bids}) unless bids.empty?
+          create_or_update_orderbook(@books[market][:book], {"asks" => asks}) unless asks.empty?
+          @books[market][:sequence] = sequence
+          notify_orderbook_increment([id,  market, sequence, asks, bids])
         end
       end
     end
