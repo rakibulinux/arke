@@ -1,5 +1,5 @@
 describe Arke::Exchange::Tradepoint do
-  let(:tradepoint) {
+  let(:tp) {
     Arke::Exchange::Tradepoint.new(
       "ws" => "ws://localhost:5050",
       "markets" => ["alpha.yellow.org:btcusd"],
@@ -39,14 +39,27 @@ describe Arke::Exchange::Tradepoint do
         body: [sequence, asks, bids].to_json,
         headers: {}
       )
+      tp.apply_flags(::Arke::Helpers::Flags::LISTEN_PUBLIC_ORDERBOOK)
     end
 
-    it do
-      tradepoint.apply_flags(::Arke::Helpers::Flags::LISTEN_PUBLIC_ORDERBOOK)
-      tradepoint.ws_connect_public
-      
+    it "bufferizes increments received before the snapshot and apply them on top of snapshot" do
+      tp.ws_connect_public
+
+      expect(tp.books["alpha.yellow.org:btcusd"][:sequence]).to eq(12)
     end
-  
+
+    it "works without any increment to add to the snapshot" do
+      tp.ws_connect_public
+
+      expect(tp.books["alpha.yellow.org:btcusd"][:sequence]).to eq(12)
+    end
+
+    it "fails if a gap in sequence is detected" do
+      tp.ws_connect_public
+
+      expect(tp.books["alpha.yellow.org:btcusd"][:sequence]).to eq(12)
+    end
+
   end
 
 end
