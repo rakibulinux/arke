@@ -2,6 +2,8 @@
 
 module Arke::Exchange
   class Tradepoint < Base
+    class OrderbookSequenceError < StandardError; end
+
     def initialize(opts)
       super
       @markets = opts["markets"]
@@ -28,21 +30,13 @@ module Arke::Exchange
     end
 
     #
-    # how-to-manage-a-local-order-book-correctly
+    # Intialization phase for orderbook:
+    # 1. bufferize orderbook increments until we receive the snapshot
+    # 2. ignore increments with lower sequence than orderbook snapshot
+    # 3. apply others increments on the snapshot
+    # 4. very that every new increment has the next sequence number
+    # 5. restart orderbook init phase if a increment sequence doesn't match
     #
-    # https://github.com/binance/binance-spot-api-docs/blob/master/web-socket-streams.md#how-to-manage-a-local-order-book-correctly
-    #
-    # 1. Open a stream to wss://stream.binance.com:9443/ws/bnbbtc@depth.
-    # 2. Buffer the events you receive from the stream.
-    # 3. Get a depth snapshot from https://api.binance.com/api/v3/depth?symbol=BNBBTC&limit=1000 .
-    # 4. Drop any event where u is <= lastUpdateId in the snapshot.
-    # 5. The first processed event should have U <= lastUpdateId+1 AND u >= lastUpdateId+1.
-    # 6. While listening to the stream, each new event's U should be equal to the previous event's u+1.
-    # 7. The data in each event is the absolute quantity for a price level.
-    # 8. If the quantity is 0, remove the price level.
-    # 9. Receiving an event that removes a price level that is not in your local order book can happen and is normal.
-    #
-
     def initialize_orderbook(stream, market)
       market_id = [stream, market].join(":")
       @books[market_id] = {
@@ -58,6 +52,7 @@ module Arke::Exchange
         handle_ob_inc(stream, market, inc_sequence, bids, asks)
       end
       logger.info { "ACCOUNT:#{id} stream #{stream} orderbook #{market} initialized" }
+    rescue OrderbookSequenceError
     end
 
     def fetch_orderbook(stream, market)
@@ -128,8 +123,14 @@ module Arke::Exchange
       prev_sequence = @books[market_id][:sequence]
 
       if sequence != prev_sequence + 1
-        logger.error { "Sequence out of order (previous: #{prev_sequence} current:#{sequence}, reconnecting websocket..." }
-        return
+        @books[market_id] = {
+          init: true,
+          inc:  []
+        }
+        EM.add_timer(0.1) { initialize_orderbook(stream, market) }
+        error_msg = "Sequence out of order (previous: #{prev_sequence} current:#{sequence}, re-initializing the orderbook..."
+        logger.error(error_msg)
+        raise OrderbookSequenceError.new(error_msg)
       end
       create_or_update_orderbook(@books[market_id][:book], asks, bids)
       @books[market_id][:sequence] = sequence
