@@ -22,6 +22,17 @@ module Arke
     end
     alias inspect to_s
 
+    def to_h
+      {
+        "market" => @market.to_s,
+        "price" => @price.to_s,
+        "amount" => @amount.to_s,
+        "side" => @side.to_s,
+        "type" => @type.to_s,
+        "id" => @id.to_s,
+      }
+    end
+
     def ==(order)
       !order.nil? && \
       order.market == market && \

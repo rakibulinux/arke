@@ -29,6 +29,7 @@ module Arke::Exchange
       @forced_balances = []
       @timer = nil
       @private_trades_cb = []
+      @private_balances_cb = []
       @public_trades_cb = []
       @public_obinc_cb = []
       @created_order_cb = []
@@ -132,6 +133,10 @@ module Arke::Exchange
       @private_trades_cb << cb
     end
 
+    def register_on_private_balances_cb(&cb)
+      @private_balances_cb << cb
+    end
+
     def register_on_public_trade_cb(&cb)
       @public_trades_cb << cb
     end
@@ -158,6 +163,10 @@ module Arke::Exchange
 
     def notify_private_trade(trade, trust_trade_info=false)
       @private_trades_cb.each {|cb| cb&.call(trade, trust_trade_info) }
+    end
+
+    def notify_private_balances(balances)
+      @private_balances_cb.each {|cb| cb&.call(balances) }
     end
 
     def notify_created_order(order)
