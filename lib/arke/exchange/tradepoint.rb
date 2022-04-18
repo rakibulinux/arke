@@ -77,22 +77,6 @@ module Arke::Exchange
       return @books[market_id][:book] if @books[market_id]
     end
 
-    def market_config(market_id)
-      stream, market = market_id.split(":")
-      body = {
-        "market" => market,
-        "id" => stream,
-      }
-      headers = {
-        "Content-Type" => "application/json",
-      }
-      @dapr.post do |req|
-        req.url URI.join(@dapr.url_prefix, "/v1.0/invoke/exchange-arke/method/market-config")
-        req.body = body
-        req.headers = headers
-      end
-    end
-
     def create_or_update_orderbook(orderbook, asks, bids)
       (bids || []).each do |price, amount|
         amount = amount.to_d
@@ -134,6 +118,74 @@ module Arke::Exchange
       end
       create_or_update_orderbook(@books[market_id][:book], asks, bids)
       @books[market_id][:sequence] = sequence
+    end
+
+    #
+    # REST APIs
+    #
+
+    def invoke(method, body)
+      @dapr.post do |req|
+        req.url URI.join(@dapr.url_prefix, "/v1.0/invoke/exchange-arke/method/#{method}")
+        req.body = body
+        req.headers = {
+          "Content-Type" => "application/json",
+        }
+      end
+    end
+
+    def market_config(market_id)
+      stream, market = market_id.split(":")
+      dapr_post("market-config", {
+        "market" => market,
+        "id" => stream,
+      })
+    end
+
+    def get_balances
+      raise "FIXME: we don't have the account id?"
+      stream, market = market_id.split(":")
+      dapr_post("balances", {
+        "id" => stream,
+      })
+    end
+
+    def create_order(order)
+      stream, market = order.market.split(":")
+      dapr_post("create-order", {
+        "account_id" => stream,
+        "market" => market,
+        "price" => order.price.to_s,
+        "amount" => order.amount.to_s,
+        "side" => order.side,
+        "type" => order.type,
+      })
+      order
+    end
+
+    def stop_order(order)
+      dapr_post("stop-order", {
+        "account_id" => stream,
+        "market" => order.market,
+        "order_id" => order.id,
+      })
+      order
+    end
+
+    def cancel_all_orders(market_id)
+      stream, market = market_id.split(":")
+      dapr_post("stop-order", {
+        "account_id" => stream,
+        "market" => market,
+      })
+    end
+
+    def fetch_openorders(market_id)
+      stream, market = market_id.split(":")
+      dapr_post("stop-order", {
+        "account_id" => stream,
+        "market" => market,
+      })
     end
   end
 end
