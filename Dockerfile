@@ -18,7 +18,7 @@ RUN groupadd -r --gid ${GID} app \
 WORKDIR $APP_HOME
 USER app
 
-COPY --chown=app:app Gemfile Gemfile.lock $APP_HOME/
+COPY --chown=app:app Gemfile Gemfile.lock arke.gemspec VERSION $APP_HOME/
 
 # Install dependencies
 RUN gem install bundler
