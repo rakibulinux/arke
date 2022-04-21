@@ -289,7 +289,7 @@ module Arke::Exchange
     def create_order(order)
       # Request [1, 42, "create_order", ["btcusd", "m", "sell", "amount", "price"]]
       type = convert_type(order.type)
-      order_params = [order.market.downcase, type, order.side.to_s, order.amount.to_f.to_s, order.price.to_f.to_s]
+      order_params = [order.market.downcase, type, order.side.to_s, order.amount.to_f.to_s, order.price.to_f.to_s, ""]
       ws_write_message(:private, JSON.dump([MSG_TYPE_REQUEST, reqid, METHOD_CREATE_ORDER, order_params]))
 
       order
